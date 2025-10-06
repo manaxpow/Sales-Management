@@ -1,0 +1,71 @@
+# ============================
+# Build / IDE / System
+# ============================
+bin/
+obj/
+.vscode/
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Configuration
+backend/appsettings.json
+backend/appsettings.Development.json
+# ============================
+# Environment / Config
+# ============================
+.env
+*.env.local
+.env.development
+.env.production
+.env.test
+backend/appsettings.json
+backend/appsettings.Development.json
+backend/.config/dotnet-tools.json
+# Keep example env files
+!.env.example
+
+# ============================
+# Logs / Temp
+# ============================
+*.log
+logs/
+**/logs/
+*.pid
+*.seed
+*.tmp
+
+# ============================
+# Dependency Managers
+# ============================
+node_modules/
+packages/
+*.nupkg
+*.snupkg
+*.dll
+*.exe
+*.db
+
+# ============================
+# Database & Migrations
+# ============================
+*.sqlite
+*.db
+Migrations/
+Database/
+
+# ============================
+# Publish outputs
+# ============================
+/publish/
+/dist/
+/build/
+/wwwroot/
+
+# ============================
+# OS-specific
+# ============================
+.DS_Store
+Thumbs.db
