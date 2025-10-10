@@ -1,6 +1,6 @@
 import type { RouteObject } from "react-router-dom";
 import ClientLayout from "../layout/client/client.layout";
-import HomePage from "../pages/home-page";
+import HomePage from "../pages/home.page";
 import ProductDetailPage  from "../pages/product-detail.page";
 import { authRoutes } from "./auth.route";
 
