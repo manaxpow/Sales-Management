@@ -1,6 +1,6 @@
 import type { RouteObject } from "react-router-dom";
-import ManageCustomer from "../pages/admin/ManageCustomer";
-import { ManageAccounts } from "../pages/admin/ManageAccounts";
+import ManageCustomer from "../pages/admin/manage-customer";
+import { ManageAccounts } from "../pages/admin/manage-accounts";
 
 export const adminRoutes: RouteObject[] = [
   {

@@ -3,7 +3,7 @@ import { Box, CssBaseline, Divider, useMediaQuery } from "@mui/material";
 
 import { DrawerDesktop } from "../../components/ui/admin/Drawer";
 import MuiDrawer from "@mui/material/Drawer";
-import NavbarList from "../../components/admin/navbar/navbarList";
+import NavbarList from "../../components/admin/navbar/navbar.list";
 import { useSideBarStore } from "../../store/sidebar.store";
 import DrawerHeader from "../../components/ui/admin/DrawerHeader";
 

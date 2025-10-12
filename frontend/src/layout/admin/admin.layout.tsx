@@ -2,7 +2,7 @@ import { Outlet } from "react-router-dom";
 import Header from "./header";
 import { Box, useMediaQuery, useTheme } from "@mui/material";
 import AdminFooter from "./footer";
-import SideBarDrawer from "./sidebarDrawer";
+import SideBarDrawer from "./sidebar.drawer";
 import { useSideBarStore } from "../../store/sidebar.store";
 
 const AdminLayout = () => {
