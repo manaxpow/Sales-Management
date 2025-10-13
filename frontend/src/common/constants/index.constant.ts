@@ -29,8 +29,8 @@ export const adminMenuItems = [
     icon: LayoutDashboard,
   },
   {
-    label: "Quản lý tài khoản",
-    path: "/admin/accounts",
+    label: "Quản lý nhân viên",
+    path: "/admin/staff",
     icon: UserCog,
   },
   {
