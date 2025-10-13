@@ -8,11 +8,9 @@ public class BookService(AppDbContext context, ILogger<BookService> logger) : IB
     {
         try
         {
-            var book = new Book
+            var book = new Books
             {
-                Actor_id = createBookRequest.Actor_id,
-                Category_id = createBookRequest.Category_id,
-                Name = createBookRequest.Name,
+
 
             };
 
@@ -25,11 +23,10 @@ public class BookService(AppDbContext context, ILogger<BookService> logger) : IB
             // Return the details of the created book
             return new BookResponse
             {
-                Id = book.Id,
-                Name = book.Name,
-                Actor_id = book.Actor_id,
-                Category_id = book.Category_id
-
+                Id = book.BookId,
+                Actorid = book.CategoryId,
+                Name = book.ProductName,
+                CategoryId = book.CategoryId // Set the required CategoryId property
             };
         }
         catch (Exception ex)
@@ -65,9 +62,9 @@ public class BookService(AppDbContext context, ILogger<BookService> logger) : IB
             // Return the details of the book
             return new BookResponse
             {
-                Id = book.Id,
-                Actor_id = book.Actor_id,
-                Name = book.Name,
+                Id = book.BookId,
+                Actorid = book.CategoryId,
+                Name = book.ProductName,
 
             };
         }
