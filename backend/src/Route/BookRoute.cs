@@ -8,11 +8,11 @@ public static class BookRoute
         // Define the endpoints
 
         // Endpoint to add a new book
-        group.MapPost("/books", async (CreateBookRequest createBookRequest, IBookService bookService, IValidator<CreateBookRequest> validator) =>
+        group.MapPost("/books", async ([AsParameters] CreateBookRequest createBookRequest, IBookService bookService, IValidator<CreateBookRequest> validator) =>
         {
 
             // validate
-            
+
             ValidationResult result = await validator.ValidateAsync(createBookRequest);
             if (!result.IsValid)
             {
@@ -26,7 +26,7 @@ public static class BookRoute
             var book = await bookService.AddBookAsync(createBookRequest);
 
             return Results.Created($"/books/{book.Id}", book);
-        });
+        }).RequireAuthorization();
 
 
         // Endpoint to get all books

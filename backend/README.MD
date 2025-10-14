@@ -40,6 +40,9 @@ dotnet add package Microsoft.EntityFrameworkCore.Tools
 dotnet add package Microsoft.EntityFrameworkCore.Design
 dotnet add package Pomelo.EntityFrameworkCore.MySql
 dotnet add package DotNetEnv
+<!-- authenticate -->
+dotnet add package Microsoft.AspNetCore.Authentication.JwtBearer --version 9.0.9
+dotnet add package System.IdentityModel.Tokens.Jwt
 
 <!-- ADD MIGRATIONS AND UPDATE DB -->
 run dotnet ef migrations add init_filename to migrations
