@@ -1,7 +1,8 @@
 import type { RouteObject } from "react-router-dom";
 import ManageCustomer from "../pages/admin/manage-customer";
-import { ManageAccounts } from "../pages/admin/manage-accounts";
 import ProfileAdminPage from "../pages/admin/profile.page";
+import { ManageStaff } from "../pages/admin/manage-staff";
+import CreateStaffPage from "../pages/admin/create-staff";
 
 export const adminRoutes: RouteObject[] = [
   {
@@ -9,8 +10,12 @@ export const adminRoutes: RouteObject[] = [
     element: <ManageCustomer />,
   },
   {
-    path: "accounts",
-    element: <ManageAccounts />,
+    path: "staff",
+    element: <ManageStaff />,
+  },
+  {
+    path: "staff/create",
+    element: <CreateStaffPage />,
   },
   {
     path: "profile",
