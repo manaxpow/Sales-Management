@@ -36,9 +36,9 @@ const Header: React.FC = () => {
           <div className="container mx-auto px-4 max-w-7xl">
             <div className="flex items-center justify-between py-2">
               <div className="hidden lg:flex flex-1 items-center">
-                <ContactItem href="tel:028.73008182" label="028.73008182" Icon={IconPhone} />
-                <ContactItem href="mailto:hotro@vinabook.com" label="hotro@vinabook.com" Icon={IconEnvelope} />
-                <ContactItem href="/" label="332 Lũy Bán Bích, Phường Tân Phú, TP. HCM" Icon={IconMap} />
+                <ContactItem href="tel:0123456789" label="0123456789" Icon={IconPhone} />
+                <ContactItem href="abcxyz@gmail.com" label="abcxyz@gmail.com" Icon={IconEnvelope} />
+                <ContactItem href="/" label="000 Lũy Bán Bích, Phường Tân Phú, TP. HCM" Icon={IconMap} />
               </div>
               <div className="flex items-center ml-4">
                 <div className="flex items-center gap-2 mr-6">
