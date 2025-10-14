@@ -26,8 +26,6 @@ const sampleProducts: Product[] = [
   { id: "18", title: "Tư Duy Sáng Tạo", image: "https://product.hstatic.net/200000845405/product/bia_1_suc_hut_cua_su_tap_trung_708ff3862ea140aea3fb9001023207fd_medium.png", price: "95,000₫" }
 ];
 
-
-
 const HomePage: React.FC = () => {
 return (
     <div className="w-full bg-white overflow-x-hidden">
