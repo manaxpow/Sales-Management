@@ -33,7 +33,6 @@ public class GlobalExceptionHandler : IExceptionHandler
             case BadHttpRequestException:
                 errorResponse.StatusCode = (int)HttpStatusCode.BadRequest;
                 break;
-
             case NoBookFoundException:
             case BookDoesNotExistException:
                 errorResponse.StatusCode = (int)HttpStatusCode.NotFound;

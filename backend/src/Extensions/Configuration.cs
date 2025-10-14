@@ -10,6 +10,6 @@ public static class Configuration
     }
     public static void RegisterMiddlewares(this WebApplication app)
     {
-        app.UseHttpsRedirection();
+        // app.UseHttpsRedirection();
     }
 }

@@ -9,12 +9,12 @@ public class CreateBookValidator : AbstractValidator<CreateBookRequest>
             .NotEmpty().WithMessage("Title is required")
             .MaximumLength(100).WithMessage("Title cannot exceed 100 characters");
 
-        RuleFor(x => x.Actor_id)
+        RuleFor(x => x.ActorId)
             .NotEmpty().WithMessage("Author is required")
             .GreaterThan(0).WithMessage("CategoryId must be greater than 0");
 
         
-        RuleFor(x => x.Category_id)
+        RuleFor(x => x.CategoryId)
             .NotNull().WithMessage("CategoryId is required")
             .GreaterThan(0).WithMessage("CategoryId must be greater than 0");
 

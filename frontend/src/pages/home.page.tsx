@@ -1,3 +1,4 @@
+
 import React from "react";
 import Sidebar from "../components/client/home/sidebar";
 import HeroBanner from "../components/client/home/hero-banner";
@@ -87,6 +88,5 @@ return (
       </div>
     </div>
   );
-};
-
+}
 export default HomePage;

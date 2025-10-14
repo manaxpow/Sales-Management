@@ -4,10 +4,12 @@ public class Routes
     public static void Map(WebApplication app)
     {
 
-        app.MapGroup("/api")
+        app.MapGroup("/api").DisableAntiforgery()
         .WithTags("Public endpoints")
         .MapBookEndPoint()
-        .MapUserEndPoint();
+        .MapUserEndPoint()
+        .MapAuthEndPoint()
+        ;
 
     }
 }
