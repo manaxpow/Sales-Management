@@ -1,7 +1,8 @@
 import React from "react";
-import Sidebar from "../components/client/Sidebar";
-import HeroBanner from "../components/client/HeroBanner";
-import CarouselSection, { type Product } from "../components/client/CarouselSection";
+import Sidebar from "../components/client/home/sidebar";
+import HeroBanner from "../components/client/home/hero-banner";
+import CarouselSection, { type Product } from "../components/client/home/carousel-section";
+
 
 const sampleProducts: Product[] = [
   { id: "1", title: "Tự Do Tối Thượng", image: "https://product.hstatic.net/200000845405/product/bia_1_suc_hut_cua_su_tap_trung_708ff3862ea140aea3fb9001023207fd_medium.png", price: "80,200₫", priceOld: "100,000₫", badge: "-20%" },
@@ -12,10 +13,22 @@ const sampleProducts: Product[] = [
   { id: "6", title: "Sách Demo 6", image: "https://product.hstatic.net/200000845405/product/bia_1_suc_hut_cua_su_tap_trung_708ff3862ea140aea3fb9001023207fd_medium.png", price: "90,000₫" },
   { id: "7", title: "Sách Demo 7", image: "https://product.hstatic.net/200000845405/product/bia_1_suc_hut_cua_su_tap_trung_708ff3862ea140aea3fb9001023207fd_medium.png", price: "110,000₫" },
   { id: "8", title: "Sách Demo 8", image: "https://product.hstatic.net/200000845405/product/bia_1_suc_hut_cua_su_tap_trung_708ff3862ea140aea3fb9001023207fd_medium.png", price: "59,000₫" },
+  { id: "9", title: "Nghệ Thuật Tối Giản", image: "https://product.hstatic.net/200000845405/product/bia_1_suc_hut_cua_su_tap_trung_708ff3862ea140aea3fb9001023207fd_medium.png", price: "127,500₫", priceOld: "150,000₫", badge: "-15%" },
+  { id: "10", title: "Sức Mạnh Của Sự Tĩnh Lặng", image: "https://product.hstatic.net/200000845405/product/bia_1_suc_hut_cua_su_tap_trung_708ff3862ea140aea3fb9001023207fd_medium.png", price: "99,000₫" },
+  { id: "11", title: "Tư Duy Nhanh và Chậm", image: "https://product.hstatic.net/200000845405/product/bia_1_suc_hut_cua_su_tap_trung_708ff3862ea140aea3fb9001023207fd_medium.png", price: "157,500₫", priceOld: "210,000₫", badge: "-25%" },
+  { id: "12", title: "Đầu Tư Thông Minh", image: "https://product.hstatic.net/200000845405/product/bia_1_suc_hut_cua_su_tap_trung_708ff3862ea140aea3fb9001023207fd_medium.png", price: "189,000₫" },
+  { id: "13", title: "Hành Trình Về Phương Đông", image: "https://product.hstatic.net/200000845405/product/bia_1_suc_hut_cua_su_tap_trung_708ff3862ea140aea3fb9001023207fd_medium.png", price: "68,000₫" },
+  { id: "14", title: "Dám Bị Ghét", image: "https://product.hstatic.net/200000845405/product/bia_1_suc_hut_cua_su_tap_trung_708ff3862ea140aea3fb9001023207fd_medium.png", price: "98,100₫", priceOld: "109,000₫", badge: "-10%" },
+  { id: "15", title: "Kỷ Luật Tự Thân", image: "https://product.hstatic.net/200000845405/product/bia_1_suc_hut_cua_su_tap_trung_708ff3862ea140aea3fb9001023207fd_medium.png", price: "76,000₫" },
+  { id: "16", title: "Thấu Hiểu Bản Thân", image: "https://product.hstatic.net/200000845405/product/bia_1_suc_hut_cua_su_tap_trung_708ff3862ea140aea3fb9001023207fd_medium.png", price: "102,000₫" },
+  { id: "17", title: "Lược Sử Vạn Vật", image: "https://product.hstatic.net/200000845405/product/bia_1_suc_hut_cua_su_tap_trung_708ff3862ea140aea3fb9001023207fd_medium.png", price: "221,250₫", priceOld: "295,000₫", badge: "-25%" },
+  { id: "18", title: "Tư Duy Sáng Tạo", image: "https://product.hstatic.net/200000845405/product/bia_1_suc_hut_cua_su_tap_trung_708ff3862ea140aea3fb9001023207fd_medium.png", price: "95,000₫" }
 ];
 
+
+
 const HomePage: React.FC = () => {
-  return (
+return (
     <div className="w-full bg-white overflow-x-hidden">
       <div className="max-w-screen-xl mx-auto px-4">
         <div
