@@ -12,6 +12,7 @@ public static class CorsExtension
             {
                 policy.WithOrigins(frontendUrl)
                       .AllowAnyHeader()
+                       .AllowCredentials()
                       .AllowAnyMethod();
             });
         });

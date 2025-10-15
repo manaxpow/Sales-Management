@@ -1,6 +1,5 @@
 
 using DotNetEnv;
-using FluentValidation;
 using Microsoft.AspNetCore.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,14 +13,13 @@ builder.Services.AddCorsPolicy(builder.Configuration);
 
 
 var app = builder.Build();
+app.UseCorsPolicy();
 
 app.RegisterMiddlewares();
 app.UseExceptionHandler(errorApp =>
 {
     errorApp.Run(async context =>
     {
-            Console.WriteLine("SADKJDl");
-
         var ex = context.Features.Get<IExceptionHandlerFeature>()?.Error;
         var response = new ErrorResponse
         {
