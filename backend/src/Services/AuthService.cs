@@ -4,8 +4,6 @@
 
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using backend.src.Contract.Auth;
-using backend.src.Contract.Auth.Response;
 using Microsoft.EntityFrameworkCore;
 
 public class AuthService(AppDbContext context, ILogger<AuthService> logger) : IAuthServices
@@ -34,15 +32,19 @@ public class AuthService(AppDbContext context, ILogger<AuthService> logger) : IA
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
         var accessToken = _jwtHelper.SignJWT(claims);
-
-        var Data = new LoginResponse
+        var UserRes = new UserResponse
         {
             Id = user.Id,
             UserName = user.UserName,
             FullName = user.FullName,
             Role = user.Role,
-            AccessToken = accessToken,
-
+            CreatedAt = user.CreatedAt,
+            UpdatedAt = user.UpdatedAt
+        };
+        var Data = new LoginResponse
+        {
+            User = UserRes,
+            AccessToken = accessToken
         };
         // return user info or token
         return response.SuccessResponse(Data, "Login success");

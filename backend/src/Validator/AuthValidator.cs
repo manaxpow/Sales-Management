@@ -1,5 +1,4 @@
 
-using backend.src.Contract.Auth;
 using FluentValidation;
 
 public class AuthValidator : AbstractValidator<LoginRequest>

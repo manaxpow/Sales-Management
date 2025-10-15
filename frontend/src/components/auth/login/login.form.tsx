@@ -29,19 +29,28 @@ const LoginForm = () => {
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<LoginSchemaType>({
     resolver: zodResolver(loginSchema),
     mode: "onBlur",
   });
   const navigate = useNavigate();
-  const { login, setUser } = useAuthStore();
+  const { login } = useAuthStore();
   const onSubmit = async (data: LoginSchemaType) => {
     try {
       const res = await loginService(data);
       if (res.success) {
-        navigate("/admin/");
-        toast("Login success");
+        if (res.data?.user) {
+          toast("Login success");
+          const { accessToken, user } = res.data;
+          login(accessToken, user);
+          navigate("/admin/");
+          reset();
+        } else {
+          toast.error("Lỗi đăng nhập vui lòng đăng nhập lại");
+          // reset();
+        }
       }
     } catch (err) {
       const error = err as AxiosError;

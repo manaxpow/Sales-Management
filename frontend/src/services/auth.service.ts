@@ -6,8 +6,8 @@ const loginService = async (
   data: LoginResquest
 ): Promise<ApiResponse<LoginResponse>> => {
   const URL_API = "/auth/login";
-
   const res = await instance.post(URL_API, data);
+  
   return res.data;
 };
 const logoutService = () => {

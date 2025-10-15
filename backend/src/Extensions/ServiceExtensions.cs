@@ -20,7 +20,7 @@ public static class ServiceExtensions
         builder.Services.AddDbContext<AppDbContext>(options =>
         {
             // fix cung sua lai
-            options.UseMySql(connnectionString, new MySqlServerVersion(new Version(8, 0, 11)));
+            options.UseMySql(connnectionString, ServerVersion.AutoDetect(connnectionString));
         });
 
 

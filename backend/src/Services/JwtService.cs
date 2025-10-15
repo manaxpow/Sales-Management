@@ -8,9 +8,7 @@ public class JwtService(AppDbContext context, ILogger<AuthService> logger)
     {
         var issuer = Environment.GetEnvironmentVariable("ASPNETCORE_URLS"); // phat hanh
         var audience = Environment.GetEnvironmentVariable("FRONTEND_URL"); //nhan
-
         var key = Environment.GetEnvironmentVariable("SECRET_KEY");
-        logger.LogInformation($"Issuer: {issuer}, Audience: {audience}, Key: {key}");
         var exp = Environment.GetEnvironmentVariable("EXP");
         var tokenDes = new SecurityTokenDescriptor
         {
