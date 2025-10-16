@@ -1,12 +1,13 @@
 
 using DotNetEnv;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 Env.Load();
 
-var applicationUrl = Environment.GetEnvironmentVariable("ASPNETCORE_URLS") ?? "http://localhost:5050";
+var applicationUrl = Environment.GetEnvironmentVariable("ASPNETCORE_URLS") ?? "http://localhost:8081";
 builder.WebHost.UseUrls(applicationUrl);
 builder.AddApplicationServices();
 builder.Services.AddCorsPolicy(builder.Configuration);
@@ -34,6 +35,12 @@ app.UseExceptionHandler(errorApp =>
     });
 });
 
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.Migrate();
+    await DatabaseSeeder.SeedAsync(db); // Gọi seeder tổng
+}
 
 Routes.Map(app);
 

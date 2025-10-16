@@ -8,11 +8,11 @@ public class Books
     public int CategoryId { get; set; }
     public int Supplierid { get; set; }
 
-    [Required]
-    public string? ProductName { get; set; }
+    public string ProductName { get; set; } = string.Empty;
 
-    [Required]
-    public string? Barcode { get; set; }
+
+
+    public string Barcode { get; set; } = string.Empty;
     public decimal Price
     {
         get; set;

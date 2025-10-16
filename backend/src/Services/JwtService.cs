@@ -2,13 +2,18 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.IdentityModel.Tokens;
 
-public class JwtService(AppDbContext context, ILogger<AuthService> logger)
+public class JwtService(ILogger<AuthService> logger)
 {
     public string SignJWT(List<Claim> claims)
     {
         var issuer = Environment.GetEnvironmentVariable("ASPNETCORE_URLS"); // phat hanh
         var audience = Environment.GetEnvironmentVariable("FRONTEND_URL"); //nhan
         var key = Environment.GetEnvironmentVariable("SECRET_KEY");
+        if (string.IsNullOrEmpty(key))
+        {
+            logger.LogError("Not found SECRET_KEY");
+            throw new InvalidOperationException("SECRET_KEY environment variable is not set.");
+        }
         var exp = Environment.GetEnvironmentVariable("EXP");
         var tokenDes = new SecurityTokenDescriptor
         {

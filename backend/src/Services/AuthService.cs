@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 public class AuthService(AppDbContext context, ILogger<AuthService> logger) : IAuthServices
 {
     private readonly ApiResponse<LoginResponse> response = new();
-    private readonly JwtService _jwtHelper = new(context, logger);
+    private readonly JwtService _jwtHelper = new(logger);
     public async Task<ApiResponse<LoginResponse>> Login(LoginRequest loginRequest)
     {
         var user = await context.Users
@@ -19,7 +19,8 @@ public class AuthService(AppDbContext context, ILogger<AuthService> logger) : IA
             logger.LogError($"Error login");
             return response.ErrorResponse("Tên đăng nhập hoặc mật khẩu không đúng", 400);
         }
-        if (user.Password != loginRequest.Password)
+
+        if (!AuthHelpers.VerifyPassword(user, loginRequest.Password))
         {
             logger.LogError($"Error login");
             return response.ErrorResponse("Tên đăng nhập hoặc mật khẩu không đúng", 400);
