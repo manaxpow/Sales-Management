@@ -5,7 +5,7 @@ import { useSideBarStore } from "../../../store/sidebar.store";
 const DrawerHeaderStyle = styled("div")(({ theme }) => ({
   display: "flex",
   alignItems: "center",
-  justifyContent: "flex-end",
+  justifyContent: "center",
   padding: theme.spacing(0, 1),
   ...theme.mixins.toolbar,
 }));

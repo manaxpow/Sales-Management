@@ -4,14 +4,12 @@
 
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using backend.src.Contract.Auth;
-using backend.src.Contract.Auth.Response;
 using Microsoft.EntityFrameworkCore;
 
 public class AuthService(AppDbContext context, ILogger<AuthService> logger) : IAuthServices
 {
     private readonly ApiResponse<LoginResponse> response = new();
-    private readonly JwtService _jwtHelper = new(context, logger);
+    private readonly JwtService _jwtHelper = new(logger);
     public async Task<ApiResponse<LoginResponse>> Login(LoginRequest loginRequest)
     {
         var user = await context.Users
@@ -21,7 +19,8 @@ public class AuthService(AppDbContext context, ILogger<AuthService> logger) : IA
             logger.LogError($"Error login");
             return response.ErrorResponse("Tên đăng nhập hoặc mật khẩu không đúng", 400);
         }
-        if (user.Password != loginRequest.Password)
+
+        if (!AuthHelpers.VerifyPassword(user, loginRequest.Password))
         {
             logger.LogError($"Error login");
             return response.ErrorResponse("Tên đăng nhập hoặc mật khẩu không đúng", 400);
@@ -34,15 +33,19 @@ public class AuthService(AppDbContext context, ILogger<AuthService> logger) : IA
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
         var accessToken = _jwtHelper.SignJWT(claims);
-
-        var Data = new LoginResponse
+        var UserRes = new UserResponse
         {
             Id = user.Id,
             UserName = user.UserName,
             FullName = user.FullName,
             Role = user.Role,
-            AccessToken = accessToken,
-
+            CreatedAt = user.CreatedAt,
+            UpdatedAt = user.UpdatedAt
+        };
+        var Data = new LoginResponse
+        {
+            User = UserRes,
+            AccessToken = accessToken
         };
         // return user info or token
         return response.SuccessResponse(Data, "Login success");

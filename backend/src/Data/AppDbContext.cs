@@ -8,7 +8,7 @@ public class AppDbContext : DbContext
 {
     public AppDbContext(DbContextOptions dbContextOptions) : base(dbContextOptions)
     {
-
+        
     }
 
     public DbSet<Books> Book { get; set; }

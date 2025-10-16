@@ -1,6 +1,4 @@
 
-using backend.src.Contract.Auth.Response;
-
 public class ApiResponse<T>
 {
     public T? Data { get; set; }
