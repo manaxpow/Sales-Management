@@ -1,6 +1,6 @@
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import type { Supplier } from "../../types/supplier.types";
+import type { Supplier } from "../../../types/supplier.types";
 
 const SupplierProductsPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
