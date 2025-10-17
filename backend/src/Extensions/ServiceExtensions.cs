@@ -32,6 +32,7 @@ public static class ServiceExtensions
         // scoped services
         builder.Services.AddScoped<IAuthServices, AuthService>();
         builder.Services.AddScoped<IBookService, BookService>();
+        builder.Services.AddScoped<IUserService, UserService>();
         builder.Services.AddScoped<JwtService>();
         builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
         builder.Services.AddProblemDetails();
