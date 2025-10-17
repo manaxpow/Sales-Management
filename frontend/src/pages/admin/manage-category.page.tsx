@@ -15,7 +15,9 @@ const initialMock: Category[] = [
 
 const ManageCategoryPage: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>(initialMock);
-  const [pageSize, setPageSize] = useState<number>(10);
+
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   const [openForm, setOpenForm] = useState(false);
   const [editing, setEditing] = useState<Category | null>(null);
@@ -40,7 +42,9 @@ const ManageCategoryPage: React.FC = () => {
 
   const handleSave = (payload: Omit<Category, "id">, idToUpdate?: number) => {
     if (typeof idToUpdate === "number") {
-      setCategories((prev) => prev.map((p) => (p.id === idToUpdate ? { ...p, name: payload.name } : p)));
+      setCategories((prev) =>
+        prev.map((p) => (p.id === idToUpdate ? { ...p, name: payload.name } : p))
+      );
     } else {
       const newId = Math.max(0, ...categories.map((c) => c.id)) + 1;
       setCategories((prev) => [...prev, { id: newId, name: payload.name }]);
@@ -61,8 +65,10 @@ const ManageCategoryPage: React.FC = () => {
           onAdd={handleAddClick}
           onEdit={handleEdit}
           onDelete={handleDelete}
-          pageSize={pageSize}
-          setPageSize={setPageSize}
+          page={page}
+          setPage={setPage}
+          rowsPerPage={rowsPerPage}
+          setRowsPerPage={setRowsPerPage}
         />
 
         <CategoryFormDialog
