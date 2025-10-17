@@ -27,6 +27,8 @@ export const adminRoutes: RouteObject[] = [
   {
     path: "products",
     element: <ProductManagement />,
+  },
+  {
     path: "suppliers",
     element: <ManageSupplier />,
   },
