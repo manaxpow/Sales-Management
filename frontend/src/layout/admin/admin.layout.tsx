@@ -10,7 +10,7 @@ const AdminLayout = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   return (
-    <Box className="w-full relative">
+    <Box className="w-full relative min-h-screen">
       {/* header */}
       <Header />
       {/* sidebar */}

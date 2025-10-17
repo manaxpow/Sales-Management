@@ -12,15 +12,17 @@ public static class ServiceExtensions
     public static void AddApplicationServices(this IHostApplicationBuilder builder)
     {
         if (builder == null) throw new ArgumentNullException(nameof(builder));
-        if (builder.Configuration == null) throw new ArgumentNullException(nameof(builder.Configuration));
-
+        if (builder.Configuration == null) throw new ArgumentNullException(nameof
+        (builder.Configuration));
+        var secretKey = Environment.GetEnvironmentVariable("SECRET_KEY");
+        if (string.IsNullOrEmpty(secretKey))
+            throw new InvalidOperationException("SECRET_KEY environment variable is not set.");
         var connnectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
 
         // Adding the database context
         builder.Services.AddDbContext<AppDbContext>(options =>
         {
-            // fix cung sua lai
-            options.UseMySql(connnectionString, new MySqlServerVersion(new Version(8, 0, 11)));
+            options.UseMySql(connnectionString, ServerVersion.AutoDetect(connnectionString));
         });
 
 
@@ -49,7 +51,7 @@ public static class ServiceExtensions
             ValidateIssuerSigningKey = true,
             ValidIssuer = Environment.GetEnvironmentVariable("ASPNETCORE_URLS"),
             ValidAudience = Environment.GetEnvironmentVariable("FRONTEND_URL"),
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("SECRET_KEY")))
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
         };
     });
     }

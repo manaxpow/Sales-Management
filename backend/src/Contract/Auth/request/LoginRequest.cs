@@ -2,18 +2,16 @@ using System.ComponentModel.DataAnnotations;
 
 using Microsoft.AspNetCore.Mvc;
 
-namespace backend.src.Contract.Auth
+
+public record LoginRequest
 {
-    public record LoginRequest
-    {
 
-        [FromForm]
-        [Required]
-        public required string UserName { get; init; }
+    [FromForm]
+    [Required]
+    public required string UserName { get; init; }
 
-        [Required]
-        [FromForm]
-        public required string Password { get; init; }
+    [Required]
+    [FromForm]
+    public required string Password { get; init; }
 
-    }
 }
