@@ -7,6 +7,8 @@ import ProductManagement from "../pages/admin/manage-product";
 import ManageSupplier from "../pages/admin/supplier/manage-supplier";
 import SupplierProductsPage from "../pages/admin/supplier/suppliers-products.page";
 import ManageCategoryPage from "../pages/admin/manage-category.page";
+import ManagePromotion from "../pages/admin/manage-promotion";
+import CreatePromotion from "../pages/admin/create-promotion";
 
 export const adminRoutes: RouteObject[] = [
   {
@@ -14,7 +16,7 @@ export const adminRoutes: RouteObject[] = [
     element: <ManageCustomer />,
   },
   {
-    path: "staff",
+    path: "users",
     element: <ManageStaff />,
   },
   {
@@ -40,5 +42,13 @@ export const adminRoutes: RouteObject[] = [
   {
     path: "categories",
     element: <ManageCategoryPage />,
+  },
+  {
+    path: "promotions",
+    element: <ManagePromotion />,
+  },
+  {
+    path: "promotions/create",
+    element: <CreatePromotion />,
   },
 ];

@@ -12,7 +12,6 @@ export default function SideBarDrawer() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const { toggleSidebar, isExpanded } = useSideBarStore();
-
   return (
     <Box sx={{ display: "flex" }}>
       <CssBaseline />
