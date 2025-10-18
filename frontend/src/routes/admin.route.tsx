@@ -6,6 +6,7 @@ import CreateStaffPage from "../pages/admin/create-staff";
 import ProductManagement from "../pages/admin/manage-product";
 import ManageSupplier from "../pages/admin/supplier/manage-supplier";
 import SupplierProductsPage from "../pages/admin/supplier/suppliers-products.page";
+import ManageCategoryPage from "../pages/admin/manage-category.page";
 
 export const adminRoutes: RouteObject[] = [
   {
@@ -35,5 +36,9 @@ export const adminRoutes: RouteObject[] = [
   {
     path: "suppliers/:id/products",
     element: <SupplierProductsPage />,
+  },
+  {
+    path: "categories",
+    element: <ManageCategoryPage />,
   },
 ];
