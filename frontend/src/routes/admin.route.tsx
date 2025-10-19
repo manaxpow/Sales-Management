@@ -9,6 +9,7 @@ import SupplierProductsPage from "../pages/admin/supplier/suppliers-products.pag
 import ManageCategoryPage from "../pages/admin/manage-category.page";
 import ManagePromotion from "../pages/admin/manage-promotion";
 import CreatePromotion from "../pages/admin/create-promotion";
+import { ManageOrder } from "../pages/admin/manage-order";
 
 export const adminRoutes: RouteObject[] = [
   {
@@ -30,6 +31,10 @@ export const adminRoutes: RouteObject[] = [
   {
     path: "products",
     element: <ProductManagement />,
+  },
+  {
+    path: "orders",
+    element: <ManageOrder />,
   },
   {
     path: "suppliers",
