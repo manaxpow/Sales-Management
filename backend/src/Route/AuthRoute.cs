@@ -1,4 +1,3 @@
-using backend.src.Contract.Auth;
 using FluentValidation;
 using FluentValidation.Results;
 

@@ -8,6 +8,8 @@ import {
   Typography,
 } from "@mui/material";
 import React from "react";
+import { useAuthStore } from "../../store/auth.store";
+import { useNavigate } from "react-router-dom";
 const settings = ["Profile", "Account", "Logout"];
 const UserDropDown = () => {
   const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(
@@ -19,6 +21,24 @@ const UserDropDown = () => {
   };
 
   const handleCloseUserMenu = () => {
+    setAnchorElUser(null);
+  };
+
+  const { logout, isAuthenticated } = useAuthStore();
+  const navigate = useNavigate();
+  const handleMenuItemClick = (setting: string) => {
+    switch (setting) {
+      case "Logout": {
+        if (isAuthenticated) logout();
+        navigate("/");
+        break;
+      }
+      // case profile
+      // case account
+      default: {
+        setAnchorElUser(null);
+      }
+    }
     setAnchorElUser(null);
   };
   return (
@@ -46,7 +66,10 @@ const UserDropDown = () => {
           onClose={handleCloseUserMenu}
         >
           {settings.map((setting) => (
-            <MenuItem key={setting} onClick={handleCloseUserMenu}>
+            <MenuItem
+              key={setting}
+              onClick={() => handleMenuItemClick(setting)}
+            >
               <Typography sx={{ textAlign: "center" }}>{setting}</Typography>
             </MenuItem>
           ))}

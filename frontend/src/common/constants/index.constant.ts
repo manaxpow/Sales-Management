@@ -30,7 +30,7 @@ export const adminMenuItems = [
   },
   {
     label: "Quản lý nhân viên",
-    path: "/admin/staff",
+    path: "/admin/users",
     icon: UserCog,
   },
   {
