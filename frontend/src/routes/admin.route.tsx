@@ -10,11 +10,16 @@ import ManageCategoryPage from "../pages/admin/manage-category.page";
 import ManagePromotion from "../pages/admin/manage-promotion";
 import CreatePromotion from "../pages/admin/create-promotion";
 import { ManageOrder } from "../pages/admin/manage-order";
+import CreateCustomerPage from "../pages/admin/create-customer";
 
 export const adminRoutes: RouteObject[] = [
   {
     path: "customers",
     element: <ManageCustomer />,
+  },
+  {
+    path: "customers/create",
+    element: <CreateCustomerPage />,
   },
   {
     path: "users",

@@ -1,16 +1,7 @@
-import { Box } from "@mui/material";
-import React from "react";
+import CustomerManagement from "../../components/admin/customer/customer.management";
 
 const ManageCustomer = () => {
-  return (
-    <Box
-      sx={{
-        textAlign: "center",
-        background: "green",
-        height: "200vh",
-      }}
-    ></Box>
-  );
+  return <CustomerManagement />;
 };
 
 export default ManageCustomer;
