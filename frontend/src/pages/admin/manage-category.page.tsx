@@ -1,20 +1,14 @@
-import React, { useState } from "react";
-import { Box, Container } from "@mui/material";
+import React, { useEffect, useState } from "react";
+import { Box, Container, CircularProgress } from "@mui/material";
 import type { Category } from "../../types/category.types";
 import CategoryTable from "../../components/admin/category/category-table";
 import CategoryFormDialog from "../../components/admin/category/category-form-dialog";
 import CategoryDeleteDialog from "../../components/admin/category/category-delete-dialog";
-
-const initialMock: Category[] = [
-  { id: 1, name: "Đồ uống" },
-  { id: 2, name: "Bánh kẹo" },
-  { id: 3, name: "Gia vị" },
-  { id: 4, name: "Đồ gia dụng" },
-  { id: 5, name: "Mỹ phẩm" },
-];
+import { CategoryService } from "../../services/category.service";
 
 const ManageCategoryPage: React.FC = () => {
-  const [categories, setCategories] = useState<Category[]>(initialMock);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -25,46 +19,71 @@ const ManageCategoryPage: React.FC = () => {
   const [openDelete, setOpenDelete] = useState(false);
   const [deleting, setDeleting] = useState<Category | null>(null);
 
-  const handleAddClick = () => {
-    setEditing(null);
-    setOpenForm(true);
-  };
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await CategoryService.getAll();
+        setCategories(data);
+      } catch (err) {
+        console.error("Lỗi khi lấy danh sách danh mục:", err);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
 
-  const handleEdit = (c: Category) => {
-    setEditing(c);
-    setOpenForm(true);
-  };
-
-  const handleDelete = (c: Category) => {
-    setDeleting(c);
-    setOpenDelete(true);
-  };
-
-  const handleSave = (payload: Omit<Category, "id">, idToUpdate?: number) => {
-    if (typeof idToUpdate === "number") {
-      setCategories((prev) =>
-        prev.map((p) => (p.id === idToUpdate ? { ...p, name: payload.name } : p))
-      );
-    } else {
-      const newId = Math.max(0, ...categories.map((c) => c.id)) + 1;
-      setCategories((prev) => [...prev, { id: newId, name: payload.name }]);
+  const handleSave = async (payload: Omit<Category, "id">, idToUpdate?: number) => {
+    try {
+      if (idToUpdate) {
+        const updated = await CategoryService.update(idToUpdate, payload);
+        setCategories((prev) =>
+          prev.map((c) => (c.id === idToUpdate ? updated : c))
+        );
+      } else {
+        const created = await CategoryService.create(payload);
+        setCategories((prev) => [...prev, created]);
+      }
+    } catch (err) {
+      console.error("Lỗi khi lưu danh mục:", err);
     }
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!deleting) return;
-    setCategories((prev) => prev.filter((c) => c.id !== deleting.id));
-    setDeleting(null);
+    try {
+      await CategoryService.delete(deleting.id);
+      setCategories((prev) => prev.filter((c) => c.id !== deleting.id));
+    } catch (err) {
+      console.error("Lỗi khi xoá danh mục:", err);
+    } finally {
+      setDeleting(null);
+    }
   };
+
+  if (loading)
+    return (
+      <Container sx={{ mt: 10, textAlign: "center" }}>
+        <CircularProgress />
+      </Container>
+    );
 
   return (
     <Container maxWidth="lg" sx={{ mt: 3 }}>
       <Box>
         <CategoryTable
           categories={categories}
-          onAdd={handleAddClick}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
+          onAdd={() => {
+            setEditing(null);
+            setOpenForm(true);
+          }}
+          onEdit={(c) => {
+            setEditing(c);
+            setOpenForm(true);
+          }}
+          onDelete={(c) => {
+            setDeleting(c);
+            setOpenDelete(true);
+          }}
           page={page}
           setPage={setPage}
           rowsPerPage={rowsPerPage}
@@ -75,20 +94,14 @@ const ManageCategoryPage: React.FC = () => {
           open={openForm}
           initial={editing}
           onClose={() => setOpenForm(false)}
-          onSave={(payload, id) => {
-            handleSave(payload, id ?? undefined);
-            setOpenForm(false);
-          }}
+          onSave={handleSave}
         />
 
         <CategoryDeleteDialog
           open={openDelete}
           name={deleting?.name}
           onClose={() => setOpenDelete(false)}
-          onConfirm={() => {
-            confirmDelete();
-            setOpenDelete(false);
-          }}
+          onConfirm={confirmDelete}
         />
       </Box>
     </Container>

@@ -6,9 +6,9 @@ public class JwtService(ILogger<AuthService> logger)
 {
     public string SignJWT(List<Claim> claims)
     {
-        var issuer = Environment.GetEnvironmentVariable("ASPNETCORE_URLS"); // phat hanh
-        var audience = Environment.GetEnvironmentVariable("FRONTEND_URL"); //nhan
-        var key = Environment.GetEnvironmentVariable("SECRET_KEY");
+        var issuer = Environment.GetEnvironmentVariable("ASPNETCORE_URLS")?.Trim().Trim('"');
+        var audience = Environment.GetEnvironmentVariable("FRONTEND_URL")?.Trim().Trim('"');
+        var key = Environment.GetEnvironmentVariable("SECRET_KEY")?.Trim().Trim('"');
         if (string.IsNullOrEmpty(key))
         {
             logger.LogError("Not found SECRET_KEY");
@@ -29,4 +29,3 @@ public class JwtService(ILogger<AuthService> logger)
         return accessToken;
     }
 }
-

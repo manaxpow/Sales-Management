@@ -9,6 +9,7 @@ public class Routes
         .MapBookEndPoint()
         .MapUserEndPoint()
         .MapAuthEndPoint()
+        .MapCategoryEndpoint()
         ;
 
     }
