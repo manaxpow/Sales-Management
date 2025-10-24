@@ -47,7 +47,7 @@ export const ViewPromotionModal = ({
           <Box className="flex items-center gap-4">
             <Box>
               <Typography variant="h6" className="font-semibold">
-                {Promotion.code}
+                {Promotion.promotionCode}
               </Typography>
             </Box>
           </Box>
@@ -60,7 +60,10 @@ export const ViewPromotionModal = ({
               >
                 Promotion ID
               </Typography>
-              <Typography variant="body2"> Promotion-{Promotion.id}</Typography>
+              <Typography variant="body2">
+                {" "}
+                Promotion-{Promotion.promotionId}
+              </Typography>
             </Box>
 
             {/* description */}
@@ -83,7 +86,9 @@ export const ViewPromotionModal = ({
               >
                 Discount type
               </Typography>
-              <Typography variant="body2">{Promotion.discountType}</Typography>
+              <Typography variant="body2">
+                {Promotion.discountType == 1 ? "percent" : "fixed"}
+              </Typography>
             </Box>
 
             {/* discount value */}
@@ -96,7 +101,8 @@ export const ViewPromotionModal = ({
                 Discount value
               </Typography>
               <Typography variant="body2">
-                {Promotion.discountValue}%
+                {Promotion.discountValue}
+                {Promotion.discountType == 1 ? "%" : ""}
               </Typography>
             </Box>
 
@@ -132,11 +138,21 @@ export const ViewPromotionModal = ({
                 color="text.secondary"
                 className="mb-1"
               >
+                Usage limit
+              </Typography>
+              <Typography variant="body2">{Promotion.usagelimit}</Typography>
+            </Box>
+            <Box>
+              <Typography
+                variant="subtitle2"
+                color="text.secondary"
+                className="mb-1"
+              >
                 Status
               </Typography>
               <Chip
-                label={Promotion.status}
-                color={Promotion.status === "active" ? "success" : "error"}
+                label={Promotion.status === 1 ? "active" : "inactive"}
+                color={Promotion.status === 1 ? "success" : "error"}
                 size="small"
               />
             </Box>

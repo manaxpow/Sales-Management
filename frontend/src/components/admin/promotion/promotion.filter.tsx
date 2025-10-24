@@ -1,24 +1,32 @@
-import React from 'react';
-import { Search, Filter, X } from 'lucide-react';
-import { TextField, Select, MenuItem, FormControl, InputLabel, Button, Box } from '@mui/material';
-import { styled } from '@mui/material/styles';
-import type { PromotionFilters } from '../../../types/promotion.type';
+import React from "react";
+import { Search, Filter, X } from "lucide-react";
+import {
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Button,
+  Box,
+} from "@mui/material";
+import { styled } from "@mui/material/styles";
+import type { PromotionFilters } from "../../../types/promotion.type";
 
 const StyledFormControl = styled(FormControl)(() => ({
   minWidth: 120,
-  width: '100%',
+  width: "100%",
 }));
 
 const StyledSelect = styled(Select)(() => ({
-  '& .MuiOutlinedInput-notchedOutline': {
-    borderColor: '#d1d5db', // gray-300
+  "& .MuiOutlinedInput-notchedOutline": {
+    borderColor: "#d1d5db", // gray-300
   },
-  '&:hover .MuiOutlinedInput-notchedOutline': {
-    borderColor: '#9ca3af', // gray-400
+  "&:hover .MuiOutlinedInput-notchedOutline": {
+    borderColor: "#9ca3af", // gray-400
   },
-  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-    borderColor: '#3b82f6', // blue-500
-    borderWidth: '2px',
+  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+    borderColor: "#3b82f6", // blue-500
+    borderWidth: "2px",
   },
 }));
 
@@ -40,14 +48,19 @@ const PromotionFilter = ({
     });
   };
 
-  const handleStatusChange = (e: React.ChangeEvent<{ value: unknown }>) => {
+  const handleStatusChange = (
+    e:
+      | React.ChangeEvent<HTMLInputElement>
+      | (Event & { target: { value: unknown; name?: string } })
+  ) => {
+    const value = typeof e.target.value === "string" ? e.target.value : "";
     onFiltersChange({
       ...filters,
-      status: e.target.value as 'all' | 'active' | 'inactive',
+      status: value === "active" ? 1 : value === "inactive" ? 0 : "all",
     });
   };
 
-  const hasActiveFilters = filters.search || filters.status !== 'all';
+  const hasActiveFilters = filters.search || filters.status !== "all";
 
   return (
     <Box className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
@@ -76,9 +89,7 @@ const PromotionFilter = ({
           onChange={handleSearchChange}
           placeholder="Search by promotion name..."
           InputProps={{
-            startAdornment: (
-              <Search className="w-4 h-4 text-gray-400 mr-2" />
-            ),
+            startAdornment: <Search className="w-4 h-4 text-gray-400 mr-2" />,
           }}
         />
 
@@ -88,10 +99,16 @@ const PromotionFilter = ({
           <StyledSelect
             labelId="status-label"
             id="status"
-            value={filters.status}
+            value={
+              filters.status === 1
+                ? "active"
+                : filters.status === 0
+                ? "inactive"
+                : "all"
+            }
             onChange={handleStatusChange}
             label="Status"
-            inputProps={{ 'aria-label': 'Status filter' }}
+            inputProps={{ "aria-label": "Status filter" }}
           >
             <MenuItem value="all">All Status</MenuItem>
             <MenuItem value="active">Active</MenuItem>

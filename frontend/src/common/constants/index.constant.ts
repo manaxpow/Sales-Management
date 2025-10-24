@@ -88,3 +88,13 @@ export const salesMenuItems = [
     icon: Warehouse,
   },
 ];
+
+export const status = {
+  active: 1,
+  inactive: 0,
+};
+
+export const discountType = {
+  percent: 1,
+  fixed: 2,
+};

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { Users, Plus, Eye, Edit, Trash2 } from "lucide-react";
 import {
   Box,
@@ -20,91 +20,37 @@ import {
 import { useNavigate } from "react-router-dom";
 import PromotionFilter from "./promotion.filter";
 import PromotionPagination from "./promotion.pagination";
-import type { Promotion } from "../../../types/promotion.type";
+import type {
+  Promotion,
+  PromotionDelete,
+  PromotionFilters,
+} from "../../../types/promotion.type";
 import { ViewPromotionModal } from "./modal/view-modal";
 import { DeletePromotionModal } from "./modal/delete-modal";
 import { EditPromotionModal } from "./modal/update.modals";
-
-// Simplified Promotion interface matching database structure
-
-// Simplified form data
-interface PromotionFormData {
-  code: string;
-  description: string;
-}
-
-// Simplified filters
-interface PromotionFilters {
-  search: string;
-  status: "all" | "active" | "inactive";
-}
+import {
+  GetPromotionsService,
+  UpdatePromotionService,
+} from "../../../services/promotion.service";
+import { useFetchData } from "../../../hooks/fetchData";
+import { toast } from "react-toastify";
 
 // Generate simplified mock data
-const mockData: Promotion[] = [
-  {
-    id: 1,
-    code: "SALE10",
-    description: "Giảm 10% cho tất cả đơn hàng trên 500k",
-    discountType: "fixed",
-    discountValue: 10.0,
-    minOrderAmount: 500000,
-    usageLimit: 100,
-    usedCount: 25,
-    status: "active",
-    startDate: "2025-10-01T00:00:00",
-    endDate: "2025-10-31T23:59:59",
-  },
-  {
-    id: 2,
-    code: "FREESHIP",
-    description: "Miễn phí vận chuyển cho đơn hàng từ 300k",
-    discountType: "precent",
-    discountValue: 30000,
-    minOrderAmount: 300000,
-    usageLimit: 200,
-    usedCount: 60,
-    status: "active",
-    startDate: "2025-10-10T00:00:00",
-    endDate: "2025-11-10T23:59:59",
-  },
-  {
-    id: 3,
-    code: "NEWUSER50K",
-    description: "Giảm 50.000đ cho khách hàng mới",
-    discountType: "precent",
-    discountValue: 50000,
-    minOrderAmount: 0,
-    usageLimit: 1,
-    usedCount: 0,
-    status: "inactive",
-    startDate: "2025-09-01T00:00:00",
-    endDate: "2025-12-31T23:59:59",
-  },
-  {
-    id: 4,
-    code: "BLACKFRIDAY20",
-    description: "Giảm 20% toàn bộ sản phẩm dịp Black Friday",
-    discountType: "precent",
-    discountValue: 20.0,
-    minOrderAmount: 0,
-    usageLimit: 500,
-    usedCount: 120,
-    status: "inactive",
-    startDate: "2025-11-25T00:00:00",
-    endDate: "2025-11-30T23:59:59",
-  },
-];
 
 const PromotionManagement: React.FC = () => {
-  const [Promotion, setPromotion] = useState<Promotion[]>(mockData);
-  const [filteredPromotion, setFilteredPromotion] =
-    useState<Promotion[]>(mockData);
   const [filters, setFilters] = useState<PromotionFilters>({
     search: "",
     status: "all",
+    page: 1,
+    limit: 10,
   });
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const { data, refetch } = useFetchData(GetPromotionsService, filters);
+  const [Promotion, setPromotion] = useState<Promotion[]>(
+    data?.promotions || []
+  );
+  const [filteredPromotion, setFilteredPromotion] = useState<Promotion[]>(
+    data?.promotions || []
+  );
   const navigate = useNavigate();
 
   // Modal states
@@ -125,31 +71,26 @@ const PromotionManagement: React.FC = () => {
     message: "",
     severity: "success",
   });
-
   // Filter and search logic
   useEffect(() => {
+    setPromotion(data?.promotions || []);
     const filtered = Promotion.filter((promotion) => {
       const matchesSearch =
         filters.search === "" ||
-        promotion.code.toLowerCase().includes(filters.search.toLowerCase()) ||
-        promotion.code.toLowerCase().includes(filters.search.toLowerCase());
+        promotion.promotionCode
+          .toLowerCase()
+          .includes(filters.search.toLowerCase()) ||
+        promotion.promotionCode
+          .toLowerCase()
+          .includes(filters.search.toLowerCase());
 
       const matchesStatus =
         filters.status === "all" || promotion.status === filters.status;
-
-      return matchesSearch && matchesStatus;
+      return matchesSearch && matchesStatus ;
     });
 
     setFilteredPromotion(filtered);
-    setPage(0); // Reset to first page when filters change
-  }, [Promotion, filters]);
-
-  // Pagination logic
-  const paginatedPromotion = useMemo(() => {
-    const startIndex = page * rowsPerPage;
-    const endIndex = startIndex + rowsPerPage;
-    return filteredPromotion.slice(startIndex, endIndex);
-  }, [filteredPromotion, page, rowsPerPage]);
+  }, [Promotion, filters, data]);
 
   // Event handlers
   const handleFiltersChange = (newFilters: PromotionFilters) => {
@@ -160,18 +101,25 @@ const PromotionManagement: React.FC = () => {
     setFilters({
       search: "",
       status: "all",
+      page: 1,
+      limit: 10,
     });
   };
 
   const handlePageChange = (newPage: number) => {
-    setPage(newPage);
+    setFilters((prev) => ({
+      ...prev,
+      page: newPage + 1,
+    }));
   };
-
-  const handleRowsPerPageChange = (newRowsPerPage: number) => {
-    setRowsPerPage(newRowsPerPage);
-    setPage(0);
+  const handleRowsPerPageChange = (rowsPerPage: number) => {
+    setFilters((prev) => {
+      return {
+        ...prev,
+        limit: rowsPerPage,
+      };
+    });
   };
-
   const handleViewPromotion = (PromotionMember: Promotion) => {
     setSelectedPromotion(PromotionMember);
     setViewModalOpen(true);
@@ -187,29 +135,48 @@ const PromotionManagement: React.FC = () => {
     setDeleteModalOpen(true);
   };
 
-  const handleSavePromotion = (data: PromotionFormData) => {
+  const handleSavePromotion = (data: Promotion) => {
     if (selectedPromotion) {
-      setPromotion((prev) =>
-        prev.map((emp) =>
-          emp.id === selectedPromotion.id ? { ...emp, ...data } : emp
-        )
-      );
       setSnackbar({
         open: true,
-        message: `Promotion ${data.code} updated successfully`,
+        message: `Promotion ${data.promotionCode} updated successfully`,
         severity: "success",
       });
     }
+    refetch();
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (selectedPromotion) {
-      setPromotion((prev) =>
-        prev.filter((emp) => emp.id !== selectedPromotion.id)
-      );
+      try {
+        const statusUpdate: PromotionDelete = {
+          PromotionId: selectedPromotion?.promotionId,
+          Status: 3,
+        };
+        const result = await UpdatePromotionService(statusUpdate);
+        if (!result.success) {
+          let errorMessage = "Unknown error";
+          if (Array.isArray(result.data) && result.data[0]?.message) {
+            errorMessage = result.data[0].message;
+          } else if (
+            result.data &&
+            typeof result.data === "object" &&
+            "message" in result.data
+          ) {
+            errorMessage =
+              (result.data as { message?: string }).message || errorMessage;
+          }
+          toast.error("Promotion deleted fail with error: " + errorMessage);
+        } else {
+          toast.success("Promotion deleted successfully");
+          refetch();
+        }
+      } catch (error) {
+        toast.error("Deleted promotion failed with error " + error);
+      }
       setSnackbar({
         open: true,
-        message: `Promotion ${selectedPromotion.code} deleted successfully`,
+        message: `Promotion ${selectedPromotion.promotionCode} deleted successfully`,
         severity: "success",
       });
       setDeleteModalOpen(false);
@@ -221,11 +188,11 @@ const PromotionManagement: React.FC = () => {
     setSnackbar((prev) => ({ ...prev, open: false }));
   };
 
-  const getStatusChip = (status: "active" | "inactive") => {
+  const getStatusChip = (status: number) => {
     return (
       <Chip
-        label={status}
-        color={status === "active" ? "success" : "error"}
+        label={status == 1 ? "active" : "inactive"}
+        color={status === 1 ? "success" : "error"}
         size="small"
         variant="filled"
       />
@@ -284,10 +251,10 @@ const PromotionManagement: React.FC = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {paginatedPromotion.length > 0 ? (
-                  paginatedPromotion.map((PromotionMember) => (
+                {Promotion.length > 0 ? (
+                  Promotion.map((PromotionMember) => (
                     <TableRow
-                      key={PromotionMember.id}
+                      key={PromotionMember.promotionId}
                       sx={{
                         "&:hover": {
                           backgroundColor: "#f9fafb",
@@ -301,7 +268,7 @@ const PromotionManagement: React.FC = () => {
                               variant="subtitle2"
                               className="font-medium text-gray-900"
                             >
-                              {PromotionMember.code}
+                              {PromotionMember.promotionCode}
                             </Typography>
                           </Box>
                         </Box>
@@ -374,8 +341,9 @@ const PromotionManagement: React.FC = () => {
         {filteredPromotion.length > 0 && (
           <PromotionPagination
             Promotion={filteredPromotion}
-            page={page}
-            rowsPerPage={rowsPerPage}
+            total={data?.totalPromotion || 1}
+            page={filters.page - 1 || 0}
+            rowsPerPage={filters.limit}
             onPageChange={handlePageChange}
             onRowsPerPageChange={handleRowsPerPageChange}
           />
