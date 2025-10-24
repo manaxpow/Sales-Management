@@ -71,20 +71,20 @@ export const adminMenuItems = [
 ];
 
 // Menu dành cho Sales person
-export const salesMenuItems = [
+export const staffMenuItems = [
   {
     label: "Quản lý đơn hàng",
-    path: "/sales/orders",
+    path: "/staff/orders",
     icon: ShoppingCart,
   },
   {
     label: "Quản lý sản phẩm",
-    path: "/sales/products",
+    path: "/staff/products",
     icon: PackageSearch,
   },
   {
     label: "Quản lý tồn kho",
-    path: "/sales/inventory",
+    path: "/staff/inventory",
     icon: Warehouse,
   },
 ];

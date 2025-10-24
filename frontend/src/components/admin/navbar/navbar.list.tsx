@@ -5,7 +5,10 @@ import {
   ListItemIcon,
   ListItemText,
 } from "@mui/material";
-import { adminMenuItems } from "../../../common/constants/index.constant";
+import {
+  adminMenuItems,
+  staffMenuItems,
+} from "../../../common/constants/index.constant";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 interface navbarListProps {
@@ -23,7 +26,7 @@ const NavbarList = ({ role }: navbarListProps) => {
     const currentIndex = adminMenuItems.findIndex((item) => {
       const itemPath = item.path.startsWith("/")
         ? item.path
-        : `/admin/${item.path}`;
+        : `/${role}/${item.path}`;
       return location.pathname === itemPath;
     });
     if (currentIndex !== -1) setSelectedIndex(currentIndex + 1);
@@ -51,22 +54,24 @@ const NavbarList = ({ role }: navbarListProps) => {
   return (
     <>
       <List>
-        {adminMenuItems.map((Item, index) => (
-          <ListItem key={Item.label} disablePadding>
-            <ListItemButton
-              sx={hoverItemStyle}
-              selected={selectedIndex === index + 1}
-              onClick={() => {
-                handleListItemClick(index, Item.path);
-              }}
-            >
-              <ListItemIcon>
-                <Item.icon />
-              </ListItemIcon>
-              <ListItemText primary={Item.label} />
-            </ListItemButton>
-          </ListItem>
-        ))}
+        {(role == "admin" ? adminMenuItems : staffMenuItems).map(
+          (Item, index) => (
+            <ListItem key={Item.label} disablePadding>
+              <ListItemButton
+                sx={hoverItemStyle}
+                selected={selectedIndex === index + 1}
+                onClick={() => {
+                  handleListItemClick(index, Item.path);
+                }}
+              >
+                <ListItemIcon>
+                  <Item.icon />
+                </ListItemIcon>
+                <ListItemText primary={Item.label} />
+              </ListItemButton>
+            </ListItem>
+          )
+        )}
       </List>
     </>
   );

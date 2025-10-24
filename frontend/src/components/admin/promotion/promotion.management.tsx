@@ -16,6 +16,7 @@ import {
   Tooltip,
   Alert,
   Snackbar,
+  CircularProgress,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import PromotionFilter from "./promotion.filter";
@@ -44,7 +45,10 @@ const PromotionManagement: React.FC = () => {
     page: 1,
     limit: 10,
   });
-  const { data, refetch } = useFetchData(GetPromotionsService, filters);
+  const { data, refetch, loading } = useFetchData(
+    GetPromotionsService,
+    filters
+  );
   const [Promotion, setPromotion] = useState<Promotion[]>(
     data?.promotions || []
   );
@@ -86,7 +90,7 @@ const PromotionManagement: React.FC = () => {
 
       const matchesStatus =
         filters.status === "all" || promotion.status === filters.status;
-      return matchesSearch && matchesStatus ;
+      return matchesSearch && matchesStatus;
     });
 
     setFilteredPromotion(filtered);
@@ -240,103 +244,106 @@ const PromotionManagement: React.FC = () => {
         />
 
         {/* Promotion Table */}
-        <Paper className="mb-6" elevation={1}>
-          <TableContainer>
-            <Table>
-              <TableHead sx={{ backgroundColor: "#f9fafb" }}>
-                <TableRow>
-                  <TableCell>Promotion Code</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell align="right">Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {Promotion.length > 0 ? (
-                  Promotion.map((PromotionMember) => (
-                    <TableRow
-                      key={PromotionMember.promotionId}
-                      sx={{
-                        "&:hover": {
-                          backgroundColor: "#f9fafb",
-                        },
-                      }}
-                    >
-                      <TableCell>
-                        <Box className="flex items-center">
-                          <Box>
-                            <Typography
-                              variant="subtitle2"
-                              className="font-medium text-gray-900"
-                            >
-                              {PromotionMember.promotionCode}
-                            </Typography>
+        {loading ? (
+          <CircularProgress />
+        ) : (
+          <Paper className="mb-6" elevation={1}>
+            <TableContainer>
+              <Table>
+                <TableHead sx={{ backgroundColor: "#f9fafb" }}>
+                  <TableRow>
+                    <TableCell>Promotion Code</TableCell>
+                    <TableCell>Status</TableCell>
+                    <TableCell align="right">Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {Promotion.length > 0 ? (
+                    Promotion.map((PromotionMember) => (
+                      <TableRow
+                        key={PromotionMember.promotionId}
+                        sx={{
+                          "&:hover": {
+                            backgroundColor: "#f9fafb",
+                          },
+                        }}
+                      >
+                        <TableCell>
+                          <Box className="flex items-center">
+                            <Box>
+                              <Typography
+                                variant="subtitle2"
+                                className="font-medium text-gray-900"
+                              >
+                                {PromotionMember.promotionCode}
+                              </Typography>
+                            </Box>
                           </Box>
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        {getStatusChip(PromotionMember.status)}
-                      </TableCell>
-                      <TableCell align="right">
-                        <Box className="flex items-center justify-end gap-1">
-                          <Tooltip title="View Details" arrow>
-                            <IconButton
-                              size="small"
-                              onClick={() =>
-                                handleViewPromotion(PromotionMember)
-                              }
-                            >
-                              <Eye className="w-4 h-4" />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Edit Promotion" arrow>
-                            <IconButton
-                              size="small"
-                              onClick={() =>
-                                handleEditPromotion(PromotionMember)
-                              }
-                            >
-                              <Edit className="w-4 h-4" />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Delete Promotion" arrow>
-                            <IconButton
-                              size="small"
-                              onClick={() =>
-                                handleDeletePromotion(PromotionMember)
-                              }
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </IconButton>
-                          </Tooltip>
+                        </TableCell>
+                        <TableCell>
+                          {getStatusChip(PromotionMember.status)}
+                        </TableCell>
+                        <TableCell align="right">
+                          <Box className="flex items-center justify-end gap-1">
+                            <Tooltip title="View Details" arrow>
+                              <IconButton
+                                size="small"
+                                onClick={() =>
+                                  handleViewPromotion(PromotionMember)
+                                }
+                              >
+                                <Eye className="w-4 h-4" />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Edit Promotion" arrow>
+                              <IconButton
+                                size="small"
+                                onClick={() =>
+                                  handleEditPromotion(PromotionMember)
+                                }
+                              >
+                                <Edit className="w-4 h-4" />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Delete Promotion" arrow>
+                              <IconButton
+                                size="small"
+                                onClick={() =>
+                                  handleDeletePromotion(PromotionMember)
+                                }
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </IconButton>
+                            </Tooltip>
+                          </Box>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={3} align="center" sx={{ py: 6 }}>
+                        <Box className="flex flex-col items-center">
+                          <Users className="w-12 h-12 text-gray-300 mb-4" />
+                          <Typography
+                            variant="h6"
+                            className="text-lg font-medium text-gray-900 mb-2"
+                          >
+                            No Promotion found
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {filters.search || filters.status !== "all"
+                              ? "Try adjusting your filters to see more results."
+                              : "Get started by adding your first Promotion member."}
+                          </Typography>
                         </Box>
                       </TableCell>
                     </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={3} align="center" sx={{ py: 6 }}>
-                      <Box className="flex flex-col items-center">
-                        <Users className="w-12 h-12 text-gray-300 mb-4" />
-                        <Typography
-                          variant="h6"
-                          className="text-lg font-medium text-gray-900 mb-2"
-                        >
-                          No Promotion found
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {filters.search || filters.status !== "all"
-                            ? "Try adjusting your filters to see more results."
-                            : "Get started by adding your first Promotion member."}
-                        </Typography>
-                      </Box>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Paper>
-
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Paper>
+        )}
         {/* Pagination */}
         {filteredPromotion.length > 0 && (
           <PromotionPagination
