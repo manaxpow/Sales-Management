@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
-import type { Supplier } from "../../../../types/supplier.types";
+import type { CreateSupplierRequest, SupplierResponse } from "../../../../types/supplier.types";
+import { createSupplier } from "../../../../services/supplier.service";
 
 interface CreateSupplierFormProps {
     isOpen: boolean;
     onClose: () => void;
-    onSubmit: (newSupplier: Supplier) => void;
+    onSubmit: (newSupplier: SupplierResponse) => void;
 }
 
 const CreateModal: React.FC<CreateSupplierFormProps> = ({
@@ -12,19 +13,15 @@ const CreateModal: React.FC<CreateSupplierFormProps> = ({
     onClose,
     onSubmit,
 }) => {
-    const initialFormData: Omit<Supplier, "id"> = {
+    const initialFormData: CreateSupplierRequest = {
         name: "",
-        contact_name: "",
         phone: "",
         email: "",
         address: "",
-        status: "ACTIVE",
-        created_at: new Date().toISOString().split("T")[0],
     };
 
-    const [formData, setFormData] = useState<Omit<Supplier, "id">>(initialFormData);
+    const [formData, setFormData] = useState<CreateSupplierRequest>(initialFormData);
 
-    // ✅ Reset form mỗi khi modal được mở
     useEffect(() => {
         if (isOpen) {
             setFormData(initialFormData);
@@ -39,12 +36,13 @@ const CreateModal: React.FC<CreateSupplierFormProps> = ({
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = () => {
-        const newSupplier: Supplier = {
-            id: Date.now(),
-            ...formData,
-        };
-        onSubmit(newSupplier);
+    const handleSubmit = async () => {
+        try {
+            const newSupplier = await createSupplier(formData);
+            onSubmit(newSupplier);
+        } catch (error) {
+            console.error('Error creating supplier:', error);
+        }
         onClose();
     };
 
@@ -56,7 +54,7 @@ const CreateModal: React.FC<CreateSupplierFormProps> = ({
                 </h2>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Các input giữ nguyên */}
+                    {/* Tên nhà cung cấp */}
                     <div>
                         <label className="text-sm text-gray-600 block mb-1">
                             Tên nhà cung cấp
@@ -68,21 +66,6 @@ const CreateModal: React.FC<CreateSupplierFormProps> = ({
                             onChange={handleChange}
                             className="w-full border rounded-lg px-3 py-2 focus:outline-blue-500"
                             placeholder="Nhập tên nhà cung cấp"
-                        />
-                    </div>
-
-                    {/* Người liên hệ */}
-                    <div>
-                        <label className="text-sm text-gray-600 block mb-1">
-                            Người liên hệ
-                        </label>
-                        <input
-                            type="text"
-                            name="contact_name"
-                            value={formData.contact_name}
-                            onChange={handleChange}
-                            className="w-full border rounded-lg px-3 py-2 focus:outline-blue-500"
-                            placeholder="Nhập người liên hệ"
                         />
                     </div>
 
@@ -129,22 +112,6 @@ const CreateModal: React.FC<CreateSupplierFormProps> = ({
                             className="w-full border rounded-lg px-3 py-2 focus:outline-blue-500"
                             placeholder="Nhập địa chỉ"
                         />
-                    </div>
-
-                    {/* Trạng thái */}
-                    <div>
-                        <label className="text-sm text-gray-600 block mb-1">
-                            Trạng thái
-                        </label>
-                        <select
-                            name="status"
-                            value={formData.status}
-                            onChange={handleChange}
-                            className="w-full border rounded-lg px-3 py-2 focus:outline-blue-500"
-                        >
-                            <option value="ACTIVE">Hoạt động</option>
-                            <option value="INACTIVE">Ngừng hoạt động</option>
-                        </select>
                     </div>
                 </div>
 

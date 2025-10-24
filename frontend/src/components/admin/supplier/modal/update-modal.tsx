@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-
-import type { Supplier } from "../../../../types/supplier.types";
+import type { Supplier, CreateSupplierRequest } from "../../../../types/supplier.types";
+import { updateSupplier } from "../../../../services/supplier.service";
 
 interface UpdateModalProps {
     isOpen: boolean;
@@ -15,49 +15,46 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
     supplierData,
     onSubmit,
 }) => {
-    // Khởi tạo state với Supplier đã được import
-    const [formData, setFormData] = useState<Supplier>(
-        supplierData || {
-            id: 0,
-            name: "",
-            contact_name: "",
-            phone: "",
-            email: "",
-            address: "",
-            status: "ACTIVE",
-            created_at: "",
-        }
-    );
+    const initialFormData: CreateSupplierRequest = {
+        name: "",
+        phone: "",
+        email: "",
+        address: "",
+    };
+
+    const [formData, setFormData] = useState<CreateSupplierRequest>(initialFormData);
 
     useEffect(() => {
         if (supplierData) {
-            setFormData(supplierData);
-        } else {
             setFormData({
-                id: 0,
-                name: "",
-                contact_name: "",
-                phone: "",
-                email: "",
-                address: "",
-                status: "ACTIVE",
-                created_at: "",
+                name: supplierData.name,
+                phone: supplierData.phone,
+                email: supplierData.email,
+                address: supplierData.address,
             });
+        } else {
+            setFormData(initialFormData);
         }
     }, [supplierData]);
 
     if (!isOpen) return null;
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value } as Supplier);
+        setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = () => {
-        const submittedData: Supplier = {
-            ...formData,
-            created_at: supplierData?.created_at || formData.created_at,
-        };
-        onSubmit(submittedData);
+    const handleSubmit = async () => {
+        if (!supplierData?.id) return;
+        try {
+            const updatedSupplier = await updateSupplier(supplierData.id, formData);
+            if (updatedSupplier) {
+                onSubmit(updatedSupplier);
+            } else {
+                console.error('Supplier not found or update failed');
+            }
+        } catch (error) {
+            console.error('Error updating supplier:', error);
+        }
         onClose();
     };
 
@@ -80,20 +77,7 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                             value={formData.name}
                             onChange={handleChange}
                             className="w-full border rounded-lg px-3 py-2 focus:outline-blue-500"
-                        />
-                    </div>
-
-                    {/* Người liên hệ */}
-                    <div>
-                        <label className="text-sm text-gray-600 block mb-1">
-                            Người liên hệ
-                        </label>
-                        <input
-                            type="text"
-                            name="contact_name"
-                            value={formData.contact_name}
-                            onChange={handleChange}
-                            className="w-full border rounded-lg px-3 py-2 focus:outline-blue-500"
+                            placeholder="Nhập tên nhà cung cấp"
                         />
                     </div>
 
@@ -108,6 +92,7 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                             value={formData.phone}
                             onChange={handleChange}
                             className="w-full border rounded-lg px-3 py-2 focus:outline-blue-500"
+                            placeholder="Nhập số điện thoại"
                         />
                     </div>
 
@@ -122,10 +107,11 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                             value={formData.email}
                             onChange={handleChange}
                             className="w-full border rounded-lg px-3 py-2 focus:outline-blue-500"
+                            placeholder="Nhập email"
                         />
                     </div>
 
-                    {/* Địa chỉ (2 cột) */}
+                    {/* Địa chỉ */}
                     <div className="col-span-1 md:col-span-2">
                         <label className="text-sm text-gray-600 block mb-1">
                             Địa chỉ
@@ -136,32 +122,9 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                             value={formData.address}
                             onChange={handleChange}
                             className="w-full border rounded-lg px-3 py-2 focus:outline-blue-500"
+                            placeholder="Nhập địa chỉ"
                         />
                     </div>
-
-                    {/* Trạng thái */}
-                    <div>
-                        <label className="text-sm text-gray-600 block mb-1">
-                            Trạng thái
-                        </label>
-                        <select
-                            name="status"
-                            value={formData.status}
-                            onChange={handleChange}
-                            className="w-full border rounded-lg px-3 py-2 focus:outline-blue-500"
-                        >
-                            <option value="ACTIVE">Hoạt động</option>
-                            <option value="INACTIVE">Ngừng hoạt động</option>
-                        </select>
-                    </div>
-
-                    {/* Hidden input để giữ created_at trong formData, không cho edit */}
-                    <input
-                        type="hidden"
-                        name="created_at"
-                        value={formData.created_at}
-                        onChange={handleChange}
-                    />
                 </div>
 
                 <div className="flex justify-end space-x-3 mt-6 pt-4 border-t">
