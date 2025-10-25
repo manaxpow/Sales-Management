@@ -18,6 +18,7 @@
     "@mui/styled-engine-sc": "^7.3.3",
     "@tailwindcss/vite": "^4.1.14",
     "axios": "^1.12.2",
+    "date-and-time": "^4.1.0",
     "lucide-react": "^0.545.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",

@@ -33,11 +33,14 @@ public static class ServiceExtensions
         builder.Services.AddScoped<IAuthServices, AuthService>();
         builder.Services.AddScoped<IBookService, BookService>();
         builder.Services.AddScoped<IUserService, UserService>();
+        builder.Services.AddScoped<IPromotionService, PromotionService>();
         builder.Services.AddScoped<JwtService>();
+
+        // global error handler
         builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
         builder.Services.AddProblemDetails();
+        
         // jwt
-
         builder.Services.AddAuthorization();
         builder.Services.AddAuthentication();
         builder.Services.AddAuthentication("Bearer")

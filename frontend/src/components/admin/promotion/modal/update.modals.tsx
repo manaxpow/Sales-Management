@@ -16,6 +16,7 @@ import {
   MenuItem,
 } from "@mui/material";
 import {
+  ActivitySquareIcon,
   CalendarDays,
   CalendarX,
   DollarSign,
@@ -26,13 +27,19 @@ import {
   Tag,
   X,
 } from "lucide-react";
-import type { Promotion } from "../../../../types/promotion.type";
-import { useForm } from "react-hook-form";
+import type {
+  Promotion,
+  PromotionUpdateFormData,
+} from "../../../../types/promotion.type";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   updatePromotionSchema,
   type UpdatePromotionSchema,
 } from "../../../../common/helpers/promotion.validate";
+import { UpdatePromotionService } from "../../../../services/promotion.service";
+import { toast } from "react-toastify";
+import { status } from "../../../../common/constants/index.constant";
 
 interface EditPromotionModalProps {
   Promotion: Promotion | null;
@@ -51,7 +58,7 @@ export const EditPromotionModal = ({
     register,
     handleSubmit,
     reset,
-
+    control,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(updatePromotionSchema),
@@ -65,17 +72,57 @@ export const EditPromotionModal = ({
         endDate: Promotion.endDate?.toString().split("T")[0],
         minOrderAmount: Promotion.minOrderAmount,
         startDate: Promotion.startDate?.toString().split("T")[0],
-        usageLimit: Promotion.usageLimit,
+        usageLimit: Promotion.usagelimit,
+        status: Promotion.status,
       });
     }
   }, [Promotion, reset]);
   const [isLoading, setLoading] = useState(false);
   const onSubmit = async (data: UpdatePromotionSchema) => {
     setLoading(true);
-    console.log(data);
-    reset();
-    setLoading(false);
-    // onSave(data);
+    try {
+      setLoading(true);
+      const fixedData = {
+        PromotionId: Promotion?.promotionId || 0,
+        Description: data.description || "",
+        DiscountValue: data.discountValue,
+        MinOrderAmount: data.minOrderAmount,
+        Usagelimit: data.usageLimit,
+        StartDate: data.startDate
+          .toISOString()
+          .split("T")[0]
+          .replaceAll("-", "/"),
+        EndDate: data.endDate.toISOString().split("T")[0].replaceAll("-", "/"),
+        Status: data.status,
+      };
+      const result = await UpdatePromotionService(
+        fixedData as PromotionUpdateFormData
+      );
+      console.log(result.data);
+      if (!result.success) {
+        let errorMessage = "Unknown error";
+        if (Array.isArray(result.data) && result.data[0]?.message) {
+          errorMessage = result.data[0].message;
+        } else if (
+          result.data &&
+          typeof result.data === "object" &&
+          "message" in result.data
+        ) {
+          errorMessage =
+            (result.data as { message?: string }).message || errorMessage;
+        }
+        toast.error("Promotion created fail with error: " + errorMessage);
+      } else {
+        if (result.data) onSave(result.data);
+        toast.success("Promotion created successfully");
+        reset();
+        onClose();
+      }
+    } catch (error) {
+      toast.error("create promotion failed with error " + error);
+    } finally {
+      setLoading(false);
+    }
   };
   // function for debug
   const onError = (errors: unknown) => {
@@ -106,7 +153,7 @@ export const EditPromotionModal = ({
                 disabled
                 variant="outlined"
                 fullWidth
-                defaultValue={Promotion?.code}
+                defaultValue={Promotion?.promotionCode}
                 size="medium"
                 InputProps={{
                   startAdornment: (
@@ -147,7 +194,7 @@ export const EditPromotionModal = ({
               <InputLabel id="discount_type">Discount type</InputLabel>
 
               <Select
-                defaultValue={Promotion?.discountType}
+                value={Promotion?.discountType == 1 ? "percent" : "fixed"}
                 disabled
                 labelId="discount_type"
                 label="Discount type"
@@ -282,6 +329,35 @@ export const EditPromotionModal = ({
                 {errors.endDate?.message}
               </Typography>
             </FormControl>
+
+            {/* status */}
+            <Controller
+              name="status"
+              control={control}
+              // giá trị ban đầu (tránh undefined
+              render={({ field }) => (
+                <FormControl fullWidth required>
+                  <InputLabel id="status">Status</InputLabel>
+                  <Select
+                    {...field}
+                    labelId="status"
+                    label="Status"
+                    className="[&_.MuiOutlinedInput-root]:rounded-xl [&_.MuiOutlinedInput-root]:bg-white [&_.MuiOutlinedInput-root]:shadow-sm"
+                    startAdornment={
+                      <InputAdornment position="start">
+                        <ActivitySquareIcon
+                          size={18}
+                          className="text-gray-400 "
+                        />
+                      </InputAdornment>
+                    }
+                  >
+                    <MenuItem value={status.active}>Active</MenuItem>
+                    <MenuItem value={status.inactive}>UnActive</MenuItem>
+                  </Select>
+                </FormControl>
+              )}
+            />
           </Box>
           <Box className="bg-gray-50 p-3 rounded-md">
             <Typography variant="caption" color="text.secondary">

@@ -6,14 +6,15 @@ interface PromotionPaginationProps {
   Promotion: Promotion[];
   page: number;
   rowsPerPage: number;
+  total: number;
   onPageChange: (newPage: number) => void;
   onRowsPerPageChange: (newRowsPerPage: number) => void;
 }
 
 const PromotionPagination = ({
-  Promotion,
   page,
   rowsPerPage,
+  total,
   onPageChange,
   onRowsPerPageChange,
 }: PromotionPaginationProps) => {
@@ -27,14 +28,14 @@ const PromotionPagination = ({
   const handleChangeRowsPerPage = (
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
-    onRowsPerPageChange(parseInt(event.target.value, 10));
-    onPageChange(0);
+    const newValue = parseInt(event.target.value, 10);
+    onRowsPerPageChange(newValue);
   };
-
+  console.log(total);
   return (
     <TablePagination
       component="div"
-      count={Promotion.length}
+      count={total}
       page={page}
       onPageChange={handleChangePage}
       rowsPerPage={rowsPerPage}

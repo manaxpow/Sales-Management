@@ -11,13 +11,6 @@ const instance = axios.create({
 });
 instance.interceptors.request.use(
   function (config) {
-    // if (config.data instanceof FormData) {
-    //   config.headers["Content-Type"] = "multipart/form-data";
-    // } else {
-    //   config.headers["Content-Type"] = "application/json";
-    // }
-    // Do something before request is sent
-
     const token = sessionStorage.getItem("access_token");
     config.headers.Authorization = token ? `Bearer ${token}` : "";
 
@@ -41,11 +34,13 @@ instance.interceptors.response.use(
     return response.data;
   },
   function (error): Promise<unknown> {
+    const resData = error.response?.data;
     const customError: ErrorApiResponse = {
       ...error.response?.data,
       message: error.response?.data?.message || error.message,
       success: error.response?.data?.success,
       statusCode: error.response?.status,
+      data: resData,
     };
 
     return Promise.reject(customError);
