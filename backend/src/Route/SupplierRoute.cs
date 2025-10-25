@@ -1,3 +1,4 @@
+using backend.Contract.Supplier.Request;
 using FluentValidation;
 using FluentValidation.Results;
 using Microsoft.AspNetCore.Mvc;

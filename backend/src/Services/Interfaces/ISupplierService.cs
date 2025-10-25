@@ -1,3 +1,6 @@
+using backend.Contract.Supplier.Request;
+using backend.Contract.Supplier.Response;
+
 public interface ISupplierService
 {
     Task<IEnumerable<SupplierResponse>> GetSuppliersAsync();

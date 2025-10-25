@@ -1,3 +1,5 @@
+using backend.Contract.Supplier.Request;
+using backend.Contract.Supplier.Response;
 using Microsoft.EntityFrameworkCore;
 
 public class SupplierService(AppDbContext context, ILogger<SupplierService> logger) : ISupplierService
