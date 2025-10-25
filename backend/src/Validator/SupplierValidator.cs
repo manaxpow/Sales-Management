@@ -1,3 +1,4 @@
+using backend.Contract.Supplier.Request;
 using FluentValidation;
 public class CreateSupplierRequestValidator : AbstractValidator<CreateSupplierRequest>
 {
