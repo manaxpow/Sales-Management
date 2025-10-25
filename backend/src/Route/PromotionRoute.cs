@@ -43,7 +43,7 @@ public static class PromotionRoute
                 return Results.Json(err);
             }
             // validate
-        });
+        }).RequireAuthorization();
         // get promotion 
         PromotionRoute.MapGet("/", async ([AsParameters] GetPromotionRequest getPromotionRequest, IPromotionService promotionService, IValidator<GetPromotionRequest> validator) =>
             {
@@ -137,7 +137,7 @@ public static class PromotionRoute
                 };
                 return Results.Json(err);
             }
-        });
+        }).RequireAuthorization();
         return group;
     }
 }

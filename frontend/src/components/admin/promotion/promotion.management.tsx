@@ -40,7 +40,7 @@ import { toast } from "react-toastify";
 
 const PromotionManagement: React.FC = () => {
   const [filters, setFilters] = useState<PromotionFilters>({
-    search: "",
+    PromotionCode: "",
     status: "all",
     page: 1,
     limit: 10,
@@ -50,9 +50,6 @@ const PromotionManagement: React.FC = () => {
     filters
   );
   const [Promotion, setPromotion] = useState<Promotion[]>(
-    data?.promotions || []
-  );
-  const [filteredPromotion, setFilteredPromotion] = useState<Promotion[]>(
     data?.promotions || []
   );
   const navigate = useNavigate();
@@ -75,35 +72,20 @@ const PromotionManagement: React.FC = () => {
     message: "",
     severity: "success",
   });
-  // Filter and search logic
+  // Filter and PromotionCode logic
   useEffect(() => {
     setPromotion(data?.promotions || []);
-    const filtered = Promotion.filter((promotion) => {
-      const matchesSearch =
-        filters.search === "" ||
-        promotion.promotionCode
-          .toLowerCase()
-          .includes(filters.search.toLowerCase()) ||
-        promotion.promotionCode
-          .toLowerCase()
-          .includes(filters.search.toLowerCase());
-
-      const matchesStatus =
-        filters.status === "all" || promotion.status === filters.status;
-      return matchesSearch && matchesStatus;
-    });
-
-    setFilteredPromotion(filtered);
-  }, [Promotion, filters, data]);
+  }, [Promotion, data]);
 
   // Event handlers
   const handleFiltersChange = (newFilters: PromotionFilters) => {
-    setFilters(newFilters);
+    setFilters((prev) => ({ ...prev, ...newFilters }));
+    console.log(newFilters);
   };
 
   const handleClearFilters = () => {
     setFilters({
-      search: "",
+      PromotionCode: "",
       status: "all",
       page: 1,
       limit: 10,
@@ -298,9 +280,21 @@ const PromotionManagement: React.FC = () => {
                             <Tooltip title="Edit Promotion" arrow>
                               <IconButton
                                 size="small"
-                                onClick={() =>
-                                  handleEditPromotion(PromotionMember)
-                                }
+                                onClick={() => {
+                                  const now = new Date();
+                                  const startDate = new Date(
+                                    PromotionMember.startDate
+                                  );
+                                  const endDate = new Date(
+                                    PromotionMember.startDate
+                                  );
+                                  if (now >= startDate && now <= endDate) {
+                                    return toast.error(
+                                      "Promotion has started, cannot update."
+                                    );
+                                  }
+                                  handleEditPromotion(PromotionMember);
+                                }}
                               >
                                 <Edit className="w-4 h-4" />
                               </IconButton>
@@ -331,7 +325,7 @@ const PromotionManagement: React.FC = () => {
                             No Promotion found
                           </Typography>
                           <Typography variant="body2" color="text.secondary">
-                            {filters.search || filters.status !== "all"
+                            {filters.PromotionCode || filters.status !== "all"
                               ? "Try adjusting your filters to see more results."
                               : "Get started by adding your first Promotion member."}
                           </Typography>
@@ -345,9 +339,9 @@ const PromotionManagement: React.FC = () => {
           </Paper>
         )}
         {/* Pagination */}
-        {filteredPromotion.length > 0 && (
+        {Promotion.length > 0 && (
           <PromotionPagination
-            Promotion={filteredPromotion}
+            Promotion={Promotion}
             total={data?.totalPromotion || 1}
             page={filters.page - 1 || 0}
             rowsPerPage={filters.limit}

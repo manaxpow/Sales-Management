@@ -33,7 +33,7 @@ export interface PromotionDelete {
   Status: number;
 }
 export interface PromotionFilters {
-  search: string;
+  PromotionCode: string;
   status: number | "all";
   page: number;
   limit: number;

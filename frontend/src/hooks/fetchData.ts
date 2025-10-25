@@ -23,6 +23,7 @@ export function useFetchData<TRequest, TResponse>(
       console.error("Lỗi khi gọi API:", err);
       const error = err as AxiosError<{ message?: string }>;
       const message = error.response?.data?.message || "Lỗi khi tải dữ liệu";
+
       setError(message);
     } finally {
       setLoading(false);
@@ -30,7 +31,6 @@ export function useFetchData<TRequest, TResponse>(
   }, [service, JSON.stringify(request)]);
 
   const refetch = () => {
-    console.log("sdfasdf");
     fetchData();
   };
   useEffect(() => {

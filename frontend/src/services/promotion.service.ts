@@ -6,6 +6,7 @@ import type {
   GetPromotionResponse,
   Promotion,
   PromotionDelete,
+  PromotionFilters,
   PromotionFormData,
   PromotionUpdateFormData,
 } from "../types/promotion.type";
@@ -26,11 +27,11 @@ const GetPromotionsService = async (
   query: GetPromotionRequest
 ): Promise<ApiResponse<GetPromotionResponse>> => {
   try {
+    const { status } = query as PromotionFilters;
     const res = await instance.get(URL_API, {
       params: {
-        page: query.page,
-        limit: query.limit,
-        ...query.filters,
+        ...query,
+        status: status == "all" ? undefined : status,
       },
     });
     return res.data;

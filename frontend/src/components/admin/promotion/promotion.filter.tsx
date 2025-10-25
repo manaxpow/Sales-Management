@@ -44,7 +44,7 @@ const PromotionFilter = ({
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onFiltersChange({
       ...filters,
-      search: e.target.value,
+      PromotionCode: e.target.value,
     });
   };
 
@@ -60,7 +60,7 @@ const PromotionFilter = ({
     });
   };
 
-  const hasActiveFilters = filters.search || filters.status !== "all";
+  const hasActiveFilters = filters.PromotionCode || filters.status !== "all";
 
   return (
     <Box className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
@@ -85,7 +85,7 @@ const PromotionFilter = ({
           label="Search Employees"
           variant="outlined"
           size="small"
-          value={filters.search}
+          value={filters.PromotionCode}
           onChange={handleSearchChange}
           placeholder="Search by promotion name..."
           InputProps={{

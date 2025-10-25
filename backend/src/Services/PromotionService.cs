@@ -61,13 +61,16 @@ public class PromotionService(AppDbContext context, ILogger<PromotionService> lo
         var page = res.Page ?? 1;
         var SortBy = res.SortBy ?? "CreatedAt";
         var SortOrder = res.SortOrder ?? "desc";
+
         if (!string.IsNullOrEmpty(res.PromotionCode))
             query = query.Where(u => u.Code.Contains(res.PromotionCode));
         if (res.DiscountType.HasValue)
             query = query.Where(u => u.DiscountType == res.DiscountType.Value);
         if (res.Status.HasValue)
+
             query = query.Where(u => res.Status == u.Status);
         // sorting
+        logger.LogInformation("check query" + res.PromotionCode);
         logger.LogInformation("limit " + limit);
         query = res.SortBy?.ToLower() switch
         {
@@ -134,7 +137,6 @@ public class PromotionService(AppDbContext context, ILogger<PromotionService> lo
         };
 
         return response.SuccessResponse(Data, "Get promotion success");
-
     }
 
     public async Task<ApiResponse<PromotionResponse>> UpdatePromotion(UpdatePromotionRequest req)

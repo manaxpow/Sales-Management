@@ -16,7 +16,13 @@ export const createPromotionSchema = z.object({
   endDate: z.coerce.date(),
 });
 export const updatePromotionSchema = createPromotionSchema
-  .omit({ code: true, discountType: true })
-  
+  .omit({
+    code: true,
+    discountType: true,
+  })
+  .extend({
+    status: z.number() 
+  });
+
 export type CreatePromotionType = z.infer<typeof createPromotionSchema>;
 export type UpdatePromotionSchema = z.infer<typeof updatePromotionSchema>;

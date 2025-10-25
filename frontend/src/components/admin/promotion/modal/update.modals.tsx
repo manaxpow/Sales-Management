@@ -16,6 +16,7 @@ import {
   MenuItem,
 } from "@mui/material";
 import {
+  ActivitySquareIcon,
   CalendarDays,
   CalendarX,
   DollarSign,
@@ -26,8 +27,11 @@ import {
   Tag,
   X,
 } from "lucide-react";
-import type { Promotion, PromotionUpdateFormData } from "../../../../types/promotion.type";
-import { useForm } from "react-hook-form";
+import type {
+  Promotion,
+  PromotionUpdateFormData,
+} from "../../../../types/promotion.type";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   updatePromotionSchema,
@@ -35,6 +39,7 @@ import {
 } from "../../../../common/helpers/promotion.validate";
 import { UpdatePromotionService } from "../../../../services/promotion.service";
 import { toast } from "react-toastify";
+import { status } from "../../../../common/constants/index.constant";
 
 interface EditPromotionModalProps {
   Promotion: Promotion | null;
@@ -53,6 +58,7 @@ export const EditPromotionModal = ({
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(updatePromotionSchema),
@@ -60,7 +66,6 @@ export const EditPromotionModal = ({
   });
   useEffect(() => {
     if (Promotion) {
-      console.log(Promotion);
       reset({
         description: Promotion.description,
         discountValue: Promotion.discountValue,
@@ -68,6 +73,7 @@ export const EditPromotionModal = ({
         minOrderAmount: Promotion.minOrderAmount,
         startDate: Promotion.startDate?.toString().split("T")[0],
         usageLimit: Promotion.usagelimit,
+        status: Promotion.status,
       });
     }
   }, [Promotion, reset]);
@@ -87,8 +93,11 @@ export const EditPromotionModal = ({
           .split("T")[0]
           .replaceAll("-", "/"),
         EndDate: data.endDate.toISOString().split("T")[0].replaceAll("-", "/"),
+        Status: data.status,
       };
-      const result = await UpdatePromotionService(fixedData as PromotionUpdateFormData);
+      const result = await UpdatePromotionService(
+        fixedData as PromotionUpdateFormData
+      );
       console.log(result.data);
       if (!result.success) {
         let errorMessage = "Unknown error";
@@ -320,6 +329,35 @@ export const EditPromotionModal = ({
                 {errors.endDate?.message}
               </Typography>
             </FormControl>
+
+            {/* status */}
+            <Controller
+              name="status"
+              control={control}
+              // giá trị ban đầu (tránh undefined
+              render={({ field }) => (
+                <FormControl fullWidth required>
+                  <InputLabel id="status">Status</InputLabel>
+                  <Select
+                    {...field}
+                    labelId="status"
+                    label="Status"
+                    className="[&_.MuiOutlinedInput-root]:rounded-xl [&_.MuiOutlinedInput-root]:bg-white [&_.MuiOutlinedInput-root]:shadow-sm"
+                    startAdornment={
+                      <InputAdornment position="start">
+                        <ActivitySquareIcon
+                          size={18}
+                          className="text-gray-400 "
+                        />
+                      </InputAdornment>
+                    }
+                  >
+                    <MenuItem value={status.active}>Active</MenuItem>
+                    <MenuItem value={status.inactive}>UnActive</MenuItem>
+                  </Select>
+                </FormControl>
+              )}
+            />
           </Box>
           <Box className="bg-gray-50 p-3 rounded-md">
             <Typography variant="caption" color="text.secondary">
