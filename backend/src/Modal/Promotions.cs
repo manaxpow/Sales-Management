@@ -11,7 +11,7 @@ public class Promotions
     public string Code { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public int DiscountType { get; set; }
-    public decimal DiscountValue { get; set; }
+    public decimal  DiscountValue { get; set; }
     public decimal MinOrderAmount { get; set; }
     public int Usagelimit { get; set; }
     public int Usedcount { get; set; }

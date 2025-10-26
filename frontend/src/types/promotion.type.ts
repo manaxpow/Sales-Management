@@ -1,26 +1,52 @@
 export interface Promotion {
   promotionId: number;
-  code: string;
+  promotionCode: string;
   description: string;
-  discountType: "precent" | "fixed";
+  discountType: number;
   discountValue: number;
   minOrderAmount: number;
-  usageLimit: number;
+  usagelimit: number;
   usedCount: number;
-  status: "active" | "inactive";
+  status: number;
   startDate: string;
   endDate: string;
 }
 
 export interface PromotionFormData {
-  fullName: string;
-  email: string;
-  phone: string;
-  status: "active" | "inactive";
-  role: string;
+  PromotionCode: string;
+  Description: string;
+  DiscountType: number;
+  DiscountValue: number;
+  MinOrderAmount: number;
+  Usagelimit: number;
+  StartDate: string;
+  EndDate: string;
+}
+export interface PromotionUpdateFormData
+  extends Omit<PromotionFormData, "PromotionCode" | "DiscountType"> {
+  PromotionId: number;
+  Status: number;
 }
 
+export interface PromotionDelete {
+  PromotionId: number;
+  Status: number;
+}
 export interface PromotionFilters {
-  search: string;
-  status: "all" | "active" | "inactive";
+  PromotionCode: string;
+  status: number | "all";
+  page: number;
+  limit: number;
+}
+
+export interface GetPromotionResponse {
+  promotions: Promotion[];
+  totalPromotion: number;
+  totalPages: number;
+}
+
+export interface GetPromotionRequest {
+  page: number;
+  limit: number;
+  filters?: PromotionFilters;
 }

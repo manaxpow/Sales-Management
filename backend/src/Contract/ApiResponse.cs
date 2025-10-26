@@ -19,7 +19,7 @@ public class ApiResponse<T>
         Data = data;
         Message = message;
         Success = true;
-        return this;
+    return this;
     }
 
     public ApiResponse<T> ErrorResponse(string message, int statusCode = 400)
@@ -30,9 +30,6 @@ public class ApiResponse<T>
         return this;
     }
 
-    internal ApiResponse<LoginResponse> SuccessResponse()
-    {
-        throw new NotImplementedException();
-    }
+   
 }
 

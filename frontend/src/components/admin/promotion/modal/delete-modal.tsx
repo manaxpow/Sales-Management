@@ -46,12 +46,13 @@ export const DeletePromotionModal = ({
           member will be permanently deleted.
         </Alert>
         <Typography>
-          Are you sure you want to delete <strong>{Promotion.code}</strong> (@
-          {Promotion.code})?
+          Are you sure you want to delete{" "}
+          <strong>{Promotion.promotionCode}</strong> (@
+          {Promotion.promotionCode})?
         </Typography>
         <Box className="mt-3 p-3 bg-gray-50 rounded-md">
           <Typography variant="caption" color="text.secondary">
-            Promotion ID: {Promotion.id}
+            Promotion ID: {Promotion.promotionId}
           </Typography>
           <br />
           <Typography variant="caption" color="text.secondary">

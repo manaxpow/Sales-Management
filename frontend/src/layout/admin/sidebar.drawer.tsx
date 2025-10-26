@@ -6,13 +6,15 @@ import MuiDrawer from "@mui/material/Drawer";
 import NavbarList from "../../components/admin/navbar/navbar.list";
 import { useSideBarStore } from "../../store/sidebar.store";
 import DrawerHeader from "../../components/ui/admin/DrawerHeader";
+import { useLocation } from "react-router-dom";
 
 const drawerWidth = 300;
 export default function SideBarDrawer() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const { toggleSidebar, isExpanded } = useSideBarStore();
-
+  const location = useLocation();
+  const role = location.pathname.split("/");
   return (
     <Box sx={{ display: "flex" }}>
       <CssBaseline />
@@ -30,14 +32,14 @@ export default function SideBarDrawer() {
         >
           <DrawerHeader />
           <Divider />
-          <NavbarList role="admin" open={isExpanded}></NavbarList>
+          <NavbarList role={role[1]} open={isExpanded}></NavbarList>
         </MuiDrawer>
       ) : (
         // Desktop => mini variant drawer
         <DrawerDesktop variant="permanent" open={isExpanded}>
           <DrawerHeader />
           <Divider />
-          <NavbarList role="admin" open={isExpanded}></NavbarList>
+          <NavbarList role={role[1]} open={isExpanded}></NavbarList>
         </DrawerDesktop>
       )}
     </Box>

@@ -3,8 +3,8 @@ import MainLayout from "../layout/main.layout";
 import { clientRoutes } from "./client.route";
 import AdminLayout from "../layout/admin/admin.layout";
 import { adminRoutes } from "./admin.route";
-import StaffLayout from "../layout/staff/staff.layout";
 import { staffRoutes } from "./staff.route";
+
 
 export const router = createBrowserRouter([
   {
@@ -19,7 +19,8 @@ export const router = createBrowserRouter([
   },
   {
     path: "/staff",
-    element: <StaffLayout />,
+    element: <AdminLayout />,
     children: [...staffRoutes],
   },
+ 
 ]);

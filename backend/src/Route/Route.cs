@@ -10,6 +10,7 @@ public class Routes
         .MapUserEndPoint()
         .MapAuthEndPoint()
         .MapCategoryEndpoint()
+        .MapPromotionEndPoint()
         ;
 
     }
