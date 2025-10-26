@@ -1,48 +1,123 @@
 import axios from "../config/axios.config";
-import type { Category } from "../types/category.types";
-import type { ApiResponse } from "../types/api.type";
+import type { ApiResponse, ErrorApiResponse } from "../types/api.type";
+import type { Category, RawCategory, CategoryFormData } from "../types/category.types";
 
 const BASE_URL = "/categories";
 
 export const CategoryService = {
-  async getAll(): Promise<Category[]> {
-    const res = await axios.get<ApiResponse<any[]>>(BASE_URL);
+  async getAll(): Promise<ApiResponse<Category[]>> {
+    try {
+      const res = await axios.get(BASE_URL);
 
-    const raw = Array.isArray(res.data) ? res.data : res.data?.data ?? [];
+      const rawData: RawCategory[] = Array.isArray(res.data)
+        ? res.data 
+        : Array.isArray(res.data.data)
+        ? res.data.data 
+        : [];
 
-    return raw.map((c) => ({
-      id: c.categoryId,
-      name: c.categoryName,
-    }));
+      const mapped: Category[] = rawData.map((c) => ({
+        id: c.categoryId,
+        name: c.categoryName,
+      }));
+
+      return {
+        success: true,
+        message: "Lấy danh mục thành công",
+        statusCode: 200,
+        data: mapped,
+      };
+    } catch (error: any) {
+      const err = error as ErrorApiResponse;
+      return {
+        success: false,
+        message: err.message ?? "Lỗi không xác định",
+        statusCode: err.statusCode ?? 500,
+        data: [],
+      };
+    }
   },
 
-  async create(payload: Omit<Category, "id">): Promise<Category> {
-    const res = await axios.post<ApiResponse<any>>(
-      BASE_URL,
-      { categoryName: payload.name }, 
-      {
-        headers: { "Content-Type": "application/json" }, 
-      }
-    );
+  async create(payload: CategoryFormData): Promise<ApiResponse<Category>> {
+    try {
+      const res = await axios.post<RawCategory | ApiResponse<RawCategory>>(
+        BASE_URL,
+        { categoryName: payload.name },
+        { headers: { "Content-Type": "application/json" } } 
+      );
 
-    const c = res.data?.data ?? res.data;
-    return { id: c.categoryId, name: c.categoryName };
+      const c: RawCategory =
+        (res.data as any).data ?? (res.data as RawCategory);
+
+      const mapped: Category = {
+        id: c.categoryId,
+        name: c.categoryName,
+      };
+
+      return {
+        success: true,
+        message: "Tạo danh mục thành công",
+        statusCode: 200,
+        data: mapped,
+      };
+    } catch (error: any) {
+      const err = error as ErrorApiResponse;
+      return {
+        success: false,
+        message: err.message ?? "Lỗi tạo danh mục",
+        statusCode: err.statusCode ?? 500,
+      };
+    }
   },
 
-  async update(id: number, payload: Omit<Category, "id">): Promise<Category> {
-    const res = await axios.put<ApiResponse<any>>(
-      `${BASE_URL}/${id}`,
-      { categoryName: payload.name }, 
-      {
-        headers: { "Content-Type": "application/json" }, 
-      }
-    );
+  async update(id: number, payload: CategoryFormData): Promise<ApiResponse<Category>> {
+    try {
+      const res = await axios.put<RawCategory | ApiResponse<RawCategory>>(
+        `${BASE_URL}/${id}`,
+        { categoryName: payload.name },
+        { headers: { "Content-Type": "application/json" } }
+      );
 
-    const c = res.data?.data ?? res.data;
-    return { id: c.categoryId, name: c.categoryName };
+      const c: RawCategory =
+        (res.data as any).data ?? (res.data as RawCategory);
+
+      const mapped: Category = {
+        id: c.categoryId,
+        name: c.categoryName,
+      };
+
+      return {
+        success: true,
+        message: "Cập nhật danh mục thành công",
+        statusCode: 200,
+        data: mapped,
+      };
+    } catch (error: any) {
+      const err = error as ErrorApiResponse;
+      return {
+        success: false,
+        message: err.message ?? "Lỗi cập nhật danh mục",
+        statusCode: err.statusCode ?? 500,
+      };
+    }
   },
 
-  async delete(id: number): Promise<void> {
-    await axios.delete<ApiResponse<null>>(`${BASE_URL}/${id}`);
+  async delete(id: number): Promise<ApiResponse<null>> {
+    try {
+      await axios.delete(`${BASE_URL}/${id}`);
+      return {
+        success: true,
+        message: "Xoá danh mục thành công",
+        statusCode: 200,
+        data: null,
+      };
+    } catch (error: any) {
+      const err = error as ErrorApiResponse;
+      return {
+        success: false,
+        message: err.message ?? "Lỗi xoá danh mục",
+        statusCode: err.statusCode ?? 500,
+        data: null,
+      };
+    }
   },
 };

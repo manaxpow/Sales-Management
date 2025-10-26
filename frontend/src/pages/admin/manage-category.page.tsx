@@ -19,47 +19,71 @@ const ManageCategoryPage: React.FC = () => {
   const [openDelete, setOpenDelete] = useState(false);
   const [deleting, setDeleting] = useState<Category | null>(null);
 
+  // 🟢 Lấy danh sách danh mục
   useEffect(() => {
     (async () => {
       try {
-        const data = await CategoryService.getAll();
-        setCategories(data);
+        const res = await CategoryService.getAll();
+        if (res.success && res.data) {
+          setCategories(res.data);
+        } else {
+          console.error("❌ Lỗi khi lấy danh mục:", res.message);
+        }
       } catch (err) {
-        console.error("Lỗi khi lấy danh sách danh mục:", err);
+        console.error("❌ Lỗi khi lấy danh mục:", err);
       } finally {
         setLoading(false);
       }
     })();
   }, []);
 
+  // 🟢 Xử lý tạo hoặc cập nhật danh mục
   const handleSave = async (payload: Omit<Category, "id">, idToUpdate?: number) => {
     try {
       if (idToUpdate) {
-        const updated = await CategoryService.update(idToUpdate, payload);
-        setCategories((prev) =>
-          prev.map((c) => (c.id === idToUpdate ? updated : c))
-        );
+        const res = await CategoryService.update(idToUpdate, payload);
+        if (res.success && res.data) {
+          setCategories((prev) =>
+            prev.map((c) => (c.id === idToUpdate ? res.data! : c))
+          );
+        } else {
+          console.error("❌ Lỗi khi cập nhật danh mục:", res.message);
+        }
       } else {
-        const created = await CategoryService.create(payload);
-        setCategories((prev) => [...prev, created]);
+        const res = await CategoryService.create(payload);
+        if (res.success && res.data) {
+          setCategories((prev) => [...prev, res.data!]);
+        } else {
+          console.error("❌ Lỗi khi tạo danh mục:", res.message);
+        }
       }
     } catch (err) {
-      console.error("Lỗi khi lưu danh mục:", err);
+      console.error("❌ Lỗi khi lưu danh mục:", err);
+    } finally {
+      setOpenForm(false);
+      setEditing(null);
     }
   };
 
+  // 🟢 Xác nhận xoá
   const confirmDelete = async () => {
     if (!deleting) return;
     try {
-      await CategoryService.delete(deleting.id);
-      setCategories((prev) => prev.filter((c) => c.id !== deleting.id));
+      const res = await CategoryService.delete(deleting.id);
+      if (res.success) {
+        setCategories((prev) => prev.filter((c) => c.id !== deleting.id));
+      } else {
+        console.error("❌ Lỗi khi xoá danh mục:", res.message);
+      }
     } catch (err) {
-      console.error("Lỗi khi xoá danh mục:", err);
+      console.error("❌ Lỗi khi xoá danh mục:", err);
     } finally {
       setDeleting(null);
+      setOpenDelete(false);
     }
   };
 
+  // 🟢 Loading UI
   if (loading)
     return (
       <Container sx={{ mt: 10, textAlign: "center" }}>
