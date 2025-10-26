@@ -39,6 +39,12 @@ namespace SRC.Services
 
         public async Task<CategoryResponse> CreateAsync(CreateCategoryRequest request)
         {
+            var isExist = await _context.Categories
+                .AnyAsync(c => c.CategoryName.ToLower() == request.CategoryName.ToLower());
+
+            if (isExist)
+                throw new Exception($"Category name '{request.CategoryName}' already exists.");
+
             var entity = new Categories
             {
                 CategoryName = request.CategoryName
@@ -59,6 +65,13 @@ namespace SRC.Services
             var entity = await _context.Categories.FindAsync(request.CategoryId);
             if (entity == null)
                 throw new Exception($"Category with ID {request.CategoryId} not found.");
+
+            var isExist = await _context.Categories
+                .AnyAsync(c => c.CategoryName.ToLower() == request.CategoryName.ToLower()
+                            && c.CategoryId != request.CategoryId);
+
+            if (isExist)
+                throw new Exception($"Category name '{request.CategoryName}' already exists.");
 
             entity.CategoryName = request.CategoryName;
             await _context.SaveChangesAsync();

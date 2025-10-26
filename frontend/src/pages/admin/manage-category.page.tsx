@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Box, Container, CircularProgress } from "@mui/material";
+import { Box, Container, CircularProgress, Snackbar, Alert } from "@mui/material";
 import type { Category } from "../../types/category.types";
 import CategoryTable from "../../components/admin/category/category-table";
 import CategoryFormDialog from "../../components/admin/category/category-form-dialog";
@@ -19,6 +19,13 @@ const ManageCategoryPage: React.FC = () => {
   const [openDelete, setOpenDelete] = useState(false);
   const [deleting, setDeleting] = useState<Category | null>(null);
 
+  // 🟢 Snackbar thông báo
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success" as "success" | "error" | "info" | "warning",
+  });
+
   // 🟢 Lấy danh sách danh mục
   useEffect(() => {
     (async () => {
@@ -28,9 +35,11 @@ const ManageCategoryPage: React.FC = () => {
           setCategories(res.data);
         } else {
           console.error("❌ Lỗi khi lấy danh mục:", res.message);
+          setSnackbar({ open: true, message: res.message ?? "Lỗi khi lấy danh mục", severity: "error" });
         }
       } catch (err) {
         console.error("❌ Lỗi khi lấy danh mục:", err);
+        setSnackbar({ open: true, message: "Không thể tải danh mục", severity: "error" });
       } finally {
         setLoading(false);
       }
@@ -46,19 +55,30 @@ const ManageCategoryPage: React.FC = () => {
           setCategories((prev) =>
             prev.map((c) => (c.id === idToUpdate ? res.data! : c))
           );
+          setSnackbar({ open: true, message: "Cập nhật danh mục thành công", severity: "success" });
         } else {
-          console.error("❌ Lỗi khi cập nhật danh mục:", res.message);
+          const message =
+            res.message?.includes("already exists")
+              ? "Tên danh mục đã tồn tại"
+              : res.message ?? "Lỗi khi cập nhật danh mục";
+          setSnackbar({ open: true, message, severity: "error" });
         }
       } else {
         const res = await CategoryService.create(payload);
         if (res.success && res.data) {
           setCategories((prev) => [...prev, res.data!]);
+          setSnackbar({ open: true, message: "Tạo danh mục thành công", severity: "success" });
         } else {
-          console.error("❌ Lỗi khi tạo danh mục:", res.message);
+          const message =
+            res.message?.includes("already exists")
+              ? "Tên danh mục đã tồn tại"
+              : res.message ?? "Lỗi khi tạo danh mục";
+          setSnackbar({ open: true, message, severity: "error" });
         }
       }
     } catch (err) {
       console.error("❌ Lỗi khi lưu danh mục:", err);
+      setSnackbar({ open: true, message: "Lỗi không xác định", severity: "error" });
     } finally {
       setOpenForm(false);
       setEditing(null);
@@ -72,11 +92,13 @@ const ManageCategoryPage: React.FC = () => {
       const res = await CategoryService.delete(deleting.id);
       if (res.success) {
         setCategories((prev) => prev.filter((c) => c.id !== deleting.id));
+        setSnackbar({ open: true, message: "Xoá danh mục thành công", severity: "success" });
       } else {
-        console.error("❌ Lỗi khi xoá danh mục:", res.message);
+        setSnackbar({ open: true, message: res.message ?? "Lỗi khi xoá danh mục", severity: "error" });
       }
     } catch (err) {
       console.error("❌ Lỗi khi xoá danh mục:", err);
+      setSnackbar({ open: true, message: "Không thể xoá danh mục", severity: "error" });
     } finally {
       setDeleting(null);
       setOpenDelete(false);
@@ -127,6 +149,18 @@ const ManageCategoryPage: React.FC = () => {
           onClose={() => setOpenDelete(false)}
           onConfirm={confirmDelete}
         />
+
+        {/* 🟢 Snackbar thông báo */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={3000}
+          onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        >
+          <Alert severity={snackbar.severity} variant="filled" sx={{ width: "100%" }}>
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
       </Box>
     </Container>
   );
