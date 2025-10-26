@@ -4,6 +4,7 @@ using System.Text;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using SRC.Services.Interfaces;
 
 
 public static class ServiceExtensions
@@ -35,6 +36,7 @@ public static class ServiceExtensions
         builder.Services.AddScoped<IUserService, UserService>();
         builder.Services.AddScoped<IPromotionService, PromotionService>();
         builder.Services.AddScoped<JwtService>();
+        builder.Services.AddScoped<ICategoryService, SRC.Services.CategoryService>();
 
         // global error handler
         builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
