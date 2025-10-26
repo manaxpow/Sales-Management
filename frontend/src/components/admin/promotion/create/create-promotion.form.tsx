@@ -32,6 +32,9 @@ import {
 } from "../../../../common/helpers/promotion.validate";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
+import { createPromotionService } from "../../../../services/promotion.service";
+import { toast } from "react-toastify";
+import { discountType } from "../../../../common/constants/index.constant";
 
 const CreatePromotionForm = () => {
   // Form state
@@ -49,10 +52,49 @@ const CreatePromotionForm = () => {
   const [submitError, setSubmitError] = useState<string>("");
   const [isLoading, setLoading] = useState(false);
   const onSubmit = async (data: CreatePromotionType) => {
-    setLoading(true);
-    console.log(data);
-    reset();
-    setLoading(false);
+    try {
+      setLoading(true);
+      const fixedData = {
+        PromotionCode: data.code,
+        Description: data.description || "",
+        DiscountType: data.discountType,
+        DiscountValue: data.discountValue,
+        MinOrderAmount: data.minOrderAmount,
+        Usagelimit: data.usageLimit,
+        StartDate: data.startDate
+          .toISOString()
+          .split("T")[0]
+          .replaceAll("-", "/"),
+        EndDate: data.endDate.toISOString().split("T")[0].replaceAll("-", "/"),
+      };
+
+      // Map form fields to PromotionFormData fields
+
+      console.log(fixedData);
+      const result = await createPromotionService(fixedData);
+      console.log(result.data);
+      if (!result.success) {
+        let errorMessage = "Unknown error";
+        if (Array.isArray(result.data) && result.data[0]?.message) {
+          errorMessage = result.data[0].message;
+        } else if (
+          result.data &&
+          typeof result.data === "object" &&
+          "message" in result.data
+        ) {
+          errorMessage =
+            (result.data as { message?: string }).message || errorMessage;
+        }
+        toast.error("Promotion created fail with error: " + errorMessage);
+      } else {
+        toast.success("Promotion created successfully");
+        reset();
+      }
+    } catch (error) {
+      toast.error("create promotion failed with error " + error);
+    } finally {
+      setLoading(false);
+    }
   };
   // function for debug
   const onError = (errors: unknown) => {
@@ -165,7 +207,7 @@ const CreatePromotionForm = () => {
               <Controller
                 name="discountType"
                 control={control}
-                defaultValue="" // giá trị ban đầu (tránh undefined)
+                defaultValue={0} // giá trị ban đầu (tránh undefined)
                 render={({ field }) => (
                   <FormControl fullWidth required>
                     <InputLabel id="discount_type">Discount type</InputLabel>
@@ -184,8 +226,8 @@ const CreatePromotionForm = () => {
                       {/* <MenuItem value="">
                         <em>None</em>
                       </MenuItem> */}
-                      <MenuItem value="percent">Percent</MenuItem>
-                      <MenuItem value="fixed">Fixed</MenuItem>
+                      <MenuItem value={discountType.percent}>Percent</MenuItem>
+                      <MenuItem value={discountType.fixed}>Fixed</MenuItem>
                     </Select>
                   </FormControl>
                 )}
