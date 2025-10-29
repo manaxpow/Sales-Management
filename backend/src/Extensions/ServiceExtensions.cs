@@ -38,6 +38,7 @@ public static class ServiceExtensions
         builder.Services.AddScoped<JwtService>();
         builder.Services.AddScoped<ICategoryService, SRC.Services.CategoryService>();
         builder.Services.AddScoped<IOrderService, OrderService>();
+        builder.Services.AddScoped<IOrderItemService, OrderItemService>();
 
         // global error handler
         builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
