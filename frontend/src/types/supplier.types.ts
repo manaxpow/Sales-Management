@@ -1,6 +1,6 @@
 export type Supplier = {
   id: number;
-  name: string; 
+  name: string;
   phone: string;
   email: string;
   address: string;
@@ -9,6 +9,14 @@ export type Supplier = {
 };
 
 export type CreateSupplierRequest = {
+  name: string;
+  phone: string;
+  email: string;
+  address: string;
+};
+
+export type UpdateSupplierRequest = {
+  id: number;
   name: string;
   phone: string;
   email: string;

@@ -1,11 +1,12 @@
+using System.Text;
 using backend.Contract.Supplier.Request;
 using backend.Contract.Supplier.Response;
 using Microsoft.EntityFrameworkCore;
 
 public class SupplierService(AppDbContext context, ILogger<SupplierService> logger) : ISupplierService
 {
-    // --- Helper ---
-    private SupplierResponse ToResponse(Suppliers supplier) => new SupplierResponse
+    // [SỬA] Làm static method để tránh capture 'this' trong projection
+    private static SupplierResponse ToResponse(Suppliers supplier) => new()
     {
         Id = supplier.Id,
         Name = supplier.Name,
@@ -15,9 +16,21 @@ public class SupplierService(AppDbContext context, ILogger<SupplierService> logg
         CreatedAt = supplier.CreatedAt,
         UpdatedAt = supplier.UpdatedAt
     };
-    // --- CREATE ---
+
     public async Task<SupplierResponse> AddSupplierAsync(CreateSupplierRequest request)
     {
+        var existingSupplier = await context.Suppliers.AsNoTracking()
+            .FirstOrDefaultAsync(s => s.Name == request.Name || s.Phone == request.Phone || s.Email == request.Email);
+
+        if (existingSupplier != null)
+        {
+            var messages = new StringBuilder();
+            if (existingSupplier.Name == request.Name) messages.Append("Tên nhà cung cấp đã tồn tại. ");
+            if (existingSupplier.Phone == request.Phone) messages.Append("Số điện thoại đã tồn tại. ");
+            if (existingSupplier.Email == request.Email) messages.Append("Email đã tồn tại. ");
+            throw new InvalidOperationException(messages.ToString().Trim());
+        }
+
         var supplier = new Suppliers
         {
             Name = request.Name,
@@ -30,29 +43,41 @@ public class SupplierService(AppDbContext context, ILogger<SupplierService> logg
 
         context.Suppliers.Add(supplier);
         await context.SaveChangesAsync();
-        logger.LogInformation("Supplier added successfully with ID: {Id}", supplier.Id);
-
-        return ToResponse(supplier);
+        logger.LogInformation("Supplier added with ID: {Id}", supplier.Id);
+        return ToResponse(supplier);  // Vẫn gọi bình thường (static không ảnh hưởng)
     }
-    // --- READ ALL ---
+
     public async Task<IEnumerable<SupplierResponse>> GetSuppliersAsync()
     {
-        var suppliers = await context.Suppliers.AsNoTracking().ToListAsync();
-        return suppliers.Select(ToResponse);
+        // [SỬA] Bây giờ Select(s => ToResponse(s)) sẽ work vì static
+        return await context.Suppliers
+            .AsNoTracking()
+            .Select(s => ToResponse(s))
+            .ToListAsync();
     }
 
-    // --- READ BY ID ---
     public async Task<SupplierResponse?> GetSupplierByIdAsync(int id)
     {
         var supplier = await context.Suppliers.FindAsync(id);
-        return supplier == null ? null : ToResponse(supplier);
+        return supplier == null ? null : ToResponse(supplier);  // An toàn
     }
 
-    // --- UPDATE ---
     public async Task<SupplierResponse?> UpdateSupplierAsync(int id, UpdateSupplierRequest request)
     {
         var supplier = await context.Suppliers.FindAsync(id);
         if (supplier == null) return null;
+
+        var existingSupplier = await context.Suppliers.AsNoTracking()
+            .FirstOrDefaultAsync(s => s.Id != id && (s.Name == request.Name || s.Phone == request.Phone || s.Email == request.Email));
+
+        if (existingSupplier != null)
+        {
+            var messages = new StringBuilder();
+            if (existingSupplier.Name == request.Name) messages.Append("Tên nhà cung cấp đã tồn tại. ");
+            if (existingSupplier.Phone == request.Phone) messages.Append("Số điện thoại đã tồn tại. ");
+            if (existingSupplier.Email == request.Email) messages.Append("Email đã tồn tại. ");
+            throw new InvalidOperationException(messages.ToString().Trim());
+        }
 
         supplier.Name = request.Name;
         supplier.Phone = request.Phone;
@@ -61,12 +86,10 @@ public class SupplierService(AppDbContext context, ILogger<SupplierService> logg
         supplier.UpdatedAt = DateTime.UtcNow;
 
         await context.SaveChangesAsync();
-        logger.LogInformation("Supplier updated successfully with ID: {Id}", supplier.Id);
-
-        return ToResponse(supplier);
+        logger.LogInformation("Supplier updated with ID: {Id}", supplier.Id);
+        return ToResponse(supplier);  // An toàn
     }
 
-    // --- DELETE --- 
     public async Task<bool> DeleteSupplierAsync(int id)
     {
         var supplier = await context.Suppliers.FindAsync(id);
@@ -76,28 +99,4 @@ public class SupplierService(AppDbContext context, ILogger<SupplierService> logg
         await context.SaveChangesAsync();
         return true;
     }
-
-    // --- DELETE (check tồn tại product)---
-    // public async Task<bool> DeleteSupplierAsync(int id)
-    // {
-    //     var hasProducts = await productService.HasProductsBySupplierIdAsync(id);
-    //     if (hasProducts)
-    //     {
-    //         logger.LogWarning("Cannot delete Supplier ID {Id}", id);
-    //         return false;
-    //     }
-
-    //     var supplier = await context.Suppliers.FindAsync(id);
-    //     if (supplier == null) return false;
-
-    //     context.Suppliers.Remove(supplier);
-    //     await context.SaveChangesAsync();
-    //     logger.LogInformation("Supplier ID {Id} deleted successfully.", id);
-    //     return true;
-    // }
-
 }
-
-
-
-

@@ -1,30 +1,42 @@
 import React, { useState, useEffect } from "react";
 import { Eye, Pencil, Trash2, Plus } from "lucide-react";
-import type { Supplier, CreateSupplierRequest } from "../../../types/supplier.types";
-import { getSuppliers, getSupplierById, createSupplier, updateSupplier, deleteSupplier } from "../../../services/supplier.service";
+
+// [ĐÃ SỬA] Sửa đường dẫn import về 3 cấp
+import type { Supplier, SupplierResponse } from "../../../types/supplier.types";
+// [ĐÃ SỬA] Xóa 'updateSupplier' và sửa đường dẫn
+import { getSuppliers, getSupplierById, deleteSupplier } from "../../../services/supplier.service";
+
+// [ĐÃ SỬA] Sửa tên file import về kebab-case
 import ViewModal from "./modal/view-modal";
 import UpdateModal from "./modal/update-modal";
 import DeleteModal from "./modal/delete-modal";
 import CreateModal from "./modal/create-modal";
 import SupplierPagination from "./supplier.pagination";
 
+
 const SupplierManagement: React.FC = () => {
     const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+
+    // Hàm fetch dữ liệu tập trung
+    const fetchSuppliers = async () => {
+        try {
+            const data = await getSuppliers();
+            setSuppliers(data);
+        } catch (error) {
+            console.error('Error loading suppliers:', error);
+            // Cân nhắc hiển thị thông báo lỗi cho người dùng (ví dụ: toast)
+        }
+    };
+
+    // Tải dữ liệu khi component mount
     useEffect(() => {
-        const fetchSuppliers = async () => {
-            try {
-                const data = await getSuppliers();
-                setSuppliers(data);
-            } catch (error) {
-                console.error('Error loading suppliers:', error);
-            }
-        };
         fetchSuppliers();
     }, []);
 
-    // Bộ lọc + tìm kiếm (loại bỏ status filter)
+    // State cho tìm kiếm
     const [searchTerm, setSearchTerm] = useState("");
 
+    // Lọc dữ liệu dựa trên searchTerm
     const filteredSuppliers = suppliers.filter((s) => {
         const search = searchTerm.toLowerCase();
         const matchesSearch =
@@ -35,69 +47,77 @@ const SupplierManagement: React.FC = () => {
         return matchesSearch;
     });
 
-    // Phân trang
-    const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 10;
-    const totalPages = Math.ceil(filteredSuppliers.length / itemsPerPage);
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const currentSuppliers = filteredSuppliers.slice(startIndex, startIndex + itemsPerPage);
+    // State cho phân trang
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
 
-    // modal
+    const handlePageChange = (newPage: number) => {
+        setPage(newPage);
+    };
+
+    const handleRowsPerPageChange = (newRowsPerPage: number) => {
+        setRowsPerPage(newRowsPerPage);
+        setPage(0); // Quay về trang đầu khi đổi số lượng dòng
+    };
+
+    // Lấy dữ liệu cho trang hiện tại
+    const startIndex = page * rowsPerPage;
+    const currentSuppliers = filteredSuppliers.slice(startIndex, startIndex + rowsPerPage);
+
+    // State cho các modal
     const [viewOpen, setViewOpen] = useState(false);
     const [updateOpen, setUpdateOpen] = useState(false);
     const [deleteOpen, setDeleteOpen] = useState(false);
-    const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
     const [createOpen, setCreateOpen] = useState(false);
+    const [selectedSupplier, setSelectedSupplier] = useState<Supplier | SupplierResponse | null>(null);
 
-    // refetch data
-    const refetchSuppliers = async () => {
-        try {
-            const data = await getSuppliers();
-            setSuppliers(data);
-        } catch (error) {
-            console.error('Error refetching suppliers:', error);
-        }
-    };
 
-    // open modal
-    const handleSubmitCreate = async (newSupplier: CreateSupplierRequest) => {
-        try {
-            await createSupplier(newSupplier);
-            await refetchSuppliers();
-        } catch (error) {
-            console.error('Error creating supplier:', error);
-        }
+    // Callback khi Modal "Thêm mới" submit thành công
+    const handleSubmitCreate = async () => {
+        // Modal con tự gọi API, cha chỉ cần fetch lại và đóng
+        await fetchSuppliers();
         setCreateOpen(false);
     };
 
+    // Xử lý mở modal "Xem"
     const handleView = async (supplier: Supplier) => {
         try {
+            // Gọi getById để lấy thông tin chi tiết (nếu có)
             const detailedSupplier = await getSupplierById(supplier.id);
             setSelectedSupplier(detailedSupplier || supplier);
         } catch (error) {
             console.error('Error fetching supplier details:', error);
-            setSelectedSupplier(supplier);
+            setSelectedSupplier(supplier); // Dùng dữ liệu cũ nếu gọi API lỗi
         }
         setViewOpen(true);
     };
 
+    // Xử lý mở modal "Cập nhật"
     const handleUpdate = (supplier: Supplier) => {
         setSelectedSupplier(supplier);
         setUpdateOpen(true);
     };
 
+    // Xử lý mở modal "Xóa"
     const handleDelete = (supplier: Supplier) => {
         setSelectedSupplier(supplier);
         setDeleteOpen(true);
     };
 
+    // Xử lý "Xác nhận xóa" từ DeleteModal
     const handleConfirmDelete = async () => {
         if (selectedSupplier && selectedSupplier.id) {
             try {
-                await deleteSupplier(selectedSupplier.id);
-                await refetchSuppliers();
+                const success = await deleteSupplier(selectedSupplier.id);
+                if (success) {
+                    await fetchSuppliers(); // Tải lại danh sách
+                } else {
+                    console.error('Delete failed, supplier not found.');
+                    // TODO: Hiển thị lỗi
+                }
             } catch (error) {
                 console.error('Error deleting supplier:', error);
+                // TODO: Hiển thị lỗi
             }
         } else {
             console.error('No supplier selected or ID is missing for deletion.');
@@ -105,20 +125,13 @@ const SupplierManagement: React.FC = () => {
         setDeleteOpen(false);
     };
 
-    const handleSubmitUpdate = async (updatedSupplier: Supplier) => {
-        if (!updatedSupplier.id) return;
-        try {
-            await updateSupplier(updatedSupplier.id, {
-                name: updatedSupplier.name,
-                phone: updatedSupplier.phone,
-                email: updatedSupplier.email,
-                address: updatedSupplier.address,
-            });
-            await refetchSuppliers();
-        } catch (error) {
-            console.error('Error updating supplier:', error);
-        }
+    // Callback khi Modal "Cập nhật" submit thành công
+    // Hàm này không cần nhận 'updatedSupplier' nữa.
+    const handleSubmitUpdate = async () => {
+        // Modal con tự gọi API, cha chỉ cần fetch lại và đóng
+        await fetchSuppliers();
         setUpdateOpen(false);
+        setSelectedSupplier(null); // Xóa nhà cung cấp đã chọn
     };
 
     return (
@@ -158,7 +171,7 @@ const SupplierManagement: React.FC = () => {
                 </button>
             </div>
 
-            {/* Bảng danh sách (loại bỏ cột Trạng thái, thêm Địa chỉ) */}
+            {/* Bảng danh sách */}
             <div className="overflow-x-auto bg-white rounded-2xl shadow-md">
                 <table className="w-full border-collapse text-sm">
                     <thead>
@@ -219,12 +232,14 @@ const SupplierManagement: React.FC = () => {
                         )}
                     </tbody>
                 </table>
+
+                {/* Phân trang */}
                 <SupplierPagination
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    onPageChange={(page) => {
-                        if (page >= 1 && page <= totalPages) setCurrentPage(page);
-                    }}
+                    suppliers={filteredSuppliers}
+                    page={page}
+                    rowsPerPage={rowsPerPage}
+                    onPageChange={handlePageChange}
+                    onRowsPerPageChange={handleRowsPerPageChange}
                 />
             </div>
 
@@ -252,6 +267,7 @@ const SupplierManagement: React.FC = () => {
                 supplierName={selectedSupplier?.name}
                 id={selectedSupplier?.id}
             />
+
             <CreateModal
                 isOpen={createOpen}
                 onClose={() => setCreateOpen(false)}

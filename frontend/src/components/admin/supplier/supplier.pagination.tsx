@@ -1,51 +1,64 @@
 import React from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { TablePagination } from "@mui/material";
+import type { Supplier } from "../../../types/supplier.types";
 
 interface SupplierPaginationProps {
-    currentPage: number;
-    totalPages: number;
-    onPageChange: (page: number) => void;
+  suppliers: Supplier[];
+  page: number;
+  rowsPerPage: number;
+  onPageChange: (newPage: number) => void;
+  onRowsPerPageChange: (newRowsPerPage: number) => void;
 }
 
 const SupplierPagination: React.FC<SupplierPaginationProps> = ({
-    currentPage,
-    totalPages,
-    onPageChange,
+  suppliers,
+  page,
+  rowsPerPage,
+  onPageChange,
+  onRowsPerPageChange,
 }) => {
-    if (totalPages <= 1) return null;
+  const handleChangePage = (
+    _event: React.MouseEvent<HTMLButtonElement> | null,
+    newPage: number
+  ) => {
+    onPageChange(newPage);
+  };
 
-    return (
-        <div className="flex justify-center items-center gap-2 mt-6 pt-4 pb-10">
-            <button
-                onClick={() => onPageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-            >
-                <ChevronLeft className="w-4 h-4 text-gray-700" />
-            </button>
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    onRowsPerPageChange(parseInt(event.target.value, 10));
+  };
 
-            {Array.from({ length: totalPages }, (_, i) => (
-                <button
-                    key={i}
-                    onClick={() => onPageChange(i + 1)}
-                    className={`px-3 py-1 border rounded-md text-sm transition-all duration-150 ${currentPage === i + 1
-                        ? "bg-blue-200"
-                        : "hover:bg-gray-100"
-                        }`}
-                >
-                    {i + 1}
-                </button>
-            ))}
-
-            <button
-                onClick={() => onPageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-            >
-                <ChevronRight className="w-4 h-4 text-gray-700" />
-            </button>
-        </div>
-    );
+  return (
+    <TablePagination
+      component="div"
+      count={suppliers.length}
+      page={page}
+      onPageChange={handleChangePage}
+      rowsPerPage={rowsPerPage}
+      onRowsPerPageChange={handleChangeRowsPerPage}
+      rowsPerPageOptions={[5, 10, 25, 50]}
+      labelRowsPerPage="Số hàng mỗi trang:"
+      labelDisplayedRows={({ from, to, count }) =>
+        `${from} - ${to} trên tổng ${count !== -1 ? count : `hơn ${to}`}`
+      }
+      sx={{
+        "& .MuiTablePagination-toolbar": {
+          paddingLeft: 2,
+          paddingRight: 2,
+        },
+        "& .MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows":
+          {
+            fontSize: "0.875rem",
+          },
+        "& .MuiTablePagination-select": {
+          paddingTop: 1,
+          paddingBottom: 1,
+        },
+      }}
+    />
+  );
 };
 
 export default SupplierPagination;
