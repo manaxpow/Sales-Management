@@ -1,0 +1,88 @@
+import React from 'react';
+import { TablePagination } from '@mui/material';
+
+// Product interface matching database structure
+interface Product {
+  productId: number;
+  categoryId: number;
+  supplierId: number;
+  productName: string;
+  barcode: string;
+  price: number;
+  unit: string;
+  createdAt: string;
+}
+
+// Inventory interface matching database structure
+interface InventoryItem {
+  inventoryId: number;
+  productId: number;
+  quantity: number;
+  updatedAt: string;
+}
+
+// Combined interface for display
+interface InventoryWithProduct extends InventoryItem {
+  product: Product;
+}
+
+interface InventoryPaginationProps {
+  inventory: InventoryWithProduct[];
+  page: number;
+  rowsPerPage: number;
+  onPageChange: (newPage: number) => void;
+  onRowsPerPageChange: (newRowsPerPage: number) => void;
+}
+
+const InventoryPagination = ({
+  inventory,
+  page,
+  rowsPerPage,
+  onPageChange,
+  onRowsPerPageChange,
+}: InventoryPaginationProps) => {
+  const handleChangePage = (
+    _event: React.MouseEvent<HTMLButtonElement> | null,
+    newPage: number,
+  ) => {
+    onPageChange(newPage);
+  };
+
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    onRowsPerPageChange(parseInt(event.target.value, 10));
+    onPageChange(0);
+  };
+
+  return (
+    <TablePagination
+      component="div"
+      count={inventory.length}
+      page={page}
+      onPageChange={handleChangePage}
+      rowsPerPage={rowsPerPage}
+      onRowsPerPageChange={handleChangeRowsPerPage}
+      rowsPerPageOptions={[5, 10, 25, 50]}
+      labelRowsPerPage="Items per page:"
+      labelDisplayedRows={({ from, to, count }) => 
+        `${from}-${to} of ${count !== -1 ? count : `more than ${to}`}`
+      }
+      sx={{
+        '& .MuiTablePagination-toolbar': {
+          paddingLeft: 2,
+          paddingRight: 2,
+        },
+        '& .MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': {
+          fontSize: '0.875rem',
+        },
+        '& .MuiTablePagination-select': {
+          paddingTop: 1,
+          paddingBottom: 1,
+        },
+      }}
+    />
+  );
+};
+
+export default InventoryPagination;
