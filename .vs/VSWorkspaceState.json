@@ -1,0 +1,11 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\backend",
+    "\\backend\\src",
+    "\\backend\\src\\Extensions",
+    "\\backend\\src\\Route"
+  ],
+  "SelectedNode": "\\backend\\src\\Extensions\\ServiceExtensions.cs",
+  "PreviewInSolutionExplorer": false
+}

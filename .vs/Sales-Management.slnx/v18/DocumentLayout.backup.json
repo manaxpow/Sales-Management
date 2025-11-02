@@ -1,0 +1,126 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "D:\\SGU\\HK1_2025-2026\\DotNet\\Sales-Management\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\SGU\\HK1_2025-2026\\DotNet\\Sales-Management\\backend\\src\\Route\\Route.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\src\\Route\\Route.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\SGU\\HK1_2025-2026\\DotNet\\Sales-Management\\backend\\src\\Extensions\\ServiceExtensions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\src\\Extensions\\ServiceExtensions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\SGU\\HK1_2025-2026\\DotNet\\Sales-Management\\backend\\src\\Route\\OrderRoute.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\src\\Route\\OrderRoute.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\SGU\\HK1_2025-2026\\DotNet\\Sales-Management\\backend\\src\\Services\\OrderService.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\src\\Services\\OrderService.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\SGU\\HK1_2025-2026\\DotNet\\Sales-Management\\backend\\src\\Services\\Interfaces\\IOrderService.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\src\\Services\\Interfaces\\IOrderService.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\SGU\\HK1_2025-2026\\DotNet\\Sales-Management\\backend\\src\\Modal\\Orders.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\src\\Modal\\Orders.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 1,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Route.cs",
+              "DocumentMoniker": "D:\\SGU\\HK1_2025-2026\\DotNet\\Sales-Management\\backend\\src\\Route\\Route.cs",
+              "RelativeDocumentMoniker": "backend\\src\\Route\\Route.cs",
+              "ToolTip": "D:\\SGU\\HK1_2025-2026\\DotNet\\Sales-Management\\backend\\src\\Route\\Route.cs",
+              "RelativeToolTip": "backend\\src\\Route\\Route.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAbAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-27T00:50:22.148Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "ServiceExtensions.cs",
+              "DocumentMoniker": "D:\\SGU\\HK1_2025-2026\\DotNet\\Sales-Management\\backend\\src\\Extensions\\ServiceExtensions.cs",
+              "RelativeDocumentMoniker": "backend\\src\\Extensions\\ServiceExtensions.cs",
+              "ToolTip": "D:\\SGU\\HK1_2025-2026\\DotNet\\Sales-Management\\backend\\src\\Extensions\\ServiceExtensions.cs",
+              "RelativeToolTip": "backend\\src\\Extensions\\ServiceExtensions.cs",
+              "ViewState": "AgIAABgAAAAAAAAAAAAAACcAAABCAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-27T00:49:47.853Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "OrderRoute.cs",
+              "DocumentMoniker": "D:\\SGU\\HK1_2025-2026\\DotNet\\Sales-Management\\backend\\src\\Route\\OrderRoute.cs",
+              "RelativeDocumentMoniker": "backend\\src\\Route\\OrderRoute.cs",
+              "ToolTip": "D:\\SGU\\HK1_2025-2026\\DotNet\\Sales-Management\\backend\\src\\Route\\OrderRoute.cs",
+              "RelativeToolTip": "backend\\src\\Route\\OrderRoute.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACsAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-27T00:49:21.071Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "OrderService.cs",
+              "DocumentMoniker": "D:\\SGU\\HK1_2025-2026\\DotNet\\Sales-Management\\backend\\src\\Services\\OrderService.cs",
+              "RelativeDocumentMoniker": "backend\\src\\Services\\OrderService.cs",
+              "ToolTip": "D:\\SGU\\HK1_2025-2026\\DotNet\\Sales-Management\\backend\\src\\Services\\OrderService.cs",
+              "RelativeToolTip": "backend\\src\\Services\\OrderService.cs",
+              "ViewState": "AgIAABsAAAAAAAAAAAAowEcAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-27T00:48:33.286Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "IOrderService.cs",
+              "DocumentMoniker": "D:\\SGU\\HK1_2025-2026\\DotNet\\Sales-Management\\backend\\src\\Services\\Interfaces\\IOrderService.cs",
+              "RelativeDocumentMoniker": "backend\\src\\Services\\Interfaces\\IOrderService.cs",
+              "ToolTip": "D:\\SGU\\HK1_2025-2026\\DotNet\\Sales-Management\\backend\\src\\Services\\Interfaces\\IOrderService.cs",
+              "RelativeToolTip": "backend\\src\\Services\\Interfaces\\IOrderService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-27T00:47:48.332Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "Orders.cs",
+              "DocumentMoniker": "D:\\SGU\\HK1_2025-2026\\DotNet\\Sales-Management\\backend\\src\\Modal\\Orders.cs",
+              "RelativeDocumentMoniker": "backend\\src\\Modal\\Orders.cs",
+              "ToolTip": "D:\\SGU\\HK1_2025-2026\\DotNet\\Sales-Management\\backend\\src\\Modal\\Orders.cs",
+              "RelativeToolTip": "backend\\src\\Modal\\Orders.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAnAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-27T00:09:48.089Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

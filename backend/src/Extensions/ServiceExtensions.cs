@@ -35,6 +35,7 @@ public static class ServiceExtensions
         builder.Services.AddScoped<IBookService, BookService>();
         builder.Services.AddScoped<IUserService, UserService>();
         builder.Services.AddScoped<IPromotionService, PromotionService>();
+        builder.Services.AddScoped<ISupplierService, SupplierService>();
         builder.Services.AddScoped<JwtService>();
         builder.Services.AddScoped<ICategoryService, SRC.Services.CategoryService>();
         builder.Services.AddScoped<IOrderService, OrderService>();

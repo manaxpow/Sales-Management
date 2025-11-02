@@ -15,6 +15,7 @@ public static class OrderRoute {
             return rs.Success ? Results.Ok(rs) : Results.BadRequest(rs);
         });
 
+        // READ - LIST with optional filters
         orders.MapGet("/", async (
             IOrderService svc,
             int? customerId,
@@ -26,6 +27,7 @@ public static class OrderRoute {
                 return rs.Success ? Results.Ok(rs) : Results.BadRequest(rs);
             });
 
+        // READ - BY ID
         orders.MapGet("/{id:int}", async (int id, IOrderService svc) => {
             var rs = await svc.GetById(id);
             return rs.Success ? Results.Ok(rs) : Results.NotFound(rs);
@@ -41,6 +43,7 @@ public static class OrderRoute {
             return rs.Success ? Results.Ok(rs) : Results.BadRequest(rs);
         });
 
+        // DELETE
         orders.MapDelete("/{id:int}", async (int id, IOrderService svc) => {
             var rs = await svc.Delete(id);
             return rs.Success ? Results.Ok(rs) : Results.BadRequest(rs);

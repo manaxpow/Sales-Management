@@ -11,6 +11,7 @@ import ManagePromotion from "../pages/admin/manage-promotion";
 import CreatePromotion from "../pages/admin/create-promotion";
 import { ManageOrder } from "../pages/admin/manage-order";
 import CreateCustomerPage from "../pages/admin/create-customer";
+import { ManageInventory } from "../pages/admin/manage-inventory";
 
 export const adminRoutes: RouteObject[] = [
   {
@@ -61,4 +62,8 @@ export const adminRoutes: RouteObject[] = [
     path: "promotions/create",
     element: <CreatePromotion />,
   },
+  {
+    path: "inventory",
+    element: <ManageInventory />,
+  }
 ];
