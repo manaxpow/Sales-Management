@@ -1,12 +1,12 @@
-using FluentValidation;
+﻿using FluentValidation;
 using FluentValidation.Results;
 
-public static class OrderRoute {
-    public static IEndpointRouteBuilder MapOrderEndPoint(this IEndpointRouteBuilder group) {
-        var orders = group.MapGroup("/orders").WithTags("Orders");
+public static class SupplierRoute {
+    public static IEndpointRouteBuilder MapSupplierEndPoint(this IEndpointRouteBuilder group) {
+        var route = group.MapGroup("/suppliers").WithTags("Suppliers");
 
-        orders.MapPost("/", async (Orders body, IValidator<Orders> validator, IOrderService svc) =>
-        {
+        // CREATE
+        route.MapPost("/", async (Suppliers body, IValidator<Suppliers> validator, ISupplierService svc) => {
             ValidationResult val = await validator.ValidateAsync(body);
             if (!val.IsValid)
                 return Results.BadRequest(val.Errors.Select(e => new { field = e.PropertyName, message = e.ErrorMessage }));
@@ -15,24 +15,20 @@ public static class OrderRoute {
             return rs.Success ? Results.Ok(rs) : Results.BadRequest(rs);
         });
 
-        orders.MapGet("/", async (
-            IOrderService svc,
-            int? customerId,
-            int? userId,
-            int? status,
-            DateTime? dateFrom,
-            DateTime? dateTo) => {
-                var rs = await svc.GetAll(customerId, userId, status, dateFrom, dateTo);
-                return rs.Success ? Results.Ok(rs) : Results.BadRequest(rs);
-            });
+        // LIST
+        route.MapGet("/", async (ISupplierService svc) => {
+            var rs = await svc.GetAll();
+            return rs.Success ? Results.Ok(rs) : Results.BadRequest(rs);
+        });
 
-        orders.MapGet("/{id:int}", async (int id, IOrderService svc) => {
+        // BY ID
+        route.MapGet("/{id:int}", async (int id, ISupplierService svc) => {
             var rs = await svc.GetById(id);
             return rs.Success ? Results.Ok(rs) : Results.NotFound(rs);
         });
 
-        orders.MapPut("/{id:int}", async (int id, Orders body, IValidator<Orders> validator, IOrderService svc) =>
-        {
+        // UPDATE
+        route.MapPut("/{id:int}", async (int id, Suppliers body, IValidator<Suppliers> validator, ISupplierService svc) => {
             ValidationResult val = await validator.ValidateAsync(body);
             if (!val.IsValid)
                 return Results.BadRequest(val.Errors.Select(e => new { field = e.PropertyName, message = e.ErrorMessage }));
@@ -41,7 +37,8 @@ public static class OrderRoute {
             return rs.Success ? Results.Ok(rs) : Results.BadRequest(rs);
         });
 
-        orders.MapDelete("/{id:int}", async (int id, IOrderService svc) => {
+        // DELETE
+        route.MapDelete("/{id:int}", async (int id, ISupplierService svc) => {
             var rs = await svc.Delete(id);
             return rs.Success ? Results.Ok(rs) : Results.BadRequest(rs);
         });

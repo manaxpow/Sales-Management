@@ -13,6 +13,8 @@ public class Routes
         .MapPromotionEndPoint()
         .MapOrderEndPoint()
         .MapOrderItemEndPoint()
+        .MapProductEndPoint()
+        .MapSupplierEndPoint()
         ;
 
     }

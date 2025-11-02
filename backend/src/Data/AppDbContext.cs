@@ -12,6 +12,7 @@ public class AppDbContext : DbContext
     }
 
     public DbSet<Books> Book { get; set; }
+    public DbSet<Products> Products { get; set; }
     public DbSet<Users> Users { get; set; }
     public DbSet<Suppliers> Suppliers { get; set; }
     public DbSet<Categories> Categories { get; set; }
