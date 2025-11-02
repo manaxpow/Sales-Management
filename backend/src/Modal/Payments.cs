@@ -9,10 +9,7 @@ public class Payments
     public int PaymentId { get; set; }
     public int OrderId { get; set; }
     public decimal Amount { get; set; }
-    public int Paymentmethod
-    {
-        get; set;
-    }
+    public string Paymentmethod { get; set; } = string.Empty;
 
     public DateTime PaymentDate { get; set; }
 }

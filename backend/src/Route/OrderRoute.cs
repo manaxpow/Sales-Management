@@ -1,9 +1,17 @@
+using FluentValidation;
+using FluentValidation.Results;
+
 public static class OrderRoute {
     public static IEndpointRouteBuilder MapOrderEndPoint(this IEndpointRouteBuilder group) {
         var orders = group.MapGroup("/orders").WithTags("Orders");
 
         // CREATE
-        orders.MapPost("/", async (Orders body, IOrderService svc) => {
+        orders.MapPost("/", async (Orders body, IValidator<Orders> validator, IOrderService svc) =>
+        {
+            ValidationResult val = await validator.ValidateAsync(body);
+            if (!val.IsValid)
+                return Results.BadRequest(val.Errors.Select(e => new { field = e.PropertyName, message = e.ErrorMessage }));
+
             var rs = await svc.Create(body);
             return rs.Success ? Results.Ok(rs) : Results.BadRequest(rs);
         });
@@ -27,7 +35,12 @@ public static class OrderRoute {
         });
 
         // UPDATE
-        orders.MapPut("/{id:int}", async (int id, Orders body, IOrderService svc) => {
+        orders.MapPut("/{id:int}", async (int id, Orders body, IValidator<Orders> validator, IOrderService svc) =>
+        {
+            ValidationResult val = await validator.ValidateAsync(body);
+            if (!val.IsValid)
+                return Results.BadRequest(val.Errors.Select(e => new { field = e.PropertyName, message = e.ErrorMessage }));
+
             var rs = await svc.Update(id, body);
             return rs.Success ? Results.Ok(rs) : Results.BadRequest(rs);
         });
