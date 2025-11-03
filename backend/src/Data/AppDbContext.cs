@@ -21,6 +21,5 @@ public class AppDbContext : DbContext
     public DbSet<Customers> Customers { get; set; }
     public DbSet<Inventory> Inventory { get; set; }
     public DbSet<Payments> Payments { get; set; }
-    public DbSet<Products> Products { get; set; }
 
 }
