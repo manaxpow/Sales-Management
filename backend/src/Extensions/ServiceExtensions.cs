@@ -32,7 +32,6 @@ public static class ServiceExtensions
 
         // scoped services
         builder.Services.AddScoped<IAuthServices, AuthService>();
-        builder.Services.AddScoped<IBookService, BookService>();
         builder.Services.AddScoped<IUserService, UserService>();
         builder.Services.AddScoped<IPromotionService, PromotionService>();
         builder.Services.AddScoped<ISupplierService, SupplierService>();
@@ -40,12 +39,16 @@ public static class ServiceExtensions
         builder.Services.AddScoped<ICategoryService, SRC.Services.CategoryService>();
         builder.Services.AddScoped<IOrderService, OrderService>();
         builder.Services.AddScoped<IOrderItemService, OrderItemService>();
+<<<<<<< HEAD
         builder.Services.AddScoped<IPaymentService, PaymentService>();
+=======
+        builder.Services.AddScoped<IProductService, ProductService>();
+>>>>>>> 112ae7a (#68 - design api for product success (#71))
 
         // global error handler
         builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
         builder.Services.AddProblemDetails();
-        
+
         // jwt
         builder.Services.AddAuthorization();
         builder.Services.AddAuthentication();
