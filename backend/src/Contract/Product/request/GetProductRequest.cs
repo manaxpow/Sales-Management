@@ -1,22 +1,31 @@
 using Microsoft.AspNetCore.Mvc;
 
-public record GetPromotionRequest
+public record GetProductRequest
 {
     [FromQuery]
-    public string? PromotionCode { get; init; } = string.Empty;
+    public string? ProductName { get; init; } = string.Empty;
     [FromQuery]
 
 
-    public int? DiscountType { get; init; }
+    public int? SupplierId { get; init; }
     [FromQuery]
 
-    public int? Status { get; init; }
+    public int? CategoryId { get; init; }
+    [FromQuery]
+
+    public string? Barcode { get; init; }
+    [FromQuery]
+
+    public decimal? Price { get; init; }
     [FromQuery]
 
     public int? Limit { get; init; } = 10;
     [FromQuery]
 
     public int? Page { get; init; } = 1;
+    [FromQuery]
+
+    public int? Status { get; init; }
     [FromQuery]
 
 
