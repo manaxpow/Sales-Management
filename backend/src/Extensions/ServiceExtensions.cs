@@ -4,6 +4,7 @@ using System.Text;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using SRC.Services.Interfaces;
 
 
 public static class ServiceExtensions
@@ -31,15 +32,20 @@ public static class ServiceExtensions
 
         // scoped services
         builder.Services.AddScoped<IAuthServices, AuthService>();
-        builder.Services.AddScoped<IBookService, BookService>();
         builder.Services.AddScoped<IUserService, UserService>();
         builder.Services.AddScoped<IPromotionService, PromotionService>();
+        builder.Services.AddScoped<ISupplierService, SupplierService>();
         builder.Services.AddScoped<JwtService>();
+        builder.Services.AddScoped<ICategoryService, SRC.Services.CategoryService>();
+        builder.Services.AddScoped<IOrderService, OrderService>();
+        builder.Services.AddScoped<IOrderItemService, OrderItemService>();
+        builder.Services.AddScoped<IProductService, ProductService>();
+        builder.Services.AddScoped<ICustomerService, CustomerService>();
 
         // global error handler
         builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
         builder.Services.AddProblemDetails();
-        
+
         // jwt
         builder.Services.AddAuthorization();
         builder.Services.AddAuthentication();

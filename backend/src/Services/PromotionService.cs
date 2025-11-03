@@ -67,7 +67,6 @@ public class PromotionService(AppDbContext context, ILogger<PromotionService> lo
         if (res.DiscountType.HasValue)
             query = query.Where(u => u.DiscountType == res.DiscountType.Value);
         if (res.Status.HasValue)
-
             query = query.Where(u => res.Status == u.Status);
         // sorting
         logger.LogInformation("check query" + res.PromotionCode);

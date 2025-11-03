@@ -1,18 +1,9 @@
 import React from "react";
 import { TablePagination } from "@mui/material";
-
-export interface SimpleCustomer {
-  id: number | string;
-  name: string;
-  phone?: string;
-  email?: string;
-  address?: string;
-  status?: "active" | "inactive";
-  createdAt?: string; // ISO string nếu cần
-}
+import type { CustomerResponse } from "../../../types/customer.types";
 
 interface CustomerPaginationProps {
-  customers: SimpleCustomer[];
+  customers: CustomerResponse[];
   page: number;
   rowsPerPage: number;
   onPageChange: (newPage: number) => void;

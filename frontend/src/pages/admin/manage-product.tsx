@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import {
   Box,
   Paper,
@@ -12,7 +12,6 @@ import {
   Button,
   IconButton,
   Typography,
-  Avatar,
   Chip,
   TextField,
   InputAdornment,
@@ -35,7 +34,6 @@ import {
   Plus,
   Edit,
   Trash2,
-  Image as ImageIcon,
   Package,
   Tag,
   DollarSign,
@@ -49,147 +47,36 @@ import {
 
 // Import modals
 import EditProductModal from "../../components/admin/product/update-product.modal";
-import AddProductModal, {
-  type NewProductFormData,
-} from "../../components/admin/product/add-product.modal";
-
-export interface SimpleProduct {
-  id: number;
-  image?: string;
-  name: string;
-  code: string;
-  category: string;
-  supplier: string;
-  status: "active" | "inactive";
-  price: number;
-  unit: string;
-}
-
-const mockProducts: SimpleProduct[] = [
-  {
-    id: 1,
-    image: "https://picsum.photos/200?random=1",
-    name: "iPhone 15 Pro Max 256GB",
-    code: "IPH15PM-001",
-    category: "Điện thoại",
-    supplier: "Apple Việt Nam",
-    status: "active",
-    price: 29999000,
-    unit: "Chiếc",
-  },
-  {
-    id: 2,
-    image: "https://picsum.photos/200?random=2",
-    name: "Samsung Galaxy S24 Ultra",
-    code: "SGS24U-002",
-    category: "Điện thoại",
-    supplier: "Samsung Việt Nam",
-    status: "active",
-    price: 25999000,
-    unit: "Chiếc",
-  },
-  {
-    id: 3,
-    image: "https://picsum.photos/200?random=3",
-    name: "MacBook Pro M3 14 inch",
-    code: "MBP-M3-003",
-    category: "Laptop",
-    supplier: "Apple Việt Nam",
-    status: "active",
-    price: 49999000,
-    unit: "Chiếc",
-  },
-  {
-    id: 4,
-    image: "https://picsum.photos/200?random=4",
-    name: "Asus ROG Strix G16",
-    code: "ROG-G16-004",
-    category: "Laptop",
-    supplier: "ASUS Việt Nam",
-    status: "inactive",
-    price: 35999000,
-    unit: "Chiếc",
-  },
-  {
-    id: 5,
-    image: "https://picsum.photos/200?random=5",
-    name: "iPad Pro M4 11 inch",
-    code: "IPAD-M4-005",
-    category: "Máy tính bảng",
-    supplier: "Apple Việt Nam",
-    status: "active",
-    price: 24999000,
-    unit: "Chiếc",
-  },
-  {
-    id: 6,
-    image: "https://picsum.photos/200?random=6",
-    name: "AirPods Pro 2nd Gen",
-    code: "AP-PRO2-006",
-    category: "Tai nghe",
-    supplier: "Apple Việt Nam",
-    status: "active",
-    price: 6990000,
-    unit: "Cặp",
-  },
-  {
-    id: 7,
-    image: "https://picsum.photos/200?random=7",
-    name: "Sony WH-1000XM5",
-    code: "WH1000XM5-007",
-    category: "Tai nghe",
-    supplier: "Sony Việt Nam",
-    status: "active",
-    price: 12990000,
-    unit: "Cặp",
-  },
-  {
-    id: 8,
-    image: "https://picsum.photos/200?random=8",
-    name: "Ốp lưng iPhone 15 Pro",
-    code: "CASE-IPH15-008",
-    category: "Phụ kiện",
-    supplier: "Spigen Việt Nam",
-    status: "active",
-    price: 890000,
-    unit: "Cái",
-  },
-  {
-    id: 9,
-    image: "https://picsum.photos/200?random=9",
-    name: "Chuột không dây Logitech MX Master 3",
-    code: "LOGI-MX3-009",
-    category: "Phụ kiện",
-    supplier: "Logitech Việt Nam",
-    status: "active",
-    price: 2790000,
-    unit: "Cái",
-  },
-  {
-    id: 10,
-    image: "https://picsum.photos/200?random=10",
-    name: "Bàn phím cơ Keychron K2",
-    code: "KEY-K2-010",
-    category: "Phụ kiện",
-    supplier: "Keychron Việt Nam",
-    status: "inactive",
-    price: 3490000,
-    unit: "Cái",
-  },
-];
+import AddProductModal from "../../components/admin/product/add-product.modal";
+import { useFetchData } from "../../hooks/fetchData";
+import { GetProductsService } from "../../services/product.service";
+import type { ProductFilter, ProductResponse } from "../../types/product.type";
+import { CategoryService } from "../../services/category.service";
 
 const ProductManagement = () => {
-  const [products, setProducts] = useState<SimpleProduct[]>(mockProducts);
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("Tất cả");
-  const [statusFilter, setStatusFilter] = useState("Tất cả");
+  const [filter, setFilter] = useState<ProductFilter>({
+    Limit: 5,
+    Page: 1,
+    ProductName: "",
+  });
+  const { data } = useFetchData(GetProductsService, filter);
+  // Sửa nút xóa bộ lọc
+  const handleClearFilters = () => {
+    setFilter({
+      Limit: 5,
+      Page: 1,
+      ProductName: "",
+      CategoryId: undefined,
+      Status: undefined,
+    });
+  };
+  const { data: Category } = useFetchData(CategoryService.getAll, {});
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<SimpleProduct | null>(
+  const [editingProduct, setEditingProduct] = useState<ProductResponse | null>(
     null
   );
+
   const [deleteDialog, setDeleteDialog] = useState<{
     open: boolean;
     productId: number | null;
@@ -206,60 +93,12 @@ const ProductManagement = () => {
     severity: "success" | "error";
   }>({ open: false, message: "", severity: "success" });
 
-  const availableCategories = useMemo(() => {
-    const uniqueCategories = Array.from(
-      new Set(products.map((p) => p.category))
-    ).sort();
-    return ["Tất cả", ...uniqueCategories];
-  }, [products]);
-
-  // Tạo URL ảnh placeholder từ Lorem Picsum dựa trên product ID
-  const getPlaceholderImage = (productId: number) => {
-    return `https://picsum.photos/200?random=${productId}`;
-  };
-
-  // Tự động generate unique code và ID cho sản phẩm mới
-  const generateUniqueProductData = (newProductData: NewProductFormData) => {
-    const categoryCode = newProductData.category
-      .substring(0, 4)
-      .toUpperCase()
-      .replace(/[^A-Z]/g, "");
-
-    const nameCode = newProductData.name
-      .toUpperCase()
-      .replace(/[^A-Z0-9]/g, "")
-      .substring(0, 6);
-
-    const randomCode = Math.random().toString(36).substring(2, 7).toUpperCase();
-    const code = `${categoryCode}-${nameCode}-${randomCode}`;
-    const id = Date.now() + Math.random();
-
-    return { id, code };
-  };
-
-  const handleAddProduct = async (newProductData: NewProductFormData) => {
-    setSaveLoading(true);
+  const handleAddProduct = async () => {
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      const { id, code } = generateUniqueProductData(newProductData);
-
-      const newProduct: SimpleProduct = {
-        id,
-        image: getPlaceholderImage(Math.floor(id)), // TODO: Sau này upload ảnh thật và lưu URL từ server
-        name: newProductData.name,
-        code,
-        category: newProductData.category,
-        supplier: newProductData.supplier,
-        status: newProductData.status,
-        price: newProductData.price,
-        unit: newProductData.unit,
-      };
-
-      setProducts((prev) => [newProduct, ...prev]);
+      console.log(1);
       setSnackbar({
         open: true,
-        message: `Thêm sản phẩm "${newProduct.name}" thành công!`,
+        message: `Thêm sản phẩm thành công!`,
         severity: "success",
       });
       setAddModalOpen(false);
@@ -275,40 +114,15 @@ const ProductManagement = () => {
     }
   };
 
-  const handleEditProduct = (product: SimpleProduct) => {
+  const handleEditProduct = (product: ProductResponse) => {
     setEditingProduct(product);
     setEditModalOpen(true);
   };
 
-  const handleSaveProduct = async (updatedData: {
-    name: string;
-    category: string;
-    supplier: string;
-    status: "active" | "inactive";
-    price: number;
-    unit: string;
-  }) => {
+  const handleSaveProduct = async () => {
     setSaveLoading(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // TODO: Sau này khi edit, nếu có upload ảnh mới thì xử lý upload và cập nhật URL
-      // Hiện tại giữ nguyên ảnh placeholder
-
-      setProducts((prev) =>
-        prev.map((product) =>
-          product.id === editingProduct?.id
-            ? {
-                ...product,
-                ...updatedData,
-                // Giữ nguyên code, id và image khi edit
-                code: product.code,
-                id: product.id,
-                image: product.image,
-              }
-            : product
-        )
-      );
+      // update Product service
 
       setSnackbar({
         open: true,
@@ -346,18 +160,8 @@ const ProductManagement = () => {
   };
 
   const handleConfirmDelete = () => {
-    if (deleteDialog.productId) {
-      const deletedProductName = deleteDialog.productName;
-      setProducts((prev) =>
-        prev.filter((product) => product.id !== deleteDialog.productId)
-      );
-      setSnackbar({
-        open: true,
-        message: `Đã xóa sản phẩm "${deletedProductName}"`,
-        severity: "success",
-      });
-      handleCloseDeleteDialog();
-    }
+    // delete product service
+    console.log(1);
   };
 
   const handleCloseEditModal = () => {
@@ -365,71 +169,31 @@ const ProductManagement = () => {
     setEditingProduct(null);
   };
 
-  const filteredProducts = useMemo(() => {
-    let filtered = products;
-
-    if (searchTerm.trim()) {
-      const searchLower = searchTerm.toLowerCase();
-      filtered = filtered.filter(
-        (product) =>
-          product.name.toLowerCase().includes(searchLower) ||
-          product.code.toLowerCase().includes(searchLower) ||
-          product.category.toLowerCase().includes(searchLower) ||
-          product.supplier.toLowerCase().includes(searchLower)
-      );
-    }
-
-    if (categoryFilter !== "Tất cả") {
-      filtered = filtered.filter(
-        (product) => product.category === categoryFilter
-      );
-    }
-
-    if (statusFilter !== "Tất cả") {
-      filtered = filtered.filter((product) => product.status === statusFilter);
-    }
-
-    return filtered;
-  }, [products, searchTerm, categoryFilter, statusFilter]);
-
-  const handleChangePage = (event: unknown, newPage: number) => {
-    setPage(newPage);
+  const handleChangePage = (newPage: number) => {
+    // mui page bat dau tu 0
+    setFilter((prev) => ({ ...prev, Page: newPage + 1 }));
   };
 
   const handleChangeRowsPerPage = (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
-
-  const handleClearFilters = () => {
-    setSearchTerm("");
-    setCategoryFilter("Tất cả");
-    setStatusFilter("Tất cả");
-    setPage(0);
-  };
-
-  const handleCategoryFilterChange = (value: string) => {
-    setCategoryFilter(value);
-    setPage(0);
-  };
-
-  const handleStatusFilterChange = (value: string) => {
-    setStatusFilter(value);
-    setPage(0);
+    setFilter((prev) => ({
+      ...prev,
+      Limit: Number(event.target.value),
+      Page: 1,
+    }));
   };
 
   const handleSnackbarClose = () => {
     setSnackbar({ open: false, message: "", severity: "success" });
   };
 
-  const getStatusChip = (status: "active" | "inactive") => {
-    const statusText = status === "active" ? "Hoạt động" : "Ngừng kinh doanh";
+  const getStatusChip = (status: number) => {
+    const statusText = status === 1 ? "Hoạt động" : "Ngừng kinh doanh";
     return (
       <Chip
         label={statusText}
-        color={status === "active" ? "success" : "error"}
+        color={status === 1 ? "success" : "error"}
         size="small"
         variant="filled"
       />
@@ -439,11 +203,6 @@ const ProductManagement = () => {
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("vi-VN").format(price) + "₫";
   };
-
-  const paginatedProducts = filteredProducts.slice(
-    page * rowsPerPage,
-    page * rowsPerPage + rowsPerPage
-  );
 
   return (
     <Box className="flex-grow p-6 bg-gray-50">
@@ -461,7 +220,7 @@ const ProductManagement = () => {
                 Quản lý sản phẩm
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Quản lý danh mục sản phẩm của bạn ({filteredProducts.length} sản
+                Quản lý danh mục sản phẩm của bạn ({data?.totalProduct} sản
                 phẩm)
               </Typography>
             </Box>
@@ -481,14 +240,15 @@ const ProductManagement = () => {
       <Container maxWidth="xl" className="mt-6 mb-6 px-4">
         <Paper className="p-4 mb-4 bg-white shadow-sm rounded-lg">
           <Box className="flex flex-col md:flex-row gap-4 items-end">
+            {/* Ô tìm kiếm */}
             <TextField
               fullWidth
               variant="outlined"
               placeholder="Tìm kiếm theo tên, mã, danh mục hoặc nhà cung cấp..."
-              value={searchTerm}
+              value={filter.ProductName ?? ""}
               onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setPage(0);
+                const value = e.target.value;
+                setFilter((prev) => ({ ...prev, ProductName: value, Page: 1 }));
               }}
               InputProps={{
                 startAdornment: (
@@ -501,50 +261,57 @@ const ProductManagement = () => {
               disabled={saveLoading}
             />
 
-            <FormControl
-              variant="outlined"
-              size="small"
-              className="min-w-[150px]"
-            >
+            {/* Lọc danh mục */}
+            <FormControl variant="outlined" size="small" sx={{ minWidth: 150 }}>
               <InputLabel>Danh mục</InputLabel>
               <Select
-                value={categoryFilter}
+                value={filter.CategoryId ?? ""}
+                MenuProps={{ disablePortal: false }}
                 onChange={(e) =>
-                  handleCategoryFilterChange(e.target.value as string)
+                  setFilter((prev) => ({
+                    ...prev,
+                    CategoryId: e.target.value
+                      ? Number(e.target.value)
+                      : undefined,
+                    Page: 1,
+                  }))
                 }
                 label="Danh mục"
                 disabled={saveLoading}
               >
-                {availableCategories.map((cat) => (
-                  <MenuItem key={cat} value={cat}>
-                    {cat}
+                <MenuItem value="">Tất cả danh mục</MenuItem>
+                {Category?.map((cat) => (
+                  <MenuItem key={cat.id} value={cat.id}>
+                    {cat.name || `Danh mục ${cat.id}`}
                   </MenuItem>
                 ))}
               </Select>
             </FormControl>
 
-            <FormControl
-              variant="outlined"
-              size="small"
-              className="min-w-[160px]"
-            >
+            {/* Lọc trạng thái */}
+            <FormControl variant="outlined" size="small" sx={{ minWidth: 150 }}>
               <InputLabel>Trạng thái</InputLabel>
               <Select
-                value={statusFilter}
+                MenuProps={{ disablePortal: false }}
+                value={filter.Status ?? ""}
                 onChange={(e) =>
-                  handleStatusFilterChange(e.target.value as string)
+                  setFilter((prev) => ({
+                    ...prev,
+                    Status: e.target.value || undefined,
+                    Page: 1,
+                  }))
                 }
                 label="Trạng thái"
                 disabled={saveLoading}
               >
-                <MenuItem value="Tất cả">Tất cả trạng thái</MenuItem>
-                <MenuItem value="active">
+                <MenuItem value="">Tất cả trạng thái</MenuItem>
+                <MenuItem value={1}>
                   <Box className="flex items-center gap-2">
                     <CheckCircle size={16} className="text-green-600" />
                     Hoạt động
                   </Box>
                 </MenuItem>
-                <MenuItem value="inactive">
+                <MenuItem value={2}>
                   <Box className="flex items-center gap-2">
                     <X size={16} className="text-red-600" />
                     Ngừng kinh doanh
@@ -553,71 +320,58 @@ const ProductManagement = () => {
               </Select>
             </FormControl>
 
+            {/* Nút xóa bộ lọc */}
             <Button
               variant="outlined"
               startIcon={<X size={16} />}
               onClick={handleClearFilters}
               size="small"
               className="whitespace-nowrap border-gray-300 hover:bg-gray-50"
-              disabled={
-                (!searchTerm.trim() &&
-                  categoryFilter === "Tất cả" &&
-                  statusFilter === "Tất cả") ||
-                saveLoading
-              }
+              disabled={saveLoading}
             >
               Xóa bộ lọc
             </Button>
           </Box>
 
-          {(searchTerm.trim() ||
-            categoryFilter !== "Tất cả" ||
-            statusFilter !== "Tất cả") && (
-            <Box className="mt-3 flex flex-wrap gap-2">
-              {searchTerm.trim() && (
+          {/* Chip hiển thị kết quả */}
+          {(filter.ProductName || filter.CategoryId || filter.Status) && (
+            <Box className="mt-3 flex flex-wrap gap-2 items-center">
+              {filter.ProductName && (
                 <Chip
-                  label={`Tìm kiếm: "${searchTerm}"`}
+                  label={`Tên chứa: "${filter.ProductName}"`}
                   size="small"
-                  onDelete={() => setSearchTerm("")}
-                  color="primary"
-                  variant="outlined"
-                  icon={<Search size={16} className="text-blue-500" />}
+                  onDelete={() =>
+                    setFilter((prev) => ({ ...prev, ProductName: undefined }))
+                  }
                 />
               )}
-              {categoryFilter !== "Tất cả" && (
+              {filter.CategoryId && (
                 <Chip
-                  label={`Danh mục: ${categoryFilter}`}
-                  size="small"
-                  onDelete={() => handleCategoryFilterChange("Tất cả")}
-                  color="success"
-                  variant="outlined"
-                  icon={<Settings2 size={16} className="text-green-500" />}
-                />
-              )}
-              {statusFilter !== "Tất cả" && (
-                <Chip
-                  label={`Trạng thái: ${
-                    statusFilter === "active" ? "Hoạt động" : "Ngừng kinh doanh"
+                  label={`Danh mục: ${
+                    Category?.find((c) => c.id === filter.CategoryId)?.name ??
+                    filter.CategoryId
                   }`}
                   size="small"
-                  onDelete={() => handleStatusFilterChange("Tất cả")}
-                  color={statusFilter === "active" ? "success" : "error"}
-                  variant="outlined"
-                  icon={
-                    statusFilter === "active" ? (
-                      <CheckCircle size={16} className="text-green-500" />
-                    ) : (
-                      <X size={16} className="text-red-500" />
-                    )
+                  onDelete={() =>
+                    setFilter((prev) => ({ ...prev, CategoryId: undefined }))
+                  }
+                />
+              )}
+              {filter.Status && (
+                <Chip
+                  label={`Trạng thái: ${
+                    filter.Status === 1 ? "Hoạt động" : "Ngừng kinh doanh"
+                  }`}
+                  size="small"
+                  onDelete={() =>
+                    setFilter((prev) => ({ ...prev, Status: undefined }))
                   }
                 />
               )}
               <Chip
-                label={`${filteredProducts.length} sản phẩm`}
+                label={`${data?.totalProduct ?? 0} sản phẩm`}
                 size="small"
-                color="default"
                 variant="outlined"
-                className="ml-2"
               />
             </Box>
           )}
@@ -628,11 +382,11 @@ const ProductManagement = () => {
             <Table stickyHeader className="min-w-full">
               <TableHead>
                 <TableRow>
-                  <TableCell className="bg-gray-50 text-gray-900 font-bold p-3 sticky top-0 w-16">
+                  {/* <TableCell className="bg-gray-50 text-gray-900 font-bold p-3 sticky top-0 w-16">
                     <div className="flex items-center gap-2 justify-center">
                       <ImageIcon size={16} className="text-blue-600" />
                     </div>
-                  </TableCell>
+                  </TableCell> */}
                   <TableCell className="bg-gray-50 text-gray-900 font-bold p-3 sticky top-0">
                     <div className="flex items-center gap-2">
                       <Package size={16} className="text-blue-600" />
@@ -685,17 +439,17 @@ const ProductManagement = () => {
               </TableHead>
 
               <TableBody>
-                {paginatedProducts.length === 0 ? (
+                {!data?.products ? (
                   <TableRow>
                     <TableCell colSpan={9} className="text-center py-8">
-                      <Typography variant="body1" color="text.secondary">
-                        {searchTerm.trim() ||
-                        categoryFilter !== "Tất cả" ||
-                        statusFilter !== "Tất cả"
-                          ? "Không tìm thấy sản phẩm nào phù hợp với bộ lọc"
-                          : "Không có sản phẩm nào"}
+                      <Typography
+                        variant="body1"
+                        textAlign={"center"}
+                        color="text.secondary"
+                      >
+                        {"Không có sản phẩm nào"}
                       </Typography>
-                      {searchTerm.trim() === "" &&
+                      {/* {searchTerm.trim() === "" &&
                         categoryFilter === "Tất cả" &&
                         statusFilter === "Tất cả" && (
                           <Button
@@ -707,22 +461,21 @@ const ProductManagement = () => {
                           >
                             Thêm sản phẩm đầu tiên
                           </Button>
-                        )}
+                        )} */}
                     </TableCell>
                   </TableRow>
                 ) : (
-                  paginatedProducts.map((product) => (
+                  data?.products.map((product) => (
                     <TableRow
-                      key={product.id}
+                      key={product.productId}
                       className="hover:bg-gray-50 transition-colors"
                     >
-                      <TableCell className="p-3">
+                      {/* <TableCell className="p-3">
                         <Avatar
-                          src={
-                            product.image ||
-                            getPlaceholderImage(Math.floor(product.id))
-                          }
-                          alt={product.name}
+                          src={getPlaceholderImage(
+                            Math.floor(product.productId)
+                          )}
+                          alt={product.productName}
                           variant="square"
                           className="!w-12 !h-12 object-cover"
                         >
@@ -730,13 +483,13 @@ const ProductManagement = () => {
                             <ImageIcon className="w-6 h-6 text-gray-400" />
                           )}
                         </Avatar>
-                      </TableCell>
+                      </TableCell> */}
                       <TableCell className="p-3 font-medium max-w-[200px] truncate">
-                        {product.name}
+                        {product.productName}
                       </TableCell>
                       <TableCell className="p-3">
                         <Chip
-                          label={product.code}
+                          label={product.barcode}
                           size="small"
                           className="!bg-blue-50 !text-blue-600 !text-xs"
                           icon={<Tag size={12} className="!text-blue-600" />}
@@ -744,7 +497,7 @@ const ProductManagement = () => {
                       </TableCell>
                       <TableCell className="p-3">
                         <Chip
-                          label={product.category}
+                          label={product.categoryName}
                           size="small"
                           className="text-xs"
                           color="primary"
@@ -752,7 +505,7 @@ const ProductManagement = () => {
                         />
                       </TableCell>
                       <TableCell className="p-3 text-sm max-w-[150px] truncate">
-                        {product.supplier}
+                        {product.supplierName}
                       </TableCell>
                       <TableCell className="p-3">
                         {getStatusChip(product.status)}
@@ -776,7 +529,10 @@ const ProductManagement = () => {
                           </IconButton>
                           <IconButton
                             onClick={() =>
-                              handleOpenDeleteDialog(product.id, product.name)
+                              handleOpenDeleteDialog(
+                                product.productId,
+                                product.productName
+                              )
                             }
                             className="!text-red-600 hover:bg-red-50 p-1"
                             title="Xóa"
@@ -794,14 +550,14 @@ const ProductManagement = () => {
             </Table>
           </TableContainer>
 
-          {filteredProducts.length > 0 && (
+          {data && data?.totalPage > 0 && (
             <TablePagination
               rowsPerPageOptions={[5, 10, 25]}
               component="div"
-              count={filteredProducts.length}
-              rowsPerPage={rowsPerPage}
-              page={page}
-              onPageChange={handleChangePage}
+              count={data.totalProduct ? data.totalProduct : 1}
+              rowsPerPage={filter.Limit ?? 5}
+              page={(filter.Page ?? 1) - 1}
+              onPageChange={(_event, newPage) => handleChangePage(newPage)}
               onRowsPerPageChange={handleChangeRowsPerPage}
               className="bg-gray-50"
               labelRowsPerPage="Hiển thị:"

@@ -1,55 +1,38 @@
-
-using System.Net;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Http;
+using System.Net;
+using System.Text.Json;
 
 public class GlobalExceptionHandler : IExceptionHandler
 {
-    private readonly ILogger<GlobalExceptionHandler> _logger;
-
-    // Constructor to initialize the logger
-    public GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger)
+    public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
     {
-        _logger = logger;
-    }
+        httpContext.Response.ContentType = "application/json";
 
-    // Method to handle exceptions asynchronously
-    public async ValueTask<bool> TryHandleAsync(
-        HttpContext httpContext,
-        Exception exception,
-        CancellationToken cancellationToken)
-    {
-        // Log the exception details
-        _logger.LogError(exception, "An error occurred while processing your request");
-
-        var errorResponse = new ErrorResponse
+        var statusCode = exception switch
         {
-            Message = exception.Message,
-            Title = exception.GetType().Name
+            BadHttpRequestException => (int)HttpStatusCode.BadRequest,
+            KeyNotFoundException => (int)HttpStatusCode.NotFound,
+            ArgumentException => (int)HttpStatusCode.BadRequest,
+            _ => (int)HttpStatusCode.InternalServerError
         };
 
-        // Determine the status code based on the type of exception
-        switch (exception)
+        httpContext.Response.StatusCode = statusCode;
+
+        var errorResponse = new
         {
-            case BadHttpRequestException:
-                errorResponse.StatusCode = (int)HttpStatusCode.BadRequest;
-                break;
-            case NoBookFoundException:
-            case BookDoesNotExistException:
-                errorResponse.StatusCode = (int)HttpStatusCode.NotFound;
-                break;
+            error = true,
+            message = exception switch
+            {
+                BadHttpRequestException badReq => $"Bad request: {badReq.Message}",
+                ArgumentException arg => $"Invalid value: {arg.Message}",
+                _ => "Unknow error."
+            },
+            statusCode
+        };
 
-            default:
-                errorResponse.StatusCode = (int)HttpStatusCode.InternalServerError;
-                break;
-        }
+        await httpContext.Response.WriteAsync(JsonSerializer.Serialize(errorResponse), cancellationToken);
 
-        // Set the response status code
-        httpContext.Response.StatusCode = errorResponse.StatusCode;
-
-        // Write the error response as JSON
-        await httpContext.Response.WriteAsJsonAsync(errorResponse, cancellationToken);
-
-        // Return true to indicate that the exception was handled
-        return true;
+        return true; // Đã xử lý xong lỗi
     }
 }

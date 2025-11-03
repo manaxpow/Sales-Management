@@ -6,11 +6,14 @@ public class Routes
 
         app.MapGroup("/api").DisableAntiforgery()
         .WithTags("Public endpoints")
-        .MapBookEndPoint()
         .MapUserEndPoint()
+        .MapCustomerEndPoint()
         .MapAuthEndPoint()
+        .MapCategoryEndpoint()
         .MapPromotionEndPoint()
-        ;
-
+        .MapOrderEndPoint()
+        .MapProductEndponit()
+        .MapOrderItemEndPoint()
+        .MapSupplierEndPoint();
     }
 }

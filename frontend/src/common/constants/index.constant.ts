@@ -11,6 +11,7 @@ import {
   PackageSearch,
   Warehouse,
   LayoutDashboard,
+  ShoppingBag,
 } from "lucide-react";
 
 import type { LucideIcon } from "lucide-react";
@@ -73,6 +74,11 @@ export const adminMenuItems = [
 // Menu dành cho Sales person
 export const staffMenuItems = [
   {
+    label: "Bán hàng",
+    path: "/staff/sale",
+    icon: ShoppingBag,
+  },
+  {
     label: "Quản lý đơn hàng",
     path: "/staff/orders",
     icon: ShoppingCart,
@@ -81,6 +87,11 @@ export const staffMenuItems = [
     label: "Quản lý sản phẩm",
     path: "/staff/products",
     icon: PackageSearch,
+  },
+  {
+    label: "Quản lý khách hàng",
+    path: "/staff/customers",
+    icon: Users,
   },
   {
     label: "Quản lý tồn kho",
