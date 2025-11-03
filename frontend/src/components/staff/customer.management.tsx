@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { Users, Plus, Eye, Edit, Trash2 } from "lucide-react";
-import CustomerFilter from "./customer.filter";
-import CustomerPagination from "./customer.pagination";
+
 import {
   Box,
   Typography,
@@ -21,15 +20,17 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { DeleteCustomerModal } from "./modal/delete-modal";
-import { EditCustomerModal } from "./modal/update.modals";
-import { ViewCustomerModal } from "./modal/view-modal";
 import type {
   CustomerResponse,
   GetCustomerRequest,
   UpdateCustomerRequest,
-} from "../../../types/customer.types";
-import { customerService } from "../../../services/customer.service";
+} from "../../types/customer.types";
+import { customerService } from "../../services/customer.service";
+import CustomerFilter from "../admin/customer/customer.filter";
+import CustomerPagination from "../admin/customer/customer.pagination";
+import { ViewCustomerModal } from "../admin/customer/modal/view-modal";
+import { EditCustomerModal } from "../admin/customer/modal/update.modals";
+import { DeleteCustomerModal } from "../admin/customer/modal/delete-modal";
 
 export interface SimpleCustomerFilters {
   search: string; // chỉ search
@@ -204,7 +205,7 @@ const CustomerManagement: React.FC = () => {
               variant="contained"
               startIcon={<Plus className="w-4 h-4" />}
               className="normal-case"
-              onClick={() => navigate("/admin/customers/create")}
+              onClick={() => navigate("/staff/customers/create")}
             >
               Thêm khách hàng
             </Button>

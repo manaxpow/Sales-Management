@@ -8,51 +8,35 @@ import {
   Box,
   Alert,
   CircularProgress,
-  IconButton,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
 } from "@mui/material";
-import type { SelectChangeEvent } from "@mui/material/Select";
-import { ArrowLeft } from "lucide-react";
-
-export interface CreateCustomerFormData {
-  name: string;
-  email?: string;
-  phone?: string;
-  address?: string;
-  status: "active" | "inactive";
-}
+import type { CreateCustomerRequest } from "../../../../types/customer.types";
+import { customerService } from "../../../../services/customer.service";
+import { toast } from "react-toastify";
 
 interface FormErrors {
   name?: string;
   email?: string;
   phone?: string;
   address?: string;
-  status?: string;
 }
 
-type FormTouched = Partial<Record<keyof CreateCustomerFormData, boolean>>;
+type RequiredCreateCustomerRequest = Omit<CreateCustomerRequest, "status"> & {
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+};
 
-interface CreateCustomerFormProps {
-  onSubmit?: (data: CreateCustomerFormData) => Promise<void>;
-  onCancel?: () => void;
-  isLoading?: boolean;
-}
+type FormTouched = Partial<
+  Record<keyof RequiredCreateCustomerRequest, boolean>
+>;
 
-const CreateCustomerForm = ({
-  onSubmit,
-  onCancel,
-  isLoading = false,
-}: CreateCustomerFormProps) => {
-  // Form state
-  const [formData, setFormData] = useState<CreateCustomerFormData>({
+const CreateCustomerForm = () => {
+  const [formData, setFormData] = useState<RequiredCreateCustomerRequest>({
     name: "",
     email: "",
     phone: "",
     address: "",
-    status: "active",
   });
 
   // Validation errors state
@@ -63,50 +47,54 @@ const CreateCustomerForm = ({
   // General error state
   const [submitError, setSubmitError] = useState<string>("");
 
-  // ---- Validators theo từng field (giữ logic như bạn đang có) ----
+  const [isLoading, setIsLoading] = useState(false);
+
+  // ---- Validators: tất cả đều bắt buộc + format cơ bản cho email/phone ----
   const validateField = (
-    field: keyof CreateCustomerFormData,
+    field: keyof RequiredCreateCustomerRequest,
     value: string
   ): string | undefined => {
+    const v = value?.trim() ?? "";
     switch (field) {
       case "name":
-        if (!value.trim()) return "Tên khách hàng là bắt buộc";
-        if (value.trim().length < 2) return "Tên phải có ít nhất 2 ký tự";
+        if (!v) return "Tên khách hàng là bắt buộc";
+        if (v.length < 2) return "Tên phải có ít nhất 2 ký tự";
         return;
       case "email":
-        if (!value) return;
-        if (!/^\S+@\S+\.\S+$/.test(value)) return "Email không hợp lệ";
+        if (!v) return "Email khách hàng là bắt buộc";
+        if (!/^\S+@\S+\.\S+$/.test(v)) return "Email không hợp lệ";
         return;
       case "phone":
-        if (!value) return;
-        if (!/^[0-9+\-\s()]+$/.test(value))
+        if (!v) return "Số điện thoại khách hàng là bắt buộc";
+        if (!/^[0-9+\-\s()]+$/.test(v))
           return "Số điện thoại chỉ chứa số, +, -, khoảng trắng hoặc ()";
         return;
       case "address":
-        // hiện tại không bắt buộc và không ràng buộc thêm
+        if (!v) return "Địa chỉ là bắt buộc";
         return;
       default:
         return;
     }
   };
 
-  const validateAll = (data: CreateCustomerFormData): FormErrors => {
+  const validateAll = (data: RequiredCreateCustomerRequest): FormErrors => {
     const next: FormErrors = {};
-    (Object.keys(data) as (keyof CreateCustomerFormData)[]).forEach((k) => {
-      const msg = validateField(k, String(data[k] ?? ""));
-      if (msg) next[k] = msg;
-    });
+    (Object.keys(data) as (keyof RequiredCreateCustomerRequest)[]).forEach(
+      (k) => {
+        const msg = validateField(k, String(data[k] ?? ""));
+        if (msg) next[k] = msg;
+      }
+    );
     return next;
   };
 
   // Handle input changes
   const handleInputChange =
-    (field: keyof CreateCustomerFormData) =>
+    (field: keyof RequiredCreateCustomerRequest) =>
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const value = event.target.value;
       setFormData((prev) => ({ ...prev, [field]: value }));
 
-      // Nếu field đã được chạm, validate ngay và cập nhật lỗi của field đó
       if (touched[field]) {
         setErrors((prev) => ({
           ...prev,
@@ -118,31 +106,22 @@ const CreateCustomerForm = ({
     };
 
   const handleBlur =
-    (field: keyof CreateCustomerFormData) =>
+    (field: keyof RequiredCreateCustomerRequest) =>
     (event: React.FocusEvent<HTMLInputElement>) => {
       const value = event.target.value;
       setTouched((prev) => ({ ...prev, [field]: true }));
       setErrors((prev) => ({ ...prev, [field]: validateField(field, value) }));
     };
 
-  const handleStatusChange = (e: SelectChangeEvent) => {
-    const value = e.target.value as "active" | "inactive";
-    setFormData((prev) => ({ ...prev, status: value }));
-    // không cần lỗi cho status vì luôn hợp lệ (mặc định đã chọn)
-    if (submitError) setSubmitError("");
-  };
-
   // Submit
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
-    // Đánh dấu tất cả field đã chạm để hiển thị lỗi đồng loạt khi submit
     setTouched({
       name: true,
       email: true,
       phone: true,
       address: true,
-      status: true,
     });
 
     const nextErrors = validateAll(formData);
@@ -150,44 +129,27 @@ const CreateCustomerForm = ({
 
     if (Object.keys(nextErrors).length > 0) return;
 
-    try {
-      setSubmitError("");
-      if (onSubmit) {
-        // chuẩn hoá giá trị rỗng -> undefined
-        await onSubmit({
-          name: formData.name.trim(),
-          email: formData.email?.trim() || undefined,
-          phone: formData.phone?.trim() || undefined,
-          address: formData.address?.trim() || undefined,
-          status: formData.status,
-        });
-      }
-    } catch (error) {
-      setSubmitError(
-        error instanceof Error
-          ? error.message
-          : "Đã xảy ra lỗi khi tạo khách hàng"
-      );
-    }
-  };
+    setSubmitError("");
+    setIsLoading(true);
+    const res = await customerService.create({
+      name: formData.name.trim(),
+      email: formData.email.trim(),
+      phone: formData.phone.trim(),
+      address: formData.address.trim(),
+    });
 
-  // Cancel
-  const handleCancel = () => {
-    if (onCancel) {
-      onCancel();
-    } else {
-      // reset nếu không có handler
+    if (res.success) {
+      toast("add success");
       setFormData({
         name: "",
         email: "",
         phone: "",
         address: "",
-        status: "active",
       });
-      setErrors({});
-      setTouched({});
-      setSubmitError("");
+    } else {
+      setSubmitError(res.message);
     }
+    setIsLoading(false);
   };
 
   return (
@@ -200,16 +162,6 @@ const CreateCustomerForm = ({
           {/* Header */}
           <Box className="mb-6">
             <Box className="flex items-center gap-3 mb-4">
-              {onCancel && (
-                <IconButton
-                  onClick={handleCancel}
-                  className="text-gray-500 hover:text-gray-700"
-                  size="small"
-                  aria-label="Quay lại"
-                >
-                  <ArrowLeft className="w-5 h-5" />
-                </IconButton>
-              )}
               <Typography
                 variant="h4"
                 component="h1"
@@ -223,7 +175,7 @@ const CreateCustomerForm = ({
               color="text.secondary"
               className="text-center"
             >
-              Nhập thông tin bên dưới để tạo khách hàng
+              Nhập đầy đủ thông tin bên dưới để tạo khách hàng
             </Typography>
           </Box>
 
@@ -261,7 +213,7 @@ const CreateCustomerForm = ({
 
             <TextField
               fullWidth
-              label="Email"
+              label="Email *"
               value={formData.email}
               onChange={handleInputChange("email")}
               onBlur={handleBlur("email")}
@@ -276,7 +228,7 @@ const CreateCustomerForm = ({
 
             <TextField
               fullWidth
-              label="Số điện thoại"
+              label="Số điện thoại *"
               value={formData.phone}
               onChange={handleInputChange("phone")}
               onBlur={handleBlur("phone")}
@@ -291,7 +243,7 @@ const CreateCustomerForm = ({
 
             <TextField
               fullWidth
-              label="Địa chỉ"
+              label="Địa chỉ *"
               value={formData.address}
               onChange={handleInputChange("address")}
               onBlur={handleBlur("address")}
@@ -305,23 +257,6 @@ const CreateCustomerForm = ({
               minRows={2}
               sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
             />
-
-            <FormControl size="medium">
-              <InputLabel id="status-label">Trạng thái</InputLabel>
-              <Select
-                labelId="status-label"
-                value={formData.status}
-                onChange={handleStatusChange}
-                label="Trạng thái"
-                disabled={isLoading}
-                sx={{
-                  "& .MuiOutlinedInput-notchedOutline": { borderRadius: 8 },
-                }}
-              >
-                <MenuItem value="active">Đang hoạt động</MenuItem>
-                <MenuItem value="inactive">Ngừng hoạt động</MenuItem>
-              </Select>
-            </FormControl>
 
             {/* Action Buttons */}
             <Box className="flex flex-col gap-3 pt-4">
@@ -349,27 +284,6 @@ const CreateCustomerForm = ({
                   "Tạo khách hàng"
                 )}
               </Button>
-
-              <Button
-                fullWidth
-                variant="outlined"
-                disabled={isLoading}
-                size="large"
-                onClick={handleCancel}
-                className="normal-case"
-                sx={{
-                  py: 1.5,
-                  borderRadius: 2,
-                  borderColor: "#d1d5db",
-                  color: "#6b7280",
-                  "&:hover": {
-                    borderColor: "#9ca3af",
-                    backgroundColor: "#f9fafb",
-                  },
-                }}
-              >
-                Hủy
-              </Button>
             </Box>
           </Box>
 
@@ -394,15 +308,21 @@ const CreateCustomerForm = ({
               color="text.secondary"
               className="block"
             >
-              • Email (không bắt buộc): đúng định dạng, ví dụ: user@domain.com
+              • Email: bắt buộc, đúng định dạng (ví dụ: user@domain.com)
             </Typography>
             <Typography
               variant="caption"
               color="text.secondary"
               className="block"
             >
-              • Số điện thoại (không bắt buộc): chỉ chứa số, +, -, khoảng trắng
-              hoặc ()
+              • Số điện thoại: bắt buộc, chỉ chứa số, +, -, khoảng trắng hoặc ()
+            </Typography>
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              className="block"
+            >
+              • Địa chỉ: bắt buộc
             </Typography>
           </Box>
         </CardContent>
