@@ -13,7 +13,6 @@ obj/
 # Configuration
 backend/appsettings.json
 backend/appsettings.Development.json
-package-lock.json
 # ============================
 # Environment / Config
 # ============================
