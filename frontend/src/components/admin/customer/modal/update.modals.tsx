@@ -9,21 +9,18 @@ import {
   Box,
   Typography,
   IconButton,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
 } from "@mui/material";
-import type { SelectChangeEvent } from "@mui/material/Select";
 import { Edit, X } from "lucide-react";
-import type { SimpleCustomer } from "../customer.pagination";
-import type { SimpleCustomerFormData } from "../customer.management";
+import type {
+  CustomerResponse,
+  UpdateCustomerRequest,
+} from "../../../../types/customer.types";
 
 interface EditCustomerModalProps {
-  customer: SimpleCustomer | null;
+  customer: CustomerResponse | null;
   open: boolean;
   onClose: () => void;
-  onSave: (data: SimpleCustomerFormData) => void;
+  onSave: (data: UpdateCustomerRequest) => void;
 }
 
 export const EditCustomerModal = ({
@@ -32,33 +29,32 @@ export const EditCustomerModal = ({
   onClose,
   onSave,
 }: EditCustomerModalProps) => {
-  const [formData, setFormData] = useState<SimpleCustomerFormData>({
+  const [formData, setFormData] = useState<UpdateCustomerRequest>({
     name: customer?.name || "",
-    phone: customer?.phone ?? "",
-    email: customer?.email ?? "",
-    address: customer?.address ?? "",
-    status: customer?.status ?? "active",
+    phone: customer?.phone || "",
+    email: customer?.email || "",
+    address: customer?.address || "",
   });
 
   const [errors, setErrors] = useState<
-    Partial<Record<keyof SimpleCustomerFormData, string>>
+    Partial<Record<keyof UpdateCustomerRequest, string>>
   >({});
 
   const validateForm = (): boolean => {
-    const newErrors: Partial<Record<keyof SimpleCustomerFormData, string>> = {};
+    const newErrors: Partial<Record<keyof UpdateCustomerRequest, string>> = {};
 
-    if (!formData.name?.trim()) {
-      newErrors.name = "Tên khách hàng là bắt buộc";
-    }
+    if (!formData.name?.trim()) newErrors.name = "Tên khách hàng là bắt buộc";
 
-    if (formData.email && !/^\S+@\S+\.\S+$/.test(formData.email)) {
+    if (!formData.email?.trim()) newErrors.email = "Email là bắt buộc";
+    else if (!/^\S+@\S+\.\S+$/.test(formData.email))
       newErrors.email = "Email không hợp lệ";
-    }
 
-    if (formData.phone && !/^[0-9+\-\s()]+$/.test(formData.phone)) {
+    if (!formData.phone?.trim()) newErrors.phone = "Số điện thoại là bắt buộc";
+    else if (!/^[0-9+\-\s()]+$/.test(formData.phone))
       newErrors.phone =
         "Số điện thoại chỉ được chứa số, +, -, khoảng trắng, hoặc ()";
-    }
+
+    if (!formData.address?.trim()) newErrors.address = "Địa chỉ là bắt buộc";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -68,38 +64,30 @@ export const EditCustomerModal = ({
     if (validateForm()) {
       onSave({
         name: formData.name.trim(),
-        phone: formData.phone?.trim() || undefined,
-        email: formData.email?.trim() || undefined,
-        address: formData.address?.trim() || undefined,
-        status: formData.status,
+        phone: formData.phone.trim(),
+        email: formData.email.trim(),
+        address: formData.address.trim(),
       });
       onClose();
     }
   };
 
   const handleChange =
-    (field: keyof SimpleCustomerFormData) =>
+    (field: keyof UpdateCustomerRequest) =>
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      setFormData((prev) => ({ ...prev, [field]: e.target.value }));
+      const value = e.target.value;
+      setFormData((prev) => ({ ...prev, [field]: value }));
       if (errors[field]) setErrors((prev) => ({ ...prev, [field]: undefined }));
     };
-
-  const handleStatusChange = (e: SelectChangeEvent) => {
-    setFormData((prev) => ({
-      ...prev,
-      status: e.target.value as "active" | "inactive",
-    }));
-  };
 
   // Reset form khi customer thay đổi
   useEffect(() => {
     if (customer) {
       setFormData({
         name: customer.name || "",
-        phone: customer.phone ?? "",
-        email: customer.email ?? "",
-        address: customer.address ?? "",
-        status: customer.status ?? "active",
+        phone: customer.phone || "",
+        email: customer.email || "",
+        address: customer.address || "",
       });
       setErrors({});
     }
@@ -137,7 +125,7 @@ export const EditCustomerModal = ({
           />
 
           <TextField
-            label="Email"
+            label="Email *"
             fullWidth
             value={formData.email}
             onChange={handleChange("email")}
@@ -148,7 +136,7 @@ export const EditCustomerModal = ({
           />
 
           <TextField
-            label="Số điện thoại"
+            label="Số điện thoại *"
             fullWidth
             value={formData.phone}
             onChange={handleChange("phone")}
@@ -159,46 +147,22 @@ export const EditCustomerModal = ({
           />
 
           <TextField
-            label="Địa chỉ"
+            label="Địa chỉ *"
             fullWidth
             value={formData.address}
             onChange={handleChange("address")}
+            error={!!errors.address}
+            helperText={errors.address}
             size="small"
             multiline
             minRows={2}
             placeholder="Nhập địa chỉ"
           />
 
-          <FormControl size="small">
-            <InputLabel id="status-label">Trạng thái</InputLabel>
-            <Select
-              labelId="status-label"
-              value={formData.status ?? "active"}
-              label="Trạng thái"
-              onChange={handleStatusChange}
-              sx={{
-                "& .MuiOutlinedInput-notchedOutline": {
-                  borderColor: "#d1d5db",
-                },
-                "&:hover .MuiOutlinedInput-notchedOutline": {
-                  borderColor: "#9ca3af",
-                },
-                "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                  borderColor: "#3b82f6",
-                  borderWidth: 2,
-                },
-              }}
-            >
-              <MenuItem value="active">Đang hoạt động</MenuItem>
-              <MenuItem value="inactive">Ngừng hoạt động</MenuItem>
-            </Select>
-          </FormControl>
-
           <Box className="bg-gray-50 p-3 rounded-md">
             <Typography variant="caption" color="text.secondary">
-              Lưu ý: Bạn có thể chỉnh sửa tên, email, SĐT, địa chỉ và trạng
-              thái. Các trường hệ thống khác (vd.
-              <code> created_at</code>) được quản lý bởi backend.
+              Lưu ý: Tất cả trường đều bắt buộc. Các trường hệ thống (ví dụ
+              <code> createdAt </code>) được quản lý bởi backend.
             </Typography>
           </Box>
         </Box>

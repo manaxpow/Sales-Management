@@ -89,6 +89,11 @@ export const staffMenuItems = [
     icon: PackageSearch,
   },
   {
+    label: "Quản lý khách hàng",
+    path: "/staff/customers",
+    icon: Users,
+  },
+  {
     label: "Quản lý tồn kho",
     path: "/staff/inventory",
     icon: Warehouse,

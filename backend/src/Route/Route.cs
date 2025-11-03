@@ -7,6 +7,7 @@ public class Routes
         app.MapGroup("/api").DisableAntiforgery()
         .WithTags("Public endpoints")
         .MapUserEndPoint()
+        .MapCustomerEndPoint()
         .MapAuthEndPoint()
         .MapCategoryEndpoint()
         .MapPromotionEndPoint()

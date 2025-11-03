@@ -40,6 +40,7 @@ public static class ServiceExtensions
         builder.Services.AddScoped<IOrderService, OrderService>();
         builder.Services.AddScoped<IOrderItemService, OrderItemService>();
         builder.Services.AddScoped<IProductService, ProductService>();
+        builder.Services.AddScoped<ICustomerService, CustomerService>();
 
         // global error handler
         builder.Services.AddExceptionHandler<GlobalExceptionHandler>();

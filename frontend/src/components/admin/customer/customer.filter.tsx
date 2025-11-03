@@ -1,20 +1,9 @@
 import React from "react";
 import { Search, Filter, X } from "lucide-react";
-import {
-  Box,
-  Button,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  InputAdornment,
-} from "@mui/material";
-import type { SelectChangeEvent } from "@mui/material/Select";
+import { Box, Button, TextField, InputAdornment } from "@mui/material";
 
 export interface CustomerFilters {
   search: string;
-  status: "all" | "active" | "inactive";
 }
 
 interface CustomerFilterProps {
@@ -29,18 +18,10 @@ const CustomerFilter = ({
   onClearFilters,
 }: CustomerFilterProps) => {
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onFiltersChange({ ...filters, search: e.target.value });
+    onFiltersChange({ search: e.target.value });
   };
 
-  // Không dùng generic, giữ SelectChangeEvent mặc định (string)
-  const handleStatusChange = (e: SelectChangeEvent) => {
-    onFiltersChange({
-      ...filters,
-      status: e.target.value as "all" | "active" | "inactive",
-    });
-  };
-
-  const hasActiveFilters = Boolean(filters.search) || filters.status !== "all";
+  const hasActiveFilters = !!filters.search?.trim();
 
   return (
     <Box className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
@@ -61,8 +42,7 @@ const CustomerFilter = ({
         )}
       </Box>
 
-      <Box className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Ô tìm kiếm */}
+      <Box className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <TextField
           label="Tìm kiếm khách hàng"
           variant="outlined"
@@ -78,33 +58,6 @@ const CustomerFilter = ({
             ),
           }}
         />
-
-        {/* Trạng thái */}
-        <FormControl variant="outlined" size="small">
-          <InputLabel id="status-label">Trạng thái</InputLabel>
-          <Select
-            labelId="status-label"
-            id="status"
-            value={filters.status}
-            onChange={handleStatusChange}
-            label="Trạng thái"
-            inputProps={{ "aria-label": "Lọc theo trạng thái" }}
-            sx={{
-              "& .MuiOutlinedInput-notchedOutline": { borderColor: "#d1d5db" },
-              "&:hover .MuiOutlinedInput-notchedOutline": {
-                borderColor: "#9ca3af",
-              },
-              "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                borderColor: "#3b82f6",
-                borderWidth: 2,
-              },
-            }}
-          >
-            <MenuItem value="all">Tất cả</MenuItem>
-            <MenuItem value="active">Đang hoạt động</MenuItem>
-            <MenuItem value="inactive">Ngừng hoạt động</MenuItem>
-          </Select>
-        </FormControl>
       </Box>
     </Box>
   );
