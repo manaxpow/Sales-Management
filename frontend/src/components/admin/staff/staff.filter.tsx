@@ -1,6 +1,14 @@
 import React from 'react';
 import { Search, Filter, X } from 'lucide-react';
-import { TextField, Select, MenuItem, FormControl, InputLabel, Button, Box } from '@mui/material';
+import {
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Button,
+  Box,
+} from '@mui/material';
 import { styled } from '@mui/material/styles';
 import type { StaffFilters } from '../../../types/staff.types';
 
@@ -40,14 +48,7 @@ const StaffFilter = ({
     });
   };
 
-  const handleStatusChange = (e: React.ChangeEvent<{ value: unknown }>) => {
-    onFiltersChange({
-      ...filters,
-      status: e.target.value as 'all' | 'active' | 'inactive',
-    });
-  };
-
-  const hasActiveFilters = filters.search || filters.status !== 'all';
+  const hasActiveFilters = filters.search || filters.role !== 'all';
 
   return (
     <Box className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
@@ -66,7 +67,7 @@ const StaffFilter = ({
         )}
       </Box>
 
-      <Box className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <Box className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Search Input */}
         <TextField
           label="Search Employees"
@@ -76,26 +77,28 @@ const StaffFilter = ({
           onChange={handleSearchChange}
           placeholder="Search by username or full name..."
           InputProps={{
-            startAdornment: (
-              <Search className="w-4 h-4 text-gray-400 mr-2" />
-            ),
+            startAdornment: <Search className="w-4 h-4 text-gray-400 mr-2" />,
           }}
         />
 
-        {/* Status Filter */}
+        {/* Role Filter */}
         <StyledFormControl variant="outlined" size="small">
-          <InputLabel id="status-label">Status</InputLabel>
+          <InputLabel id="role-label">Role</InputLabel>
           <StyledSelect
-            labelId="status-label"
-            id="status"
-            value={filters.status}
-            onChange={handleStatusChange}
-            label="Status"
-            inputProps={{ 'aria-label': 'Status filter' }}
+            labelId="role-label"
+            id="role"
+            value={filters.role}
+            onChange={(e) =>
+              onFiltersChange({
+                ...filters,
+                role: e.target.value as 'all' | 'admin' | 'staff',
+              })
+            }
+            label="Role"
           >
-            <MenuItem value="all">All Status</MenuItem>
-            <MenuItem value="active">Active</MenuItem>
-            <MenuItem value="inactive">Inactive</MenuItem>
+            <MenuItem value="all">All Roles</MenuItem>
+            <MenuItem value="admin">Admin</MenuItem>
+            <MenuItem value="staff">Staff</MenuItem>
           </StyledSelect>
         </StyledFormControl>
       </Box>

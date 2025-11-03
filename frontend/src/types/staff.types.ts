@@ -1,24 +1,37 @@
-export interface Staff {
-  id: string;
+export interface SimpleStaff {
+  id: number;
   username: string;
   fullName: string;
-  email: string;
-  phone: string;
-  status: 'active' | 'inactive';
-  role: string;
-  joinDate: string;
-  avatar?: string;
+  role: 'admin' | 'staff';
 }
 
-export interface StaffFormData {
+export interface CreateStaffFormData {
+  username: string;
   fullName: string;
-  email: string;
-  phone: string;
-  status: 'active' | 'inactive';
-  role: string;
+  password: string;
+  role?: 'admin' | 'staff';
+}
+
+export interface UpdateStaffFormData {
+  fullName: string;
+  username?: string;
+  role: "admin" | "staff";
 }
 
 export interface StaffFilters {
   search: string;
-  status: 'all' | 'active' | 'inactive';
+  role: 'all' | 'admin' | 'staff';
+}
+
+export interface RawStaff {
+  id: number;
+  userName: string;
+  fullName: string;
+  role: "admin" | "staff";
+}
+export interface Staff {
+  id: number;
+  username: string;
+  fullName: string;
+  role: "admin" | "staff";
 }
