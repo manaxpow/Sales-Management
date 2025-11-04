@@ -49,9 +49,17 @@ import {
 import EditProductModal from "../../components/admin/product/update-product.modal";
 import AddProductModal from "../../components/admin/product/add-product.modal";
 import { useFetchData } from "../../hooks/fetchData";
-import { GetProductsService } from "../../services/product.service";
-import type { ProductFilter, ProductResponse } from "../../types/product.type";
+import {
+  DeleteProductService,
+  GetProductsService,
+} from "../../services/product.service";
+import type {
+  DeleteProductRequest,
+  ProductFilter,
+  ProductResponse,
+} from "../../types/product.type";
 import { CategoryService } from "../../services/category.service";
+import { toast } from "react-toastify";
 
 const ProductManagement = () => {
   const [filter, setFilter] = useState<ProductFilter>({
@@ -59,7 +67,7 @@ const ProductManagement = () => {
     Page: 1,
     ProductName: "",
   });
-  const { data } = useFetchData(GetProductsService, filter);
+  const { data, refetch } = useFetchData(GetProductsService, filter);
   // Sửa nút xóa bộ lọc
   const handleClearFilters = () => {
     setFilter({
@@ -68,6 +76,7 @@ const ProductManagement = () => {
       ProductName: "",
       CategoryId: undefined,
       Status: undefined,
+      SortBy: "CreatedAt",
     });
   };
   const { data: Category } = useFetchData(CategoryService.getAll, {});
@@ -95,12 +104,7 @@ const ProductManagement = () => {
 
   const handleAddProduct = async () => {
     try {
-      console.log(1);
-      setSnackbar({
-        open: true,
-        message: `Thêm sản phẩm thành công!`,
-        severity: "success",
-      });
+      refetch();
       setAddModalOpen(false);
     } catch (error) {
       console.error("Lỗi thêm sản phẩm:", error);
@@ -123,14 +127,13 @@ const ProductManagement = () => {
     setSaveLoading(true);
     try {
       // update Product service
-
       setSnackbar({
         open: true,
         message: "Cập nhật sản phẩm thành công!",
         severity: "success",
       });
-
       handleCloseEditModal();
+      refetch();
     } catch (error) {
       console.error("Lỗi cập nhật sản phẩm:", error);
       setSnackbar({
@@ -159,9 +162,25 @@ const ProductManagement = () => {
     });
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async (id: number) => {
     // delete product service
-    console.log(1);
+    try {
+      const deletePayload: DeleteProductRequest = {
+        ProductId: id,
+        Status: 3,
+      };
+
+      const res = await DeleteProductService(deletePayload);
+      if (res.success) {
+        toast.success("Delete product success");
+        handleCloseDeleteDialog();
+        refetch();
+      } else {
+        toast.error("Deleted product fail with mess " + res.message);
+      }
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   const handleCloseEditModal = () => {
@@ -170,7 +189,6 @@ const ProductManagement = () => {
   };
 
   const handleChangePage = (newPage: number) => {
-    // mui page bat dau tu 0
     setFilter((prev) => ({ ...prev, Page: newPage + 1 }));
   };
 
@@ -599,7 +617,7 @@ const ProductManagement = () => {
             Hủy
           </Button>
           <Button
-            onClick={handleConfirmDelete}
+            onClick={() => handleConfirmDelete(deleteDialog.productId ?? 0)}
             variant="contained"
             color="error"
             startIcon={<Trash2 size={16} />}

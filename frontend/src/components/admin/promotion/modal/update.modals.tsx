@@ -59,7 +59,8 @@ export const EditPromotionModal = ({
     handleSubmit,
     reset,
     control,
-    formState: { errors },
+
+    formState: { errors, dirtyFields },
   } = useForm({
     resolver: zodResolver(updatePromotionSchema),
     mode: "onBlur",
@@ -82,21 +83,33 @@ export const EditPromotionModal = ({
     setLoading(true);
     try {
       setLoading(true);
-      const fixedData = {
-        PromotionId: Promotion?.promotionId || 0,
-        Description: data.description || "",
-        DiscountValue: data.discountValue,
-        MinOrderAmount: data.minOrderAmount,
-        Usagelimit: data.usageLimit,
-        StartDate: data.startDate
-          .toISOString()
-          .split("T")[0]
-          .replaceAll("-", "/"),
-        EndDate: data.endDate.toISOString().split("T")[0].replaceAll("-", "/"),
-        Status: data.status,
-      };
+      const fieldChange: {
+        [key in keyof PromotionUpdateFormData]?: string | number | Date;
+      } = {};
+      (Object.keys(dirtyFields) as (keyof UpdatePromotionSchema)[]).forEach(
+        (key) => {
+          const pascalKey = key.charAt(0).toUpperCase() + key.slice(1);
+          const value = data[key];
+          if (value !== undefined && value !== null)
+            if (key === "startDate" || key === "endDate") {
+              const formattedDate =
+                typeof value === "string"
+                  ? value
+                  : (value as Date)
+                      .toISOString()
+                      .split("T")[0]
+                      .replaceAll("-", "/");
+              fieldChange[pascalKey as keyof PromotionUpdateFormData] =
+                formattedDate;
+            }
+          fieldChange[pascalKey as keyof PromotionUpdateFormData] = value;
+        }
+      );
+
+      fieldChange.PromotionId = Promotion?.promotionId;
+      console.log(fieldChange);
       const result = await UpdatePromotionService(
-        fixedData as PromotionUpdateFormData
+        fieldChange as PromotionUpdateFormData
       );
       console.log(result.data);
       if (!result.success) {

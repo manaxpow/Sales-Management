@@ -7,6 +7,8 @@ export interface ProductResponse {
   categoryName: string;
   price: number;
   unit: string;
+  categoryId : number,
+  supplierId : number,
 }
 
 export interface GetProductResponse {
@@ -24,6 +26,7 @@ export interface ProductFilter {
   Page?: number;
   Limit?: number;
   Status?: number;
+  SortBy?: string;
 }
 
 export interface CreateProductRequest {
@@ -32,8 +35,14 @@ export interface CreateProductRequest {
   ProductName: string;
   Price: number;
   Unit: string;
+  Status: number;
 }
 export interface UpdateProductRequest extends CreateProductRequest {
+  ProductId: number;
+  Status: number;
+}
+
+export interface DeleteProductRequest  {
   ProductId: number;
   Status: number;
 }

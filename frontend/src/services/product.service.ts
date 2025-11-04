@@ -2,6 +2,7 @@ import instance from "../config/axios.config";
 import type { ApiResponse, ErrorApiResponse } from "../types/api.type";
 import type {
   CreateProductRequest,
+  DeleteProductRequest,
   GetProductResponse,
   ProductFilter,
   ProductResponse,
@@ -27,7 +28,8 @@ const GetProductsService = async (
   try {
     const res = await instance.get(URL_API, {
       params: {
-        ...query
+        ...query,
+        SortBy: "CreatedAt",
       },
     });
     return res.data;
@@ -49,4 +51,21 @@ const UpdateProductService = async (
   }
 };
 
-export { createProductService, GetProductsService, UpdateProductService };
+const DeleteProductService = async (
+  data: DeleteProductRequest
+): Promise<ApiResponse<ProductResponse>> => {
+  try {
+    const res = await instance.patch(URL_API, data);
+    return res.data;
+  } catch (error) {
+    const err = error as ErrorApiResponse;
+    return err;
+  }
+};
+
+export {
+  createProductService,
+  GetProductsService,
+  UpdateProductService,
+  DeleteProductService,
+};

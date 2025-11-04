@@ -69,8 +69,7 @@ public class PromotionService(AppDbContext context, ILogger<PromotionService> lo
         if (res.Status.HasValue)
             query = query.Where(u => res.Status == u.Status);
         // sorting
-        logger.LogInformation("check query" + res.PromotionCode);
-        logger.LogInformation("limit " + limit);
+     
         query = res.SortBy?.ToLower() switch
         {
             "promotionCode" => res.SortOrder == "asc"
