@@ -1,76 +1,164 @@
-
 using backend.Contract.Supplier.Request;
 using FluentValidation;
-using Microsoft.AspNetCore.Mvc;
+using FluentValidation.Results;
+using Microsoft.AspNetCore.Mvc; // Thêm using
 
 public static class SupplierRoute
 {
     public static IEndpointRouteBuilder MapSupplierEndPoint(this IEndpointRouteBuilder group)
     {
-        var suppliersGroup = group.MapGroup("/suppliers");
-        suppliersGroup.MapPost("/", async (
-            [FromBody] CreateSupplierRequest request,  
-            ISupplierService service,
-            IValidator<CreateSupplierRequest> validator) =>
-        {
-            var validationResult = await validator.ValidateAsync(request);
-            if (!validationResult.IsValid)
-            {
-                return Results.ValidationProblem(validationResult.ToDictionary());
-            }
+        var suppliersGroup = group.MapGroup("/suppliers").WithTags("Suppliers");
 
+        suppliersGroup.MapPost("/", async ([FromBody] CreateSupplierRequest req, ISupplierService service, IValidator<CreateSupplierRequest> validator) =>
+        {
             try
             {
-                var supplier = await service.AddSupplierAsync(request);
-                return Results.Created($"/suppliers/{supplier.Id}", supplier);
+                ValidationResult result = await validator.ValidateAsync(req);
+                if (!result.IsValid)
+                {
+                    return Results.Json(result.Errors.Select(e => new
+                    {
+                        field = e.PropertyName,
+                        message = e.ErrorMessage
+                    }), statusCode: 400);
+                }
+                var supplier = await service.AddSupplierAsync(req);
+                if (supplier.Data == null)
+                {
+                    return Results.Json(new
+                    {
+                        message = supplier.Message,
+                        status = supplier.Success
+                    }, statusCode: 400);
+                }
+                return Results.Created($"/suppliers/{supplier.Data.Id}", supplier);
             }
-            catch (InvalidOperationException ex)
+            catch (Exception e)
             {
-                return Results.Conflict(new { message = ex.Message });
+                Console.WriteLine("Error", e.Data);
+                var err = new ErrorResponse
+                {
+                    Message = e.Message.ToString() ?? "Lỗi không xác định",
+                    StatusCode = 400,
+                    Title = "Something wrong"
+                };
+                return Results.Json(err);
             }
         });
 
+        // READ - LIST 
         suppliersGroup.MapGet("/", async (ISupplierService service) =>
         {
-            return Results.Ok(await service.GetSuppliersAsync());
-        });
-
-        suppliersGroup.MapGet("/{id:int}", async (int id, ISupplierService service) =>
-        {
-            var result = await service.GetSupplierByIdAsync(id);
-            return result != null ? Results.Ok(result) : Results.NotFound();
-        });
-
-        suppliersGroup.MapPut("/{id:int}", async (
-            int id,
-            [FromBody] UpdateSupplierRequest request,  
-            ISupplierService service,
-            IValidator<UpdateSupplierRequest> validator) =>
-        {
-        
-            if (id != request.Id)
-                return Results.BadRequest(new { message = "ID in path must match ID in body." });
-
-            var validationResult = await validator.ValidateAsync(request);
-            if (!validationResult.IsValid)
-            {
-                return Results.ValidationProblem(validationResult.ToDictionary());
-            }
-
             try
             {
-                var updated = await service.UpdateSupplierAsync(id, request);
-                return updated != null ? Results.Ok(updated) : Results.NotFound();
+                var suppliers = await service.GetSuppliersAsync();
+                if (suppliers.Data == null)
+                {
+                    return Results.BadRequest(new
+                    {
+                        mess = "Get suppliers failed"
+                    });
+                }
+                return Results.Ok(suppliers);
             }
-            catch (InvalidOperationException ex)
+            catch (Exception e)
             {
-                return Results.Conflict(new { message = ex.Message });
+                Console.WriteLine("Error", e.Data);
+                var err = new ErrorResponse
+                {
+                    Message = e.Message.ToString() ?? "Un expected error",
+                    StatusCode = 400,
+                    Title = "Something wrong"
+                };
+                return Results.Json(err);
             }
         });
 
+        // READ - BY ID
+        suppliersGroup.MapGet("/{id:int}", async (int id, ISupplierService service) =>
+        {
+            try
+            {
+                var supplier = await service.GetSupplierByIdAsync(id);
+                if (supplier.Data == null)
+                {
+                    return Results.BadRequest(new { mess = supplier.Message, status = supplier.Success });
+                }
+                return Results.Ok(supplier);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error", e.Data);
+                var err = new ErrorResponse
+                {
+                    Message = e.Message.ToString() ?? "Un expected error",
+                    StatusCode = 400,
+                    Title = "Something wrong"
+                };
+                return Results.Json(err);
+            }
+        });
+
+        // UPDATE
+        suppliersGroup.MapPatch("/", async ([FromBody] UpdateSupplierRequest req, ISupplierService service, IValidator<UpdateSupplierRequest> validator) =>
+        {
+            try
+            {
+                ValidationResult result = await validator.ValidateAsync(req);
+                if (!result.IsValid)
+                {
+                    return Results.BadRequest(result.Errors.Select(e => new
+                    {
+                        field = e.PropertyName,
+                        message = e.ErrorMessage
+                    }));
+                }
+
+                var supplier = await service.UpdateSupplierAsync(req);
+
+                if (supplier.Data == null)
+                {
+                    return Results.BadRequest(new { message = supplier.Message, status = supplier.Success });
+                }
+                return Results.Ok(supplier);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error", e.Data);
+                var err = new ErrorResponse
+                {
+                    Message = e.Message.ToString() ?? "Lỗi không xác định",
+                    StatusCode = 400,
+                    Title = "Something wrong"
+                };
+                return Results.Json(err);
+            }
+        });
+
+        // DELETE
         suppliersGroup.MapDelete("/{id:int}", async (int id, ISupplierService service) =>
         {
-            return await service.DeleteSupplierAsync(id) ? Results.NoContent() : Results.NotFound();
+            try
+            {
+                var result = await service.DeleteSupplierAsync(id);
+                if (!result.Success)
+                {
+                    return Results.BadRequest(new { message = result.Message, status = result.Success });
+                }
+
+                return Results.Ok(result);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error", e.Data);
+                var err = new ErrorResponse
+                {
+                    Message = e.Message.ToString() ?? "Un expected error",
+                    StatusCode = 400,
+                    Title = "Something wrong"
+                };
+                return Results.Json(err);
+            }
         });
 
         return group;

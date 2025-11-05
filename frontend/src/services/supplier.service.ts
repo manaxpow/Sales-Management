@@ -1,75 +1,76 @@
-import axios from 'axios';
-import type { Supplier, CreateSupplierRequest, UpdateSupplierRequest, SupplierResponse } from '../types/supplier.types';
 
-const API_BASE_URL = 'http://localhost:8081/api';
+import instance from "../config/axios.config";
+import type { ApiResponse, ErrorApiResponse } from "../types/api.type";
+import type {
+    CreateSupplierRequest,
+    UpdateSupplierRequest,
+    SupplierResponse
+} from '../types/supplier.types';
 
-const api = axios.create({
-    baseURL: API_BASE_URL,
-});
+const URL_API = '/suppliers';
 
-const handleApiError = (error: unknown): Error => {
-    if (axios.isAxiosError(error) && error.response) {
-        const message = error.response.data?.message || error.response.data?.title || 'Có lỗi xảy ra từ máy chủ.';
-        return new Error(message);
-    }
-    return new Error('error');
-};
-
-
-export const getSuppliers = async (): Promise<Supplier[]> => {
+const getSuppliers = async (): Promise<ApiResponse<SupplierResponse[]>> => {
     try {
-        const response = await api.get<Supplier[]>('/suppliers');
-        return response.data;
+        const res = await instance.get<ApiResponse<SupplierResponse[]>>(URL_API);
+        return res.data;
     } catch (error) {
-        throw handleApiError(error);
+        return error as ErrorApiResponse;
     }
 };
 
-
-export const getSupplierById = async (id: number): Promise<SupplierResponse | null> => {
+const getSupplierById = async (id: number): Promise<ApiResponse<SupplierResponse>> => {
     try {
-        const response = await api.get<SupplierResponse>(`/suppliers/${id}`);
-        return response.data;
+        const res = await instance.get<ApiResponse<SupplierResponse>>(`${URL_API}/${id}`);
+        return res.data;
     } catch (error) {
-        if (axios.isAxiosError(error) && error.response?.status === 404) {
-            return null;
+        return error as ErrorApiResponse;
+    }
+};
+
+const createSupplier = async (data: CreateSupplierRequest): Promise<ApiResponse<SupplierResponse>> => {
+    try {
+        const res = await instance.post<ApiResponse<SupplierResponse>>(URL_API, data, {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        return res.data;
+    } catch (error) {
+        return error as ErrorApiResponse;
+    }
+};
+
+const updateSupplier = async (id: number, data: UpdateSupplierRequest): Promise<ApiResponse<SupplierResponse>> => {
+    try {
+        data.id = id;
+        const res = await instance.patch<ApiResponse<SupplierResponse>>(URL_API, data, {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        return res.data;
+    } catch (error) {
+        return error as ErrorApiResponse;
+    }
+};
+
+const deleteSupplier = async (id: number): Promise<ApiResponse<boolean>> => {
+    try {
+        const res = await instance.delete(`${URL_API}/${id}`);
+        if (res.status === 204) {
+            return { data: true, success: true, message: '' } as ApiResponse<boolean>;
         }
-        throw handleApiError(error);
-    }
-};
-
-export const createSupplier = async (data: CreateSupplierRequest): Promise<SupplierResponse> => {
-    try {
-
-        const response = await api.post<SupplierResponse>('/suppliers', data);
-        return response.data;
+        return res.data;
     } catch (error) {
-        throw handleApiError(error);
+        return error as ErrorApiResponse;
     }
 };
 
-
-export const updateSupplier = async (id: number, data: UpdateSupplierRequest): Promise<SupplierResponse | null> => {
-    try {
-        const response = await api.put<SupplierResponse>(`/suppliers/${id}`, data);
-        return response.data;
-    } catch (error) {
-        if (axios.isAxiosError(error) && error.response?.status === 404) {
-            return null; 
-        }
-        throw handleApiError(error);
-    }
+export {
+    getSuppliers,
+    getSupplierById,
+    createSupplier,
+    updateSupplier,
+    deleteSupplier
 };
 
-
-export const deleteSupplier = async (id: number): Promise<boolean> => {
-    try {
-        const response = await api.delete(`/suppliers/${id}`);
-        return response.status === 204 || response.status === 200;
-    } catch (error) {
-        if (axios.isAxiosError(error) && error.response?.status === 404) {
-            return false;
-        }
-        throw handleApiError(error);
-    }
-};

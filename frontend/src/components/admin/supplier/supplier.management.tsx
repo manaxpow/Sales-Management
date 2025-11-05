@@ -1,123 +1,118 @@
 import React, { useState, useEffect } from "react";
-import { Eye, Pencil, Trash2, Plus } from "lucide-react";
-
-// [ĐÃ SỬA] Sửa đường dẫn import về 3 cấp
+import { Eye, Pencil, Trash2, Plus, Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { TablePagination } from "@mui/material";
 import type { Supplier, SupplierResponse } from "../../../types/supplier.types";
-// [ĐÃ SỬA] Xóa 'updateSupplier' và sửa đường dẫn
-import { getSuppliers, getSupplierById, deleteSupplier } from "../../../services/supplier.service";
-
-// [ĐÃ SỬA] Sửa tên file import về kebab-case
-import ViewModal from "./modal/view-modal";
+import { getSuppliers, deleteSupplier } from "../../../services/supplier.service";
+import { getProductsBySupplierIdService } from "../../../services/product.service";
 import UpdateModal from "./modal/update-modal";
 import DeleteModal from "./modal/delete-modal";
 import CreateModal from "./modal/create-modal";
-import SupplierPagination from "./supplier.pagination";
-
+import AlertModal from "./modal/alert-modal";
 
 const SupplierManagement: React.FC = () => {
-    const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+    const navigate = useNavigate();
 
-    // Hàm fetch dữ liệu tập trung
+    const [suppliers, setSuppliers] = useState<Supplier[]>([]);
     const fetchSuppliers = async () => {
-        try {
-            const data = await getSuppliers();
-            setSuppliers(data);
-        } catch (error) {
-            console.error('Error loading suppliers:', error);
-            // Cân nhắc hiển thị thông báo lỗi cho người dùng (ví dụ: toast)
+        const response = await getSuppliers();
+        if (response.success) {
+            setSuppliers(response.data || []);
+        } else {
+            console.error('API Error Response:', response.message || 'No message provided');
+            setSuppliers([]);
         }
     };
 
-    // Tải dữ liệu khi component mount
     useEffect(() => {
         fetchSuppliers();
     }, []);
 
-    // State cho tìm kiếm
     const [searchTerm, setSearchTerm] = useState("");
 
-    // Lọc dữ liệu dựa trên searchTerm
     const filteredSuppliers = suppliers.filter((s) => {
         const search = searchTerm.toLowerCase();
         const matchesSearch =
             s.name.toLowerCase().includes(search) ||
             s.phone.toLowerCase().includes(search) ||
             s.email.toLowerCase().includes(search) ||
-            s.address.toLowerCase().includes(search);
+            (s.address && s.address.toLowerCase().includes(search));
         return matchesSearch;
     });
 
-    // State cho phân trang
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
 
-    const handlePageChange = (newPage: number) => {
+    const handlePageChange = (
+        _event: React.MouseEvent<HTMLButtonElement> | null,
+        newPage: number
+    ) => {
         setPage(newPage);
     };
 
-    const handleRowsPerPageChange = (newRowsPerPage: number) => {
-        setRowsPerPage(newRowsPerPage);
-        setPage(0); // Quay về trang đầu khi đổi số lượng dòng
+    const handleRowsPerPageChange = (
+        event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    ) => {
+        setRowsPerPage(parseInt(event.target.value, 10));
+        setPage(0);
     };
 
-    // Lấy dữ liệu cho trang hiện tại
     const startIndex = page * rowsPerPage;
     const currentSuppliers = filteredSuppliers.slice(startIndex, startIndex + rowsPerPage);
 
-    // State cho các modal
-    const [viewOpen, setViewOpen] = useState(false);
     const [updateOpen, setUpdateOpen] = useState(false);
     const [deleteOpen, setDeleteOpen] = useState(false);
     const [createOpen, setCreateOpen] = useState(false);
     const [selectedSupplier, setSelectedSupplier] = useState<Supplier | SupplierResponse | null>(null);
+    const [alertModalOpen, setAlertModalOpen] = useState(false);
+    const [alertModalMessage, setAlertModalMessage] = useState("");
+    const [checkingSupplierId, setCheckingSupplierId] = useState<number | null>(null);
 
 
-    // Callback khi Modal "Thêm mới" submit thành công
     const handleSubmitCreate = async () => {
-        // Modal con tự gọi API, cha chỉ cần fetch lại và đóng
         await fetchSuppliers();
         setCreateOpen(false);
     };
 
-    // Xử lý mở modal "Xem"
-    const handleView = async (supplier: Supplier) => {
-        try {
-            // Gọi getById để lấy thông tin chi tiết (nếu có)
-            const detailedSupplier = await getSupplierById(supplier.id);
-            setSelectedSupplier(detailedSupplier || supplier);
-        } catch (error) {
-            console.error('Error fetching supplier details:', error);
-            setSelectedSupplier(supplier); // Dùng dữ liệu cũ nếu gọi API lỗi
-        }
-        setViewOpen(true);
+    const handleView = (supplier: Supplier) => {
+        navigate(`/admin/products/supplier/${supplier.id}`);
     };
 
-    // Xử lý mở modal "Cập nhật"
+    // open update modal
     const handleUpdate = (supplier: Supplier) => {
         setSelectedSupplier(supplier);
         setUpdateOpen(true);
     };
 
-    // Xử lý mở modal "Xóa"
-    const handleDelete = (supplier: Supplier) => {
+    const handleDelete = async (supplier: Supplier) => {
+        if (checkingSupplierId) return;
+        setCheckingSupplierId(supplier.id);
         setSelectedSupplier(supplier);
-        setDeleteOpen(true);
+        const response = await getProductsBySupplierIdService(supplier.id);
+
+        setCheckingSupplierId(null);
+
+        if (response.success) {
+            if (response.data && response.data.length > 0) {
+                setAlertModalMessage(`Không thể xóa "${supplier.name}" vì đang có ${response.data.length} sản phẩm liên quan.`);
+                setAlertModalOpen(true);
+            }
+            else {
+                setDeleteOpen(true);
+            }
+        } else {
+            setAlertModalMessage(response.message || "Lỗi khi kiểm tra sản phẩm.");
+            setAlertModalOpen(true);
+        }
     };
 
-    // Xử lý "Xác nhận xóa" từ DeleteModal
     const handleConfirmDelete = async () => {
         if (selectedSupplier && selectedSupplier.id) {
-            try {
-                const success = await deleteSupplier(selectedSupplier.id);
-                if (success) {
-                    await fetchSuppliers(); // Tải lại danh sách
-                } else {
-                    console.error('Delete failed, supplier not found.');
-                    // TODO: Hiển thị lỗi
-                }
-            } catch (error) {
-                console.error('Error deleting supplier:', error);
-                // TODO: Hiển thị lỗi
+            const response = await deleteSupplier(selectedSupplier.id);
+            if (response.success) {
+                await fetchSuppliers();
+            } else {
+                console.error('Delete failed:', response.message);
             }
         } else {
             console.error('No supplier selected or ID is missing for deletion.');
@@ -125,13 +120,10 @@ const SupplierManagement: React.FC = () => {
         setDeleteOpen(false);
     };
 
-    // Callback khi Modal "Cập nhật" submit thành công
-    // Hàm này không cần nhận 'updatedSupplier' nữa.
     const handleSubmitUpdate = async () => {
-        // Modal con tự gọi API, cha chỉ cần fetch lại và đóng
         await fetchSuppliers();
         setUpdateOpen(false);
-        setSelectedSupplier(null); // Xóa nhà cung cấp đã chọn
+        setSelectedSupplier(null);
     };
 
     return (
@@ -150,7 +142,6 @@ const SupplierManagement: React.FC = () => {
                         className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-64 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
 
-                    {/* Xóa tìm kiếm */}
                     {searchTerm && (
                         <button
                             onClick={() => {
@@ -171,7 +162,6 @@ const SupplierManagement: React.FC = () => {
                 </button>
             </div>
 
-            {/* Bảng danh sách */}
             <div className="overflow-x-auto bg-white rounded-2xl shadow-md">
                 <table className="w-full border-collapse text-sm">
                     <thead>
@@ -192,63 +182,82 @@ const SupplierManagement: React.FC = () => {
                                 </td>
                             </tr>
                         ) : (
-                            currentSuppliers.map((supplier) => (
-                                <tr
-                                    key={supplier.id}
-                                    className="border-t hover:bg-gray-50 transition"
-                                >
-                                    <td className="py-3 px-4">{supplier.id}</td>
-                                    <td className="py-3 px-4 font-medium text-gray-800">{supplier.name}</td>
-                                    <td className="py-3 px-4">{supplier.phone}</td>
-                                    <td className="py-3 px-4">{supplier.email}</td>
-                                    <td className="py-3 px-4">{supplier.address}</td>
-                                    <td className="py-3 px-4 text-center">
-                                        <div className="flex justify-center gap-3">
-                                            <button
-                                                onClick={() => handleView(supplier)}
-                                                className="text-blue-600 hover:text-blue-800"
-                                                title="Xem chi tiết"
-                                            >
-                                                <Eye size={18} />
-                                            </button>
-                                            <button
-                                                onClick={() => handleUpdate(supplier)}
-                                                className="text-yellow-600 hover:text-yellow-700"
-                                                title="Chỉnh sửa"
-                                            >
-                                                <Pencil size={18} />
-                                            </button>
-                                            <button
-                                                onClick={() => handleDelete(supplier)}
-                                                className="text-red-600 hover:text-red-700"
-                                                title="Xóa"
-                                            >
-                                                <Trash2 size={18} />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))
+                            currentSuppliers.map((supplier) => {
+                                const isChecking = checkingSupplierId === supplier.id;
+
+                                return (
+                                    <tr
+                                        key={supplier.id}
+                                        className={`border-t hover:bg-gray-50 transition ${isChecking ? 'opacity-50' : ''}`}
+                                    >
+                                        <td className="py-3 px-4">{supplier.id}</td>
+                                        <td className="py-3 px-4 font-medium text-gray-800">{supplier.name}</td>
+                                        <td className="py-3 px-4">{supplier.phone}</td>
+                                        <td className="py-3 px-4">{supplier.email}</td>
+                                        <td className="py-3 px-4">{supplier.address}</td>
+                                        <td className="py-3 px-4 text-center">
+                                            <div className="flex justify-center gap-3">
+                                                <button
+                                                    onClick={() => handleView(supplier)}
+                                                    className="text-blue-600 hover:text-blue-800 disabled:text-gray-300"
+                                                    title="Xem chi tiết"
+                                                    disabled={isChecking}
+                                                >
+                                                    <Eye size={18} />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleUpdate(supplier)}
+                                                    className="text-yellow-600 hover:text-yellow-700 disabled:text-gray-300"
+                                                    title="Chỉnh sửa"
+                                                    disabled={isChecking}
+                                                >
+                                                    <Pencil size={18} />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(supplier)}
+                                                    className="text-red-600 hover:text-red-700 disabled:text-gray-400"
+                                                    title="Xóa"
+                                                    disabled={isChecking}
+                                                >
+                                                    {isChecking ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                )
+                            })
                         )}
                     </tbody>
                 </table>
 
-                {/* Phân trang */}
-                <SupplierPagination
-                    suppliers={filteredSuppliers}
+                <TablePagination
+                    component="div"
+                    count={filteredSuppliers.length}
                     page={page}
-                    rowsPerPage={rowsPerPage}
                     onPageChange={handlePageChange}
+                    rowsPerPage={rowsPerPage}
                     onRowsPerPageChange={handleRowsPerPageChange}
+                    rowsPerPageOptions={[5, 10, 25, 50]}
+                    labelRowsPerPage="Số hàng mỗi trang:"
+                    labelDisplayedRows={({ from, to, count }) =>
+                        `${from} - ${to} trên tổng ${count !== -1 ? count : `hơn ${to}`}`
+                    }
+                    sx={{
+                        "& .MuiTablePagination-toolbar": {
+                            paddingLeft: 2,
+                            paddingRight: 2,
+                        },
+                        "& .MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows":
+                        {
+                            fontSize: "0.875rem",
+                        },
+                        "& .MuiTablePagination-select": {
+                            paddingTop: 1,
+                            paddingBottom: 1,
+                        },
+                    }}
                 />
             </div>
-
-            {/* Các modal */}
-            <ViewModal
-                isOpen={viewOpen}
-                onClose={() => setViewOpen(false)}
-                supplierData={selectedSupplier || undefined}
-            />
 
             <UpdateModal
                 isOpen={updateOpen}
@@ -266,6 +275,13 @@ const SupplierManagement: React.FC = () => {
                 onConfirm={handleConfirmDelete}
                 supplierName={selectedSupplier?.name}
                 id={selectedSupplier?.id}
+            />
+
+            <AlertModal
+                isOpen={alertModalOpen}
+                onClose={() => setAlertModalOpen(false)}
+                title="Không thể xóa"
+                message={alertModalMessage}
             />
 
             <CreateModal
