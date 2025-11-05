@@ -20,7 +20,7 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
         name: "",
         phone: "",
         email: "",
-        address: "", 
+        address: "",
     };
 
     const [formData, setFormData] = useState<UpdateSupplierRequest>(initialFormData);
@@ -60,7 +60,6 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
         return "";
     };
 
-    // Xử lý khi người dùng nhập liệu
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
@@ -69,15 +68,13 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
         }
         if (apiError) setApiError(null);
     };
-
-    // Xử lý khi người dùng rời khỏi một input
     const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         const error = validateField(name, value);
         setErrors(prev => ({ ...prev, [name]: error }));
     };
 
-    // Logic xử lý submit form
+
     const handleSubmit = async () => {
         if (isSubmitting || !supplierData?.id) return;
 
@@ -95,13 +92,12 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
         setIsSubmitting(true);
         setApiError(null);
 
-        try {
-            const result = await updateSupplier(supplierData.id, formData);
-            if (result) {
-                onSubmit(); // Gọi callback của cha để tải lại + đóng modal
-            }
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "Đã xảy ra lỗi không xác định.";
+        const result = await updateSupplier(supplierData.id, formData);
+
+        if (result.success) {
+            onSubmit();
+        } else {
+            const errorMessage = result.message || "Đã xảy ra lỗi không xác định.";
             setApiError(errorMessage);
             setIsSubmitting(false);
         }
@@ -115,7 +111,6 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                 </h2>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Tên nhà cung cấp */}
                     <div>
                         <label className="text-sm text-gray-600 block mb-1">Tên nhà cung cấp</label>
                         <input
@@ -125,7 +120,6 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                         {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
                     </div>
 
-                    {/* Số điện thoại */}
                     <div>
                         <label className="text-sm text-gray-600 block mb-1">Số điện thoại</label>
                         <input
@@ -135,7 +129,6 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                         {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
                     </div>
 
-                    {/* Email */}
                     <div className="col-span-1 md:col-span-2">
                         <label className="text-sm text-gray-600 block mb-1">Email</label>
                         <input
@@ -145,17 +138,15 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                         {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
                     </div>
 
-                    {/* Địa chỉ */}
                     <div className="col-span-1 md:col-span-2">
                         <label className="text-sm text-gray-600 block mb-1">Địa chỉ</label>
                         <input
-                            type="text" name="address" value={formData.address} onChange={handleChange}
+                            type="text" name="address" value={formData.address || ''} onChange={handleChange}
                             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-blue-500"
                         />
                     </div>
                 </div>
 
-                {/* Khu vực hiển thị lỗi từ API */}
                 {apiError && (
                     <div className="mt-4 text-red-600 bg-red-50 p-3 rounded-lg text-sm">
                         {apiError}

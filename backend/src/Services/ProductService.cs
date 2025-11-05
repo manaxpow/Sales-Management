@@ -8,6 +8,7 @@ public class ProductService(AppDbContext context, ILogger<ProductService> logger
     private readonly ILogger<ProductService> logger = logger;
     private readonly ApiResponse<ProductResponse> response = new();
     private readonly ApiResponse<GetProductResponse> getDataRes = new();
+    private readonly ApiResponse<List<ProductResponse>> listResponse = new();
 
     public async Task<ApiResponse<ProductResponse>> CreateProduct(CreateProductRequest req)
     {
@@ -215,4 +216,46 @@ public class ProductService(AppDbContext context, ILogger<ProductService> logger
             return response.ErrorResponse("Update fail with mess:" + ex.Message, 400);
         }
     }
+
+
+    public async Task<ApiResponse<List<ProductResponse>>> GetProductsBySupplierIdAsync(int supplierId)
+    {
+        try
+        {
+            var supplierExists = await context.Suppliers.AnyAsync(s => s.Id == supplierId);
+            if (!supplierExists)
+            {
+                return listResponse.ErrorResponse("Supplier not found", 404); 
+            }
+            var products = await context.Products
+                .Include(u => u.Category)
+                .Include(u => u.Supplier) 
+                .Include(u => u.Inventory)
+                .Where(u => u.SupplierId == supplierId && u.Status != 3)
+                .Select(u => new ProductResponse
+                {
+                    ProductId = u.ProductId,
+                    ProductName = u.ProductName,
+                    Price = u.Price,
+                    CategoryId = u.CategoryId,
+                    Status = u.Status,
+                    Barcode = u.Barcode,
+                    CategoryName = u.Category != null ? u.Category.CategoryName : null,
+                    SupplierId = u.SupplierId,
+                    Unit = u.Unit,
+                    SupplierName = u.Supplier != null ? u.Supplier.Name : null,
+                    Quantity = u.Inventory != null ? u.Inventory.Quantity : 0
+                })
+                .ToListAsync();
+
+            return listResponse.SuccessResponse(products, "Get products by supplier success");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error getting products for supplier {SupplierId}", supplierId);
+            return listResponse.ErrorResponse("An unexpected error occurred", 400); 
+        }
+    }
+
+
 }
