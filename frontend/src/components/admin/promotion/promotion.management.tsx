@@ -103,6 +103,7 @@ const PromotionManagement: React.FC = () => {
       return {
         ...prev,
         limit: rowsPerPage,
+        page: 1,
       };
     });
   };

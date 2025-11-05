@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -12,211 +12,155 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-  Chip,
-  IconButton,
   FormHelperText,
   InputAdornment,
   CircularProgress,
+  FormGroup,
   FormControlLabel,
   Switch,
-  FormGroup,
+  IconButton,
 } from "@mui/material";
+import { X, Edit, Package, DollarSign, CheckCircle } from "lucide-react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  X,
-  Edit,
-  Image as ImageIcon,
-  Package,
-  Tag,
-  DollarSign,
-  Upload,
-  CheckCircle,
-  Truck,
-  Settings2,
-  Hash,
-} from "lucide-react";
-
-export interface SimpleProduct {
-  id: number;
-  image?: string;
-  name: string;
-  code: string;
-  category: string;
-  supplier: string;
-  status: "active" | "inactive";
-  price: number;
-  unit: string;
-}
-
-interface UpdateProductFormData {
-  name: string;
-  category: string;
-  supplier: string;
-  status: "active" | "inactive";
-  price: number;
-  unit: string;
-  imageFile?: File;
-}
-
-interface EditProductModalProps {
-  product: SimpleProduct | null;
-  open: boolean;
-  onClose: () => void;
-  onSave: (updatedProduct: UpdateProductFormData) => Promise<void>;
-  loading?: boolean;
-}
-
-const categories = [
-  "Điện thoại",
-  "Laptop",
-  "Máy tính bảng",
-  "Tai nghe",
-  "Phụ kiện",
-];
+  updateProductSchema,
+  type UpdateProductType,
+} from "../../../common/helpers/product.validate";
+import { useFetchData } from "../../../hooks/fetchData";
+import { CategoryService } from "../../../services/category.service";
+import { getSuppliers } from "../../../services/supplier.service";
+import type { Supplier } from "../../../types/supplier.types";
+import { toast } from "react-toastify";
+import type { ProductResponse } from "../../../types/product.type";
+import { UpdateProductService } from "../../../services/product.service";
 
 const units = ["Chiếc", "Cặp", "Bộ", "Cái", "Hộp", "Gói"];
 
+interface EditProductModalProps {
+  open: boolean;
+  onClose: () => void;
+  product: ProductResponse | null;
+  onSave: () => void;
+  loading?: boolean;
+}
+
 const EditProductModal: React.FC<EditProductModalProps> = ({
-  product,
   open,
   onClose,
+  product,
   onSave,
   loading = false,
 }) => {
-  const [formData, setFormData] = useState<UpdateProductFormData>({
-    name: "",
-    category: "",
-    supplier: "",
-    status: "active",
-    price: 0,
-    unit: "",
+  const {
+    register,
+    handleSubmit,
+    control,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<UpdateProductType>({
+    resolver: zodResolver(updateProductSchema),
+    mode: "onBlur",
+    defaultValues: {
+      productName: "",
+      categoryId: 0,
+      supplierId: 0,
+      price: undefined,
+      unit: "",
+      status: 1,
+    },
   });
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const { data: categories } = useFetchData(CategoryService.getAll, {});
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  // const [imagePreview, setImagePreview] = useState<string | null>(null);
+  // const [, setImageFile] = useState<File | null>(null);
+
+  // Load supplier list
   useEffect(() => {
+    const fetchSuppliers = async () => {
+      try {
+        const data = await getSuppliers();
+        setSuppliers(data);
+      } catch (error) {
+        console.error("Error loading suppliers:", error);
+      }
+    };
+    fetchSuppliers();
+  }, []);
+
+  // Reset form khi mở modal
+  useEffect(() => {
+    console.log(product);
+
     if (product && open) {
-      setFormData({
-        name: product.name,
-        category: product.category,
-        supplier: product.supplier,
-        status: product.status,
+      reset({
+        productName: product.productName,
+        categoryId: Number(product.categoryId) || 0,
+        supplierId: Number(product.supplierId) || 0,
         price: product.price,
         unit: product.unit,
+        status: product.status,
       });
-      setImagePreview(product.image || null);
-      setImageFile(null);
-      setErrors({});
-    } else if (!open) {
-      setFormData({
-        name: "",
-        category: "",
-        supplier: "",
-        status: "active",
-        price: 0,
-        unit: "",
-      });
-      setImagePreview(null);
-      setImageFile(null);
-      setErrors({});
+      // setImagePreview(null);
+      // setImageFile(null);
     }
-  }, [product, open]);
+  }, [product, open, reset]);
 
-  const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {};
+  // const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  //   const file = event.target.files?.[0];
+  //   if (!file) return;
 
-    if (!formData.name?.trim()) {
-      newErrors.name = "Tên sản phẩm là bắt buộc";
-    }
+  //   if (!file.type.startsWith("image/")) {
+  //     alert("Vui lòng chọn file ảnh hợp lệ (JPG, PNG, WebP)");
+  //     return;
+  //   }
+  //   if (file.size > 5 * 1024 * 1024) {
+  //     alert("Kích thước ảnh không được vượt quá 5MB");
+  //     return;
+  //   }
 
-    if (!formData.category) {
-      newErrors.category = "Vui lòng chọn danh mục";
-    }
+  //   const reader = new FileReader();
+  //   reader.onloadend = () => {
+  //     setImagePreview(reader.result as string);
+  //   };
+  //   reader.readAsDataURL(file);
+  //   setImageFile(file);
+  // };
 
-    if (!formData.supplier?.trim()) {
-      newErrors.supplier = "Nhà cung cấp là bắt buộc";
-    }
-
-    if (!formData.price || formData.price <= 0) {
-      newErrors.price = "Giá phải lớn hơn 0";
-    }
-
-    if (!formData.unit) {
-      newErrors.unit = "Vui lòng chọn đơn vị";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleInputChange = <K extends keyof UpdateProductFormData>(
-    field: K,
-    value: UpdateProductFormData[K]
-  ) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: "" }));
-    }
-  };
-
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      if (!file.type.startsWith("image/")) {
-        alert("Vui lòng chọn file ảnh hợp lệ (JPG, PNG, WebP)");
-        event.target.value = "";
-        return;
-      }
-
-      if (file.size > 5 * 1024 * 1024) {
-        alert("Kích thước ảnh không được vượt quá 5MB");
-        event.target.value = "";
-        return;
-      }
-
-      setImageFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleSubmit = async () => {
-    if (!validateForm()) return;
-
-    setIsSubmitting(true);
+  const onSubmit = async (data: UpdateProductType) => {
     try {
-      const submitData: UpdateProductFormData = {
-        ...formData,
-        ...(imageFile && { imageFile }),
-      };
+      if (product) {
+        const payload = {
+          ProductId: product.productId,
+          ProductName: data.productName,
+          CategoryId: data.categoryId,
+          SupplierId: data.supplierId,
+          Price: data.price,
+          Unit: data.unit,
+          Status: data.status,
+        };
 
-      await onSave(submitData);
-      onClose();
-    } catch (error) {
-      console.error("Lỗi lưu sản phẩm:", error);
-      alert("Có lỗi xảy ra khi lưu sản phẩm. Vui lòng thử lại.");
-    } finally {
-      setIsSubmitting(false);
+        const res = await UpdateProductService(payload);
+
+        if (res.success) {
+          toast.success("Update product success");
+          onSave();
+          onClose();
+        } else {
+          toast.error("Update fail with mess: " + res.message);
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Lỗi khi cập nhật sản phẩm");
     }
   };
-
-  const handleClose = () => {
-    if (!loading && !isSubmitting) {
-      onClose();
-    }
-  };
-
-  const hasErrors = Object.values(errors).some((error) => error);
-  const isDisabled = loading || isSubmitting || hasErrors;
 
   if (!open) return null;
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="lg" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle className="flex items-center justify-between bg-gray-50 border-b">
         <div className="flex items-center gap-2">
           <Edit className="w-5 h-5 text-blue-600" />
@@ -224,156 +168,129 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
             Chỉnh sửa sản phẩm
           </Typography>
         </div>
-        <IconButton
-          onClick={handleClose}
-          size="small"
-          disabled={loading || isSubmitting}
-          className="text-gray-500 hover:bg-gray-200"
-        >
-          <X className="w-4 h-4" />
+        <IconButton onClick={onClose} disabled={loading || isSubmitting}>
+          <X className="w-4 h-4 text-gray-500" />
         </IconButton>
       </DialogTitle>
 
-      <DialogContent className="p-6">
-        <Box className="space-y-6">
-          <Box>
-            <Typography
-              variant="subtitle1"
-              className="mb-3 font-medium flex items-center gap-2 text-gray-900"
-            >
-              <ImageIcon className="w-5 h-5 text-blue-600" />
-              <span>Hình ảnh sản phẩm</span>
-            </Typography>
-            <label htmlFor="image-upload" className="block cursor-pointer">
-              <Box className="relative w-64 h-64 border-2 border-dashed border-gray-300 rounded-lg overflow-hidden hover:border-blue-400 transition-all duration-200 bg-gray-50">
-                {imagePreview ? (
-                  <img
-                    src={imagePreview}
-                    alt="Xem trước sản phẩm"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <Box className="flex flex-col items-center justify-center h-full text-gray-500 hover:text-gray-700 transition-colors">
-                    <Upload className="w-8 h-8 mb-2 text-gray-400" />
-                    <Typography variant="body2" className="text-sm">
-                      Click để tải ảnh lên
-                    </Typography>
-                  </Box>
-                )}
-                <input
-                  id="image-upload"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+      <DialogContent className="p-6 space-y-6">
+        {/* Ảnh sản phẩm */}
+        {/* <Box>
+          <Typography
+            variant="subtitle1"
+            className="mb-3 font-medium flex items-center gap-2 text-gray-900"
+          >
+            <ImageIcon className="w-5 h-5 text-blue-600" />
+            Hình ảnh sản phẩm
+          </Typography>
+
+          <label htmlFor="image-upload" className="block cursor-pointer">
+            <Box className="relative w-64 h-64 border-2 border-dashed border-gray-300 rounded-lg overflow-hidden hover:border-blue-400 transition-all duration-200 bg-gray-50">
+              {imagePreview ? (
+                <img
+                  src={imagePreview}
+                  alt="preview"
+                  className="w-full h-full object-cover"
                 />
-              </Box>
-            </label>
-            <FormHelperText className="mt-2 text-sm text-gray-600">
-              Hỗ trợ JPG, PNG, WebP. Tối đa 5MB
-            </FormHelperText>
-          </Box>
-
-          {/* Product Name & Code */}
-          <Box className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <TextField
-              fullWidth
-              label="Tên sản phẩm *"
-              value={formData.name}
-              onChange={(e) => handleInputChange("name", e.target.value)}
-              error={!!errors.name}
-              helperText={errors.name}
-              variant="outlined"
-              disabled={isSubmitting}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Package className="w-4 h-4 text-gray-500" />
-                  </InputAdornment>
-                ),
-              }}
-            />
-
-            <TextField
-              fullWidth
-              label="Mã sản phẩm"
-              value={product?.code || ""}
-              variant="filled"
-              InputProps={{
-                readOnly: true,
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Tag className="w-4 h-4 text-gray-400" />
-                  </InputAdornment>
-                ),
-              }}
-              InputLabelProps={{ shrink: true }}
-              disabled
-              className="bg-gray-100"
-            />
-          </Box>
-
-          <Box className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormControl fullWidth error={!!errors.category} variant="outlined">
-              <InputLabel>Danh mục *</InputLabel>
-              <Select
-                value={formData.category}
-                onChange={(e) =>
-                  handleInputChange("category", e.target.value as string)
-                }
-                label="Danh mục *"
-                disabled={isSubmitting}
-                startAdornment={
-                  <InputAdornment position="start">
-                    <Settings2 className="w-4 h-4 text-gray-500 mr-2" />
-                  </InputAdornment>
-                }
-              >
-                {categories.map((cat) => (
-                  <MenuItem key={cat} value={cat}>
-                    {cat}
-                  </MenuItem>
-                ))}
-              </Select>
-              {errors.category && (
-                <FormHelperText error>{errors.category}</FormHelperText>
+              ) : (
+                <Box className="flex flex-col items-center justify-center h-full text-gray-500">
+                  <Upload className="w-8 h-8 mb-2 text-gray-400" />
+                  <Typography variant="body2" className="text-sm">
+                    Click để tải ảnh lên
+                  </Typography>
+                </Box>
               )}
+              <input
+                id="image-upload"
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              />
+            </Box>
+          </label>
+        </Box> */}
+
+        {/* Form thông tin */}
+        <Box display={"flex"} flexDirection={"column"} gap={3} mt={5}>
+          {/* Tên sản phẩm */}
+          <TextField
+            fullWidth
+            label="Tên sản phẩm *"
+            {...register("productName")}
+            error={!!errors.productName}
+            helperText={errors.productName?.message}
+            variant="outlined"
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Package className="w-4 h-4 text-gray-500" />
+                </InputAdornment>
+              ),
+            }}
+          />
+
+          {/* Category & Supplier */}
+          <Box className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormControl fullWidth error={!!errors.categoryId}>
+              <InputLabel>Danh mục *</InputLabel>
+              <Controller
+                name="categoryId"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    {...field}
+                    label="Danh mục *"
+                    value={field.value === 0 ? "" : field.value}
+                    onChange={(e) => field.onChange(Number(e.target.value))}
+                  >
+                    <MenuItem value="">Chọn danh mục</MenuItem>
+                    {(categories ?? []).map((cat) => (
+                      <MenuItem key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                )}
+              />
+              <FormHelperText>{errors.categoryId?.message}</FormHelperText>
             </FormControl>
 
-            <TextField
-              fullWidth
-              label="Nhà cung cấp *"
-              value={formData.supplier}
-              onChange={(e) => handleInputChange("supplier", e.target.value)}
-              error={!!errors.supplier}
-              helperText={errors.supplier}
-              variant="outlined"
-              disabled={isSubmitting}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Truck className="w-4 h-4 text-gray-500" />
-                  </InputAdornment>
-                ),
-              }}
-            />
+            <FormControl fullWidth error={!!errors.supplierId}>
+              <InputLabel>Nhà cung cấp *</InputLabel>
+              <Controller
+                name="supplierId"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    {...field}
+                    label="Nhà cung cấp *"
+                    value={field.value === 0 ? "" : field.value}
+                    onChange={(e) => field.onChange(Number(e.target.value))}
+                  >
+                    <MenuItem value="">Chọn nhà cung cấp</MenuItem>
+                    {suppliers.map((sup) => (
+                      <MenuItem key={sup.id} value={sup.id}>
+                        {sup.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                )}
+              />
+              <FormHelperText>{errors.supplierId?.message}</FormHelperText>
+            </FormControl>
           </Box>
 
+          {/* Giá & Đơn vị */}
           <Box className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <TextField
               fullWidth
               label="Giá bán *"
               type="number"
-              value={formData.price || ""}
-              onChange={(e) => {
-                const value =
-                  e.target.value === "" ? 0 : parseFloat(e.target.value);
-                handleInputChange("price", value);
-              }}
+              {...register("price", { valueAsNumber: true })}
               error={!!errors.price}
-              helperText={errors.price || "Đơn vị: VND"}
+              helperText={errors.price?.message || "Đơn vị: VND"}
               variant="outlined"
-              disabled={isSubmitting}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -382,105 +299,79 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                 ),
                 inputProps: { min: 0, step: "1000" },
               }}
-              InputLabelProps={{ shrink: true }}
             />
 
-            <FormControl fullWidth error={!!errors.unit} variant="outlined">
-              <InputLabel>Đơn vị *</InputLabel>
-              <Select
-                value={formData.unit}
-                onChange={(e) =>
-                  handleInputChange("unit", e.target.value as string)
-                }
-                label="Đơn vị *"
-                disabled={isSubmitting}
-                startAdornment={
-                  <InputAdornment position="start">
-                    <Hash className="w-4 h-4 text-gray-500 mr-2" />
-                  </InputAdornment>
-                }
-              >
-                {units.map((unit) => (
-                  <MenuItem key={unit} value={unit}>
-                    {unit}
-                  </MenuItem>
-                ))}
-              </Select>
-              {errors.unit && (
-                <FormHelperText error>{errors.unit}</FormHelperText>
-              )}
+            <FormControl fullWidth error={!!errors.unit}>
+              <InputLabel>Đơn vị</InputLabel>
+              <Controller
+                name="unit"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    {...field}
+                    label="Đơn vị"
+                    value={field.value || ""}
+                    onChange={(e) => field.onChange(e.target.value)}
+                  >
+                    <MenuItem value="">Chọn đơn vị</MenuItem>
+                    {units.map((u) => (
+                      <MenuItem key={u} value={u}>
+                        {u}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                )}
+              />
+              <FormHelperText>{errors.unit?.message}</FormHelperText>
             </FormControl>
           </Box>
 
-          {/* Status */}
+          {/* Trạng thái */}
           <Box className="bg-gray-50 p-4 rounded-lg">
             <Typography
               variant="subtitle1"
               className="mb-3 font-medium flex items-center gap-2 text-gray-900"
             >
               <CheckCircle className="w-5 h-5 text-emerald-600" />
-              <span>Trạng thái</span>
+              Trạng thái
             </Typography>
-            <FormGroup>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={formData.status === "active"}
-                    onChange={(e) =>
-                      handleInputChange(
-                        "status",
-                        e.target.checked ? "active" : "inactive"
-                      )
+
+            <Controller
+              name="status"
+              control={control}
+              render={({ field: { value, onChange } }) => (
+                <FormGroup>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={value === 1}
+                        onChange={(e) => onChange(e.target.checked ? 1 : 2)}
+                      />
                     }
-                    color="primary"
-                    disabled={isSubmitting}
+                    label={
+                      <Typography>
+                        {value === 1 ? "Hoạt động" : "Ngừng kinh doanh"}
+                      </Typography>
+                    }
                   />
-                }
-                label={
-                  <Box className="flex items-center gap-2">
-                    <CheckCircle
-                      className={`w-4 h-4 ${
-                        formData.status === "active"
-                          ? "text-emerald-600"
-                          : "text-gray-400"
-                      }`}
-                    />
-                    <Typography variant="body1" className="text-gray-700">
-                      {formData.status === "active"
-                        ? "Hoạt động"
-                        : "Ngừng kinh doanh"}
-                    </Typography>
-                  </Box>
-                }
-              />
-            </FormGroup>
-            <Chip
-              label={
-                formData.status === "active" ? "Hoạt động" : "Ngừng kinh doanh"
-              }
-              color={formData.status === "active" ? "success" : "default"}
-              size="small"
-              className="mt-2"
-              variant={formData.status === "active" ? "filled" : "outlined"}
+                </FormGroup>
+              )}
             />
           </Box>
         </Box>
       </DialogContent>
 
-      <DialogActions className="p-4 bg-gray-50 border-t flex justify-between">
+      <DialogActions className="p-4 bg-gray-50 border-t">
         <Button
-          onClick={handleClose}
-          disabled={loading || isSubmitting}
+          onClick={onClose}
           startIcon={<X className="w-4 h-4" />}
           variant="outlined"
-          className="text-gray-600 hover:bg-gray-100 border-gray-300"
+          disabled={loading || isSubmitting}
         >
           Hủy
         </Button>
         <Button
-          onClick={handleSubmit}
-          variant="contained"
-          disabled={isDisabled}
+          onClick={handleSubmit(onSubmit)}
           startIcon={
             isSubmitting ? (
               <CircularProgress size={20} className="text-white" />
@@ -488,7 +379,9 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
               <Edit className="w-4 h-4" />
             )
           }
-          className="bg-blue-600 hover:bg-blue-700 text-white min-w-[140px] shadow-sm"
+          variant="contained"
+          color="primary"
+          disabled={isSubmitting || loading}
         >
           {isSubmitting ? "Đang lưu..." : "Lưu thay đổi"}
         </Button>

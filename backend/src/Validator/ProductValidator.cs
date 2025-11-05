@@ -40,7 +40,7 @@ public class CreateProductValidator : AbstractValidator<CreateProductRequest>
         .GreaterThan(0).WithMessage("Supplier id value is invalid");
         RuleFor(x => x.Price)
         .GreaterThan(0).WithMessage("Price value is invalid");
-
+        RuleFor(x => x.Status).InclusiveBetween(1, 2).WithMessage("Product status value is invalid");
     }
 }
 
@@ -49,7 +49,7 @@ public class UpdateProductValidator : AbstractValidator<UpdateProductRequest>
     public UpdateProductValidator()
     {
         RuleFor(x => x.ProductId).GreaterThan(0).WithMessage("Product id value is invalid");
-        RuleFor(x => x.Status).InclusiveBetween(1,3).WithMessage("Product status value is invalid");
+        RuleFor(x => x.Status).InclusiveBetween(1, 3).WithMessage("Product status value is invalid");
         RuleFor(x => x.ProductName)
        .MinimumLength(6)
        .MaximumLength(100)
@@ -60,6 +60,7 @@ public class UpdateProductValidator : AbstractValidator<UpdateProductRequest>
         .GreaterThan(0).WithMessage("Supplier id value is invalid");
         RuleFor(x => x.Price)
         .GreaterThan(0).WithMessage("Price value is invalid");
+
 
     }
 }

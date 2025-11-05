@@ -18,7 +18,6 @@ public class ProductService(AppDbContext context, ILogger<ProductService> logger
         {
             barcode = BarcodeHelper.GenarateBarcode();
         }
-
         // check data exist
         bool productExists = await context.Products.AnyAsync(e => e.ProductName == req.ProductName);
         var supplier = await context.Suppliers.FindAsync(req.SupplierId);
@@ -32,9 +31,10 @@ public class ProductService(AppDbContext context, ILogger<ProductService> logger
             Price = req.Price,
             ProductName = req.ProductName,
             SupplierId = req.SupplierId,
-            Unit = req.Unit ?? "pcs"
+            Unit = req.Unit ?? "pcs",
+            Status = req.Status ?? 1,
+            CreatedAt = DateTime.Now
         };
-
         context.Products.Add(product);
         await context.SaveChangesAsync();
         var quantity = context.Inventory.Add(new Inventory
@@ -56,6 +56,7 @@ public class ProductService(AppDbContext context, ILogger<ProductService> logger
             SupplierName = supplier.Name,
             Unit = product.Unit,
             Barcode = product.Barcode
+
         };
         return response.SuccessResponse(dataRes, "create product success");
     }
@@ -71,7 +72,7 @@ public class ProductService(AppDbContext context, ILogger<ProductService> logger
         var limit = req.Limit ?? 10;
         var page = req.Page ?? 1;
         var SortBy = req.SortBy ?? "CreatedAt";
-        var SortOrder = req.SortOrder ?? "desc";
+        var SortOrder = req.SortOrder ?? "asc";
         if (!string.IsNullOrEmpty(req.Barcode))
             query = query.Where(u => u.Barcode.Equals(req.Barcode));
         if (!string.IsNullOrEmpty(req.ProductName))
@@ -86,9 +87,12 @@ public class ProductService(AppDbContext context, ILogger<ProductService> logger
             query = query.Where(u => u.Status == req.Status);
         query = req.SortBy?.ToLower() switch
         {
-            "ProductName" => req.SortOrder == "asc"
+            "productname" => req.SortOrder == "asc"
                 ? query.OrderBy(u => u.ProductName)
                 : query.OrderByDescending(u => u.ProductName),
+            "createdat" => req.SortOrder == "asc"
+                           ? query.OrderBy(u => u.CreatedAt)
+                           : query.OrderByDescending(u => u.CreatedAt),
             _ => req.SortOrder == "asc"
                 ? query.OrderBy(u => u.CreatedAt)
                 : query.OrderByDescending(u => u.CreatedAt)
@@ -163,7 +167,6 @@ public class ProductService(AppDbContext context, ILogger<ProductService> logger
     {
         try
         {
-            Console.WriteLine(req.ToString());
             var product = await context.Products
             .Include(u => u.Category)
             .Include(u => u.Supplier)
@@ -171,7 +174,7 @@ public class ProductService(AppDbContext context, ILogger<ProductService> logger
             .Where(u => u.Status != 3)
             .FirstOrDefaultAsync(u => u.ProductId == req.ProductId);
             if (product == null) return response.ErrorResponse("Product not found");
-            bool productExists = await context.Products.AnyAsync(e => e.ProductName == req.ProductName);
+            var productExists = await context.Products.FirstOrDefaultAsync(e => e.ProductName == req.ProductName);
             logger.LogInformation("check value" + req.SupplierId);
             if (req.CategoryId.HasValue)
             {
@@ -184,7 +187,7 @@ public class ProductService(AppDbContext context, ILogger<ProductService> logger
                 if (supplier == null) return response.ErrorResponse("Suppiler not found");
             }
 
-            if (productExists) return response.ErrorResponse("Product name is duplicate");
+            if (productExists != null && productExists.ProductId != req.ProductId) return response.ErrorResponse("Product name is duplicate");
             product.CategoryId = req.CategoryId ?? product.CategoryId;
             product.Price = req.Price ?? product.Price;
             product.ProductName = req.ProductName ?? product.ProductName;
