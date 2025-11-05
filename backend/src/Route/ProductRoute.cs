@@ -46,6 +46,8 @@ public static class ProductRoute
            }
            // validate
        });
+
+
         // READ - LIST with optional filters
         ProductRoute.MapGet("/", async ([AsParameters] GetProductRequest GetProductRequest, IProductService productService, IValidator<GetProductRequest> validator) =>
            {
@@ -82,6 +84,7 @@ public static class ProductRoute
                    return Results.Json(err);
                }
            });
+
         ProductRoute.MapGet("/{id:int}", async (int id, IProductService productService) =>
         {
             try
@@ -105,6 +108,33 @@ public static class ProductRoute
                 return Results.Json(err);
             }
 
+        });
+
+        ProductRoute.MapGet("/supplier/{supplierId:int}", async (int supplierId, IProductService productService) =>
+        {
+            try
+            {
+                var products = await productService.GetProductsBySupplierIdAsync(supplierId);
+
+                // Kiểm tra service trả về lỗi (ví dụ: supplier not found)
+                if (products.Success == false || products.Data == null)
+                {
+                    return Results.BadRequest(new { message = products.Message, status = products.Success });
+                }
+
+                return Results.Ok(products);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error", e.Data);
+                var err = new ErrorResponse
+                {
+                    Message = e.Message.ToString() ?? "Un expected error",
+                    StatusCode = 400,
+                    Title = "Something wrong"
+                };
+                return Results.Json(err);
+            }
         });
 
         // update
@@ -142,5 +172,6 @@ public static class ProductRoute
             }
         });
         return group;
+
     }
 }

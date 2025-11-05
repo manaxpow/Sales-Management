@@ -47,7 +47,7 @@ export const adminRoutes: RouteObject[] = [
     element: <ManageSupplier />,
   },
   {
-    path: "suppliers/:id/products",
+    path: "products/supplier/:id",
     element: <SupplierProductsPage />,
   },
   {

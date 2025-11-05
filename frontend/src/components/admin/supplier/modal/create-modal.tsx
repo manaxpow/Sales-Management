@@ -40,7 +40,7 @@ const CreateModal: React.FC<CreateModalProps> = ({
 
     if (!isOpen) return null;
 
-    // Hàm validate cho từng trường
+    // ... (Hàm validateField không đổi) ...
     const validateField = (fieldName: string, value: string): string => {
         switch (fieldName) {
             case "name":
@@ -56,7 +56,7 @@ const CreateModal: React.FC<CreateModalProps> = ({
         return "";
     };
 
-    // Xử lý khi người dùng nhập liệu
+    // ... (Hàm handleChange, handleBlur không đổi) ...
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
@@ -65,15 +65,14 @@ const CreateModal: React.FC<CreateModalProps> = ({
         }
         if (apiError) setApiError(null);
     };
-
-    // Xử lý khi người dùng rời khỏi một input
     const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         const error = validateField(name, value);
         setErrors(prev => ({ ...prev, [name]: error }));
     };
 
-    // Logic xử lý submit form
+
+    // [ĐÃ SỬA] Logic xử lý submit form
     const handleSubmit = async () => {
         if (isSubmitting) return;
 
@@ -91,31 +90,39 @@ const CreateModal: React.FC<CreateModalProps> = ({
         setIsSubmitting(true);
         setApiError(null);
 
-        try {
-            await createSupplier(formData);
-            onSubmit(); 
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "lỗi không xác định.";
+        // [SỬA] Bỏ try...catch, kiểm tra 'response.success'
+        const response = await createSupplier(formData);
+        
+        if (response.success) {
+            onSubmit();
+        } else {
+            // Xử lý lỗi trả về từ ApiResponse
+            const errorMessage = response.message || "Lỗi không xác định.";
             
             // Parse detailed duplicate errors
             const updatedErrors = { ...errors };
-            if (errorMessage.includes("Tên nhà cung cấp đã tồn tại.")) {
+            if (errorMessage.includes("Tên nhà cung cấp đã tồn tại")) {
                 updatedErrors.name = "Tên nhà cung cấp đã tồn tại.";
             }
-            if (errorMessage.includes("Số điện thoại đã tồn tại.")) {
+            if (errorMessage.includes("Số điện thoại đã tồn tại")) {
                 updatedErrors.phone = "Số điện thoại đã tồn tại.";
             }
-            if (errorMessage.includes("Email đã tồn tại.")) {
+            if (errorMessage.includes("Email đã tồn tại")) {
                 updatedErrors.email = "Email đã tồn tại.";
-            } else {
-                setApiError(errorMessage);
+            } 
+            
+            // Chỉ set lỗi chung nếu không phải 3 lỗi trùng lặp trên
+            if (updatedErrors.name === "" && updatedErrors.phone === "" && updatedErrors.email === "") {
+                 setApiError(errorMessage);
             }
+
             setErrors(updatedErrors);
             setIsSubmitting(false);
         }
     };
 
     return (
+        // ... (Toàn bộ JSX không đổi) ...
         <div className="fixed inset-0 bg-black/35 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-2xl shadow-lg w-full max-w-2xl p-6 transform transition-all">
                 <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">
@@ -160,7 +167,7 @@ const CreateModal: React.FC<CreateModalProps> = ({
                     <div className="col-span-1 md:col-span-2">
                         <label className="text-sm text-gray-600 block mb-1">Địa chỉ</label>
                         <input
-                            type="text" name="address" value={formData.address} onChange={handleChange}
+                            type="text" name="address" value={formData.address || ''} onChange={handleChange}
                             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-blue-500"
                             placeholder="Nhập địa chỉ"
                         />
