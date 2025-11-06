@@ -17,7 +17,6 @@ import {
   TableRow,
   Paper,
   Avatar,
-  Chip,
   IconButton,
   Tooltip,
   Alert,
@@ -30,16 +29,12 @@ import type { Staff } from '../../../types/staff.types';
 
 interface SimpleStaffFilters {
   search: string;
-  role: 'all' | 'admin' | 'staff';
 }
 
 const StaffManagement: React.FC = () => {
   const [staff, setStaff] = useState<Staff[]>([]);
   const [filteredStaff, setFilteredStaff] = useState<Staff[]>([]);
-  const [filters, setFilters] = useState<SimpleStaffFilters>({
-    search: '',
-    role: 'all',
-  });
+  const [filters, setFilters] = useState<SimpleStaffFilters>({ search: '' });
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const navigate = useNavigate();
@@ -66,7 +61,9 @@ const StaffManagement: React.FC = () => {
       setLoading(true);
       const res = await StaffService.getAll();
       if (res.success && res.data) {
-        setStaff(res.data);
+        // ✅ Chỉ lấy những người có role === 'staff'
+        const staffOnly = res.data.filter((emp) => emp.role === 'staff');
+        setStaff(staffOnly);
       } else {
         setSnackbar({
           open: true,
@@ -86,10 +83,7 @@ const StaffManagement: React.FC = () => {
         filters.search === '' ||
         employee.username.toLowerCase().includes(filters.search.toLowerCase()) ||
         employee.fullName.toLowerCase().includes(filters.search.toLowerCase());
-
-      const matchesRole = filters.role === 'all' || employee.role === filters.role;
-
-      return matchesSearch && matchesRole;
+      return matchesSearch;
     });
 
     setFilteredStaff(filtered);
@@ -105,7 +99,7 @@ const StaffManagement: React.FC = () => {
 
   // --- Handlers ---
   const handleFiltersChange = (newFilters: SimpleStaffFilters) => setFilters(newFilters);
-  const handleClearFilters = () => setFilters({ search: '', role: 'all' });
+  const handleClearFilters = () => setFilters({ search: '' });
 
   const handlePageChange = (newPage: number) => setPage(newPage);
   const handleRowsPerPageChange = (newRowsPerPage: number) => {
@@ -134,7 +128,6 @@ const StaffManagement: React.FC = () => {
       username: data.username,
       role: data.role,
     });
-    
 
     if (res.success && res.data) {
       setStaff((prev) =>
@@ -156,8 +149,7 @@ const StaffManagement: React.FC = () => {
     setSelectedStaff(null);
   };
 
-
-  // ✅ Delete staff via API
+  // ✅ Delete staff
   const handleConfirmDelete = async () => {
     if (selectedStaff) {
       const res = await StaffService.delete(selectedStaff.id);
@@ -182,10 +174,6 @@ const StaffManagement: React.FC = () => {
 
   const handleCloseSnackbar = () => setSnackbar((prev) => ({ ...prev, open: false }));
 
-  const getRoleChip = (role: 'admin' | 'staff') => (
-    <Chip label={role} color={role === 'admin' ? 'primary' : 'default'} size="small" variant="filled" />
-  );
-
   // --- Render ---
   if (loading) {
     return (
@@ -208,7 +196,7 @@ const StaffManagement: React.FC = () => {
                   Staff Management
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Manage your team members and their roles
+                  Manage your team members
                 </Typography>
               </Box>
             </Box>
@@ -233,7 +221,6 @@ const StaffManagement: React.FC = () => {
               <TableHead sx={{ backgroundColor: '#f9fafb' }}>
                 <TableRow>
                   <TableCell>Staff Member</TableCell>
-                  <TableCell>Role</TableCell>
                   <TableCell align="right">Actions</TableCell>
                 </TableRow>
               </TableHead>
@@ -255,10 +242,7 @@ const StaffManagement: React.FC = () => {
                               : '?'}
                           </Avatar>
                           <Box>
-                            <Typography
-                              variant="subtitle2"
-                              className="font-medium text-gray-900"
-                            >
+                            <Typography variant="subtitle2" className="font-medium text-gray-900">
                               {staffMember.fullName}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
@@ -268,31 +252,20 @@ const StaffManagement: React.FC = () => {
                         </Box>
                       </TableCell>
 
-                      <TableCell>{getRoleChip(staffMember.role)}</TableCell>
-
                       <TableCell align="right">
                         <Box className="flex items-center justify-end gap-1">
                           <Tooltip title="View Details" arrow>
-                            <IconButton
-                              size="small"
-                              onClick={() => handleViewStaff(staffMember)}
-                            >
+                            <IconButton size="small" onClick={() => handleViewStaff(staffMember)}>
                               <Eye className="w-4 h-4" />
                             </IconButton>
                           </Tooltip>
                           <Tooltip title="Edit Staff" arrow>
-                            <IconButton
-                              size="small"
-                              onClick={() => handleEditStaff(staffMember)}
-                            >
+                            <IconButton size="small" onClick={() => handleEditStaff(staffMember)}>
                               <Edit className="w-4 h-4" />
                             </IconButton>
                           </Tooltip>
                           <Tooltip title="Delete Staff" arrow>
-                            <IconButton
-                              size="small"
-                              onClick={() => handleDeleteStaff(staffMember)}
-                            >
+                            <IconButton size="small" onClick={() => handleDeleteStaff(staffMember)}>
                               <Trash2 className="w-4 h-4" />
                             </IconButton>
                           </Tooltip>
@@ -302,18 +275,15 @@ const StaffManagement: React.FC = () => {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={3} align="center" sx={{ py: 6 }}>
+                    <TableCell colSpan={2} align="center" sx={{ py: 6 }}>
                       <Box className="flex flex-col items-center">
                         <Users className="w-12 h-12 text-gray-300 mb-4" />
-                        <Typography
-                          variant="h6"
-                          className="text-lg font-medium text-gray-900 mb-2"
-                        >
+                        <Typography variant="h6" className="text-lg font-medium text-gray-900 mb-2">
                           No staff found
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                          {filters.search || filters.role !== 'all'
-                            ? 'Try adjusting your filters to see more results.'
+                          {filters.search
+                            ? 'Try adjusting your search to see more results.'
                             : 'Get started by adding your first staff member.'}
                         </Typography>
                       </Box>

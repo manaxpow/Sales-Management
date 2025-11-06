@@ -1,46 +1,18 @@
 import React from 'react';
 import { Search, Filter, X } from 'lucide-react';
-import {
-  TextField,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Button,
-  Box,
-} from '@mui/material';
-import { styled } from '@mui/material/styles';
-import type { StaffFilters } from '../../../types/staff.types';
+import { TextField, Button, Box } from '@mui/material';
 
-const StyledFormControl = styled(FormControl)(() => ({
-  minWidth: 120,
-  width: '100%',
-}));
-
-const StyledSelect = styled(Select)(() => ({
-  '& .MuiOutlinedInput-notchedOutline': {
-    borderColor: '#d1d5db', // gray-300
-  },
-  '&:hover .MuiOutlinedInput-notchedOutline': {
-    borderColor: '#9ca3af', // gray-400
-  },
-  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-    borderColor: '#3b82f6', // blue-500
-    borderWidth: '2px',
-  },
-}));
+interface SimpleStaffFilters {
+  search: string;
+}
 
 interface StaffFilterProps {
-  filters: StaffFilters;
-  onFiltersChange: (filters: StaffFilters) => void;
+  filters: SimpleStaffFilters;
+  onFiltersChange: (filters: SimpleStaffFilters) => void;
   onClearFilters: () => void;
 }
 
-const StaffFilter = ({
-  filters,
-  onFiltersChange,
-  onClearFilters,
-}: StaffFilterProps) => {
+const StaffFilter = ({ filters, onFiltersChange, onClearFilters }: StaffFilterProps) => {
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onFiltersChange({
       ...filters,
@@ -48,7 +20,7 @@ const StaffFilter = ({
     });
   };
 
-  const hasActiveFilters = filters.search || filters.role !== 'all';
+  const hasActiveFilters = filters.search !== '';
 
   return (
     <Box className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
@@ -62,46 +34,24 @@ const StaffFilter = ({
             className="ml-auto normal-case text-gray-600 hover:text-gray-800 hover:bg-gray-100"
             size="small"
           >
-            Clear All
+            Clear
           </Button>
         )}
       </Box>
 
-      <Box className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Search Input */}
-        <TextField
-          label="Search Employees"
-          variant="outlined"
-          size="small"
-          value={filters.search}
-          onChange={handleSearchChange}
-          placeholder="Search by username or full name..."
-          InputProps={{
-            startAdornment: <Search className="w-4 h-4 text-gray-400 mr-2" />,
-          }}
-        />
-
-        {/* Role Filter */}
-        <StyledFormControl variant="outlined" size="small">
-          <InputLabel id="role-label">Role</InputLabel>
-          <StyledSelect
-            labelId="role-label"
-            id="role"
-            value={filters.role}
-            onChange={(e) =>
-              onFiltersChange({
-                ...filters,
-                role: e.target.value as 'all' | 'admin' | 'staff',
-              })
-            }
-            label="Role"
-          >
-            <MenuItem value="all">All Roles</MenuItem>
-            <MenuItem value="admin">Admin</MenuItem>
-            <MenuItem value="staff">Staff</MenuItem>
-          </StyledSelect>
-        </StyledFormControl>
-      </Box>
+      {/* Search Input */}
+      <TextField
+        label="Search Employees"
+        variant="outlined"
+        size="small"
+        value={filters.search}
+        onChange={handleSearchChange}
+        placeholder="Search by username or full name..."
+        InputProps={{
+          startAdornment: <Search className="w-4 h-4 text-gray-400 mr-2" />,
+        }}
+        fullWidth
+      />
     </Box>
   );
 };
