@@ -1,64 +1,95 @@
 using Microsoft.EntityFrameworkCore;
 
 public class OrderItemService : IOrderItemService {
-    private readonly AppDbContext _context;
+    private readonly AppDbContext _db;
+    public OrderItemService(AppDbContext db) { _db = db; }
 
-    public OrderItemService(AppDbContext context) {
-        _context = context;
-    }
+    public async Task<ApiResponse<IEnumerable<OrderItemResponse>>> GetAll(int? orderId) {
+        var q = _db.OrderItems.AsQueryable();
+        if (orderId.HasValue) q = q.Where(i => i.OrderId == orderId.Value);
 
-    public async Task<ApiResponse<IEnumerable<OrderItem>>> GetAll(int? orderId) {
-        var query = _context.OrderItems.AsQueryable();
+        var items = await q
+            .Select(i => new OrderItemResponse {
+                OrderItemId = i.OrderItemId,
+                OrderId = i.OrderId,
+                Productid = i.Productid,
+                Quantity = i.Quantity,
+                Price = i.Price,
+                SubTotal = i.SubTotal
+            })
+            .ToListAsync();
 
-        if (orderId.HasValue)
-            query = query.Where(i => i.OrderId == orderId.Value);
-
-        var items = await query.ToListAsync();
-        return new ApiResponse<IEnumerable<OrderItem>>()
+        return new ApiResponse<IEnumerable<OrderItemResponse>>()
             .SuccessResponse(items, "Fetched order items successfully");
     }
 
-    public async Task<ApiResponse<OrderItem>> GetById(int id) {
-        var item = await _context.OrderItems.FindAsync(id);
-        if (item == null)
-            return new ApiResponse<OrderItem>().ErrorResponse("Order item not found", 404);
+    public async Task<ApiResponse<OrderItemResponse>> GetById(int id) {
+        var i = await _db.OrderItems.FindAsync(id);
+        if (i == null) return new ApiResponse<OrderItemResponse>().ErrorResponse("Order item not found", 404);
 
-        return new ApiResponse<OrderItem>().SuccessResponse(item);
+        var resp = new OrderItemResponse {
+            OrderItemId = i.OrderItemId,
+            OrderId = i.OrderId,
+            Productid = i.Productid,
+            Quantity = i.Quantity,
+            Price = i.Price,
+            SubTotal = i.SubTotal
+        };
+        return new ApiResponse<OrderItemResponse>().SuccessResponse(resp);
     }
 
-    public async Task<ApiResponse<OrderItem>> Create(OrderItem newItem) {
-        newItem.SubTotal = newItem.Price * newItem.Quantity;
+    public async Task<ApiResponse<OrderItemResponse>> Create(OrderItemRequest req) {
+        var entity = new OrderItem {
+            OrderId = req.OrderId,
+            Productid = req.Productid,
+            Quantity = req.Quantity,
+            Price = req.Price,
+            SubTotal = req.Price * req.Quantity
+        };
 
-        _context.OrderItems.Add(newItem);
-        await _context.SaveChangesAsync();
+        _db.OrderItems.Add(entity);
+        await _db.SaveChangesAsync();
 
-        return new ApiResponse<OrderItem>()
-            .SuccessResponse(newItem, "Created order item successfully", 201);
+        var resp = new OrderItemResponse {
+            OrderItemId = entity.OrderItemId,
+            OrderId = entity.OrderId,
+            Productid = entity.Productid,
+            Quantity = entity.Quantity,
+            Price = entity.Price,
+            SubTotal = entity.SubTotal
+        };
+        return new ApiResponse<OrderItemResponse>().SuccessResponse(resp, "Created order item successfully", 201);
     }
 
-    public async Task<ApiResponse<OrderItem>> Update(int id, OrderItem updatedItem) {
-        var item = await _context.OrderItems.FindAsync(id);
-        if (item == null)
-            return new ApiResponse<OrderItem>().ErrorResponse("Order item not found", 404);
+    public async Task<ApiResponse<OrderItemResponse>> Update(int id, OrderItemRequest req) {
+        var entity = await _db.OrderItems.FindAsync(id);
+        if (entity == null) return new ApiResponse<OrderItemResponse>().ErrorResponse("Order item not found", 404);
 
-        item.OrderId = updatedItem.OrderId;
-        item.Productid = updatedItem.Productid;
-        item.Quantity = updatedItem.Quantity;
-        item.Price = updatedItem.Price;
-        item.SubTotal = updatedItem.Price * updatedItem.Quantity;
+        entity.OrderId = req.OrderId;
+        entity.Productid = req.Productid;
+        entity.Quantity = req.Quantity;
+        entity.Price = req.Price;
+        entity.SubTotal = req.Price * req.Quantity;
 
-        await _context.SaveChangesAsync();
+        await _db.SaveChangesAsync();
 
-        return new ApiResponse<OrderItem>().SuccessResponse(item, "Updated order item successfully");
+        var resp = new OrderItemResponse {
+            OrderItemId = entity.OrderItemId,
+            OrderId = entity.OrderId,
+            Productid = entity.Productid,
+            Quantity = entity.Quantity,
+            Price = entity.Price,
+            SubTotal = entity.SubTotal
+        };
+        return new ApiResponse<OrderItemResponse>().SuccessResponse(resp, "Updated order item successfully");
     }
 
     public async Task<ApiResponse<string>> Delete(int id) {
-        var item = await _context.OrderItems.FindAsync(id);
-        if (item == null)
-            return new ApiResponse<string>().ErrorResponse("Order item not found", 404);
+        var entity = await _db.OrderItems.FindAsync(id);
+        if (entity == null) return new ApiResponse<string>().ErrorResponse("Order item not found", 404);
 
-        _context.OrderItems.Remove(item);
-        await _context.SaveChangesAsync();
+        _db.OrderItems.Remove(entity);
+        await _db.SaveChangesAsync();
 
         return new ApiResponse<string>().SuccessResponse("Deleted order item successfully");
     }

@@ -7,6 +7,7 @@ public static class DatabaseSeeder
         await SupplierSeeder.SeedAsync(context);
         await ProductSeeder.SeedAsync(context);
         await InventorySeeder.SeedAsync(context);
+        await PromotionSeeder.SeedAsync(context);
         // Nếu có thêm seeder khác, thêm ở đây
     }
 }

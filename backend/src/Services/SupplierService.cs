@@ -1,11 +1,18 @@
+
 using System.Text;
 using backend.Contract.Supplier.Request;
 using backend.Contract.Supplier.Response;
 using Microsoft.EntityFrameworkCore;
 
+public class ServiceResponse<T>
+{
+    public T? Data { get; set; }
+    public string Message { get; set; } = string.Empty;
+    public bool Success { get; set; } = true;
+}
+
 public class SupplierService(AppDbContext context, ILogger<SupplierService> logger) : ISupplierService
 {
-    // [SỬA] Làm static method để tránh capture 'this' trong projection
     private static SupplierResponse ToResponse(Suppliers supplier) => new()
     {
         Id = supplier.Id,
@@ -17,8 +24,10 @@ public class SupplierService(AppDbContext context, ILogger<SupplierService> logg
         UpdatedAt = supplier.UpdatedAt
     };
 
-    public async Task<SupplierResponse> AddSupplierAsync(CreateSupplierRequest request)
+    public async Task<ServiceResponse<SupplierResponse>> AddSupplierAsync(CreateSupplierRequest request)
     {
+        var response = new ServiceResponse<SupplierResponse>();
+
         var existingSupplier = await context.Suppliers.AsNoTracking()
             .FirstOrDefaultAsync(s => s.Name == request.Name || s.Phone == request.Phone || s.Email == request.Email);
 
@@ -28,7 +37,9 @@ public class SupplierService(AppDbContext context, ILogger<SupplierService> logg
             if (existingSupplier.Name == request.Name) messages.Append("Tên nhà cung cấp đã tồn tại. ");
             if (existingSupplier.Phone == request.Phone) messages.Append("Số điện thoại đã tồn tại. ");
             if (existingSupplier.Email == request.Email) messages.Append("Email đã tồn tại. ");
-            throw new InvalidOperationException(messages.ToString().Trim());
+            response.Message = messages.ToString().Trim();
+            response.Success = false;
+            return response;
         }
 
         var supplier = new Suppliers
@@ -44,31 +55,48 @@ public class SupplierService(AppDbContext context, ILogger<SupplierService> logg
         context.Suppliers.Add(supplier);
         await context.SaveChangesAsync();
         logger.LogInformation("Supplier added with ID: {Id}", supplier.Id);
-        return ToResponse(supplier);  // Vẫn gọi bình thường (static không ảnh hưởng)
+        response.Data = ToResponse(supplier);
+        return response;
     }
 
-    public async Task<IEnumerable<SupplierResponse>> GetSuppliersAsync()
+    public async Task<ServiceResponse<IEnumerable<SupplierResponse>>> GetSuppliersAsync()
     {
-        // [SỬA] Bây giờ Select(s => ToResponse(s)) sẽ work vì static
-        return await context.Suppliers
+        var response = new ServiceResponse<IEnumerable<SupplierResponse>>();
+        var suppliers = await context.Suppliers
             .AsNoTracking()
             .Select(s => ToResponse(s))
             .ToListAsync();
+        response.Data = suppliers;
+        return response;
     }
 
-    public async Task<SupplierResponse?> GetSupplierByIdAsync(int id)
+    public async Task<ServiceResponse<SupplierResponse>> GetSupplierByIdAsync(int id)
     {
+        var response = new ServiceResponse<SupplierResponse>();
         var supplier = await context.Suppliers.FindAsync(id);
-        return supplier == null ? null : ToResponse(supplier);  // An toàn
+        if (supplier == null)
+        {
+            response.Success = false;
+            response.Message = "Supplier not found";
+            return response;
+        }
+        response.Data = ToResponse(supplier);
+        return response;
     }
 
-    public async Task<SupplierResponse?> UpdateSupplierAsync(int id, UpdateSupplierRequest request)
+    public async Task<ServiceResponse<SupplierResponse>> UpdateSupplierAsync(UpdateSupplierRequest request)
     {
-        var supplier = await context.Suppliers.FindAsync(id);
-        if (supplier == null) return null;
+        var response = new ServiceResponse<SupplierResponse>();
+        var supplier = await context.Suppliers.FindAsync(request.Id);
+        if (supplier == null)
+        {
+            response.Success = false;
+            response.Message = "Supplier not found";
+            return response;
+        }
 
         var existingSupplier = await context.Suppliers.AsNoTracking()
-            .FirstOrDefaultAsync(s => s.Id != id && (s.Name == request.Name || s.Phone == request.Phone || s.Email == request.Email));
+            .FirstOrDefaultAsync(s => s.Id != request.Id && (s.Name == request.Name || s.Phone == request.Phone || s.Email == request.Email));
 
         if (existingSupplier != null)
         {
@@ -76,7 +104,9 @@ public class SupplierService(AppDbContext context, ILogger<SupplierService> logg
             if (existingSupplier.Name == request.Name) messages.Append("Tên nhà cung cấp đã tồn tại. ");
             if (existingSupplier.Phone == request.Phone) messages.Append("Số điện thoại đã tồn tại. ");
             if (existingSupplier.Email == request.Email) messages.Append("Email đã tồn tại. ");
-            throw new InvalidOperationException(messages.ToString().Trim());
+            response.Message = messages.ToString().Trim();
+            response.Success = false;
+            return response;
         }
 
         supplier.Name = request.Name;
@@ -87,16 +117,24 @@ public class SupplierService(AppDbContext context, ILogger<SupplierService> logg
 
         await context.SaveChangesAsync();
         logger.LogInformation("Supplier updated with ID: {Id}", supplier.Id);
-        return ToResponse(supplier);  // An toàn
+        response.Data = ToResponse(supplier);
+        return response;
     }
 
-    public async Task<bool> DeleteSupplierAsync(int id)
+    public async Task<ServiceResponse<bool>> DeleteSupplierAsync(int id)
     {
+        var response = new ServiceResponse<bool>();
         var supplier = await context.Suppliers.FindAsync(id);
-        if (supplier == null) return false;
+        if (supplier == null)
+        {
+            response.Success = false;
+            response.Message = "Supplier not found";
+            return response;
+        }
 
         context.Suppliers.Remove(supplier);
         await context.SaveChangesAsync();
-        return true;
+        response.Data = true;
+        return response;
     }
 }

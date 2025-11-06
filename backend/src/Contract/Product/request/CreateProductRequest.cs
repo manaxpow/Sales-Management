@@ -20,6 +20,8 @@ public record CreateProductRequest
 
     [FromForm]
     public string? Unit { get; set; } = "Cái";
+    [FromForm]
+    public int? Status { get; set; } = 1;
 
 
 
