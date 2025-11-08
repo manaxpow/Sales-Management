@@ -68,17 +68,17 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
   });
   const { data: categories } = useFetchData(CategoryService.getAll, {});
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const fetchSuppliers = async () => {
+    const response = await getSuppliers();
+    if (response.success) {
+      setSuppliers(response.data || []);
+    } else {
+      console.error('API Error Response:', response.message || 'No message provided');
+      setSuppliers([]);
+    }
+  };
 
-  // get data supplier
   useEffect(() => {
-    const fetchSuppliers = async () => {
-      try {
-        const data = await getSuppliers();
-        setSuppliers(data);
-      } catch (error) {
-        console.error("Error loading suppliers:", error);
-      }
-    };
     fetchSuppliers();
   }, []);
 

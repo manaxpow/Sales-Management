@@ -77,17 +77,19 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
   // const [, setImageFile] = useState<File | null>(null);
 
   // Load supplier list
-  useEffect(() => {
-    const fetchSuppliers = async () => {
-      try {
-        const data = await getSuppliers();
-        setSuppliers(data);
-      } catch (error) {
-        console.error("Error loading suppliers:", error);
-      }
+const fetchSuppliers = async () => {
+        const response = await getSuppliers();
+        if (response.success) {
+            setSuppliers(response.data || []);
+        } else {
+            console.error('API Error Response:', response.message || 'No message provided');
+            setSuppliers([]);
+        }
     };
-    fetchSuppliers();
-  }, []);
+
+    useEffect(() => {
+        fetchSuppliers();
+    }, []);
 
   // Reset form khi mở modal
   useEffect(() => {
