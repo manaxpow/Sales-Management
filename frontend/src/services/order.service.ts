@@ -2,14 +2,9 @@ import instance from "../config/axios.config";
 import type { ApiResponse, ErrorApiResponse } from "../types/api.type";
 import type { OrderItemResponse } from "./order-item.service";
 import { GetOrderItemsService } from "./order-item.service";
-
 import { GetProductByIdService } from "./product.service";
 
-export interface OrderDetailResponse {
-  order: OrderResponse;
-  items: (OrderItemResponse & { productName: string })[];
-}
-
+// === INTERFACES ===
 export interface OrderResponse {
   id: number;
   customerid: number;
@@ -18,6 +13,7 @@ export interface OrderResponse {
   totalAmount: number;
   discountAmount: number;
   orderDate: string;
+  promotionCode?: string | null;
 }
 
 export interface OrderRequest {
@@ -37,8 +33,31 @@ export interface GetOrdersFilter {
   dateTo?: string;
 }
 
-const URL_API = "/orders";
+export interface CreateOrderItemDto {
+  productid: number;
+  quantity: number;
+  price: number;
+}
 
+export interface CreateOrderWithItemsRequest {
+  customerid: number;
+  userid: number;
+  status?: number;
+  promotionCode?: string | null;
+  items: CreateOrderItemDto[];
+  paymentMethod: number;
+}
+
+export interface CreateOrderResponse extends OrderResponse {
+  items: (OrderItemResponse & { productName?: string })[];
+}
+
+export interface OrderDetailResponse {
+  order: OrderResponse;
+  items: (OrderItemResponse & { productName: string })[];
+}
+
+const URL_API = "/orders";
 const productNameCache = new Map<number, string>();
 
 const GetOrdersService = async (
@@ -108,6 +127,24 @@ const DeleteOrderService = async (id: number): Promise<ApiResponse<string>> => {
   }
 };
 
+const CreateOrderWithItemsService = async (
+  data: CreateOrderWithItemsRequest
+): Promise<ApiResponse<CreateOrderResponse>> => {
+  try {
+    const res = await instance.post(`${URL_API}/with-items`, data, {
+      headers: { "Content-Type": "application/json" },
+    });
+    return res.data;
+  } catch (error) {
+    const err = error as ErrorApiResponse;
+    return {
+      success: false,
+      message: err.message || "Tạo đơn hàng thất bại",
+      statusCode: err.statusCode || 500,
+    };
+  }
+};
+
 const GetOrderDetailService = async (
   orderId: number
 ): Promise<ApiResponse<OrderDetailResponse>> => {
@@ -167,6 +204,7 @@ export {
   GetOrdersService,
   GetOrderByIdService,
   CreateOrderService,
+  CreateOrderWithItemsService,
   UpdateOrderService,
   DeleteOrderService,
   GetOrderDetailService,

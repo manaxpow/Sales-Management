@@ -192,7 +192,9 @@ const OrderTable = ({
                   </TableCell>
 
                   <TableCell className="p-3 text-right font-semibold text-red-600">
-                    {formatPrice(order.totalPaymentAmount)}
+                    {formatPrice(
+                      order.totalPaymentAmount - order.discountAmount
+                    )}
                   </TableCell>
 
                   <TableCell className="p-3 text-center">

@@ -1,6 +1,5 @@
 // pages/Sale.tsx
 import { useState, useEffect, useMemo } from "react";
-
 import {
   Box,
   Container,
@@ -35,7 +34,12 @@ import type { Category } from "../../types/category.types";
 import { CategoryService } from "../../services/category.service";
 import { GetPromotionsService } from "../../services/promotion.service";
 import type { Promotion } from "../../types/promotion.type";
-// Types
+
+import {
+  CreateOrderWithItemsService,
+  type CreateOrderWithItemsRequest,
+} from "../../services/order.service";
+
 export interface SimpleProduct {
   id: number;
   image?: string;
@@ -66,13 +70,12 @@ const Sale = () => {
   const [error, setError] = useState<string | null>(null);
 
   const [categories, setCategories] = useState<Category[]>([]);
-
-  const [promotions, setPromotions] = useState<Promotion[]>([]); // Thêm
+  const [promotions, setPromotions] = useState<Promotion[]>([]);
   const [selectedPromotion, setSelectedPromotion] = useState<Promotion | null>(
     null
-  ); // Thêm
-  const [promotionSearch, setPromotionSearch] = useState(""); // Thêm
-  const [promotionLoading, setPromotionLoading] = useState(false); // Thêm
+  );
+  const [promotionSearch, setPromotionSearch] = useState("");
+  const [promotionLoading, setPromotionLoading] = useState(false);
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -99,7 +102,9 @@ const Sale = () => {
     severity: "success" | "error" | "warning" | "info";
   }>({ open: false, message: "", severity: "success" });
 
-  // === FETCH PRODUCTS ===
+  const [creatingOrder, setCreatingOrder] = useState(false);
+
+  // === FETCH DATA ===
   const fetchProducts = async () => {
     setLoadingProducts(true);
     setError(null);
@@ -142,7 +147,6 @@ const Sale = () => {
     }
   };
 
-  // === FETCH CUSTOMERS ===
   const fetchCustomers = async (search?: string) => {
     setLoadingCustomers(true);
     try {
@@ -168,20 +172,14 @@ const Sale = () => {
 
   const fetchCategories = async () => {
     try {
-      const res = await CategoryService.getAll(); // <-- import CategoryService
+      const res = await CategoryService.getAll();
       if (res.success && res.data) {
         setCategories(res.data);
-      } else {
-        setSnackbar({
-          open: true,
-          message: res.message ?? "Không thể tải danh mục",
-          severity: "error",
-        });
       }
     } catch {
       setSnackbar({
         open: true,
-        message: "Lỗi kết nối server (categories)",
+        message: "Lỗi tải danh mục",
         severity: "error",
       });
     }
@@ -205,10 +203,9 @@ const Sale = () => {
             p.status === 1 &&
             start <= today &&
             end >= today &&
-            p.usedcount < p.usagelimit
+            (!p.usagelimit || p.usedcount < p.usagelimit)
           );
         });
-
         setPromotions(valid);
       }
     } catch (error) {
@@ -225,64 +222,91 @@ const Sale = () => {
     fetchPromotions();
   }, []);
 
-  // === TÍNH TOÁN GIẢM GIÁ ===
-  const total = cartItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
+  const total = useMemo(
+    () => cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
+    [cartItems]
   );
 
   const discount = useMemo(() => {
     if (!selectedPromotion || total < selectedPromotion.minOrderAmount)
       return 0;
-    let amount = 0;
     if (selectedPromotion.discountType === 1) {
-      amount = total * (selectedPromotion.discountValue / 100);
-    } else if (selectedPromotion.discountType === 2) {
-      amount = selectedPromotion.discountValue;
+      return total * (selectedPromotion.discountValue / 100);
     }
-    return Math.min(amount, total);
+    return Math.min(selectedPromotion.discountValue, total);
   }, [selectedPromotion, total]);
 
   const finalTotal = total - discount;
 
-  // Realtime search
-  useEffect(() => {
-    const delay = setTimeout(() => {
-      fetchCustomers(customerSearch);
-    }, 300);
-    return () => clearTimeout(delay);
-  }, [customerSearch]);
+  const handlePayment = async (paymentMethod: 1 | 2) => {
+    if (!selectedCustomer) {
+      setSnackbar({
+        open: true,
+        message: "Vui lòng chọn khách hàng",
+        severity: "warning",
+      });
+      return;
+    }
 
-  // === FILTERS ===
-  const availableCategories = useMemo(() => {
-    const uniq = categories.map((c) => c.name).sort();
-    return ["Tất cả", ...uniq];
-  }, [categories]);
+    if (cartItems.length === 0) {
+      setSnackbar({
+        open: true,
+        message: "Giỏ hàng trống",
+        severity: "warning",
+      });
+      return;
+    }
 
-  const filteredProducts = useMemo(() => {
-    let filtered = products.filter((p) => p.status === "active");
-    if (searchTerm.trim()) {
-      const lower = searchTerm.toLowerCase();
-      filtered = filtered.filter(
-        (p) =>
-          p.name.toLowerCase().includes(lower) ||
-          p.code.toLowerCase().includes(lower) ||
-          p.category.toLowerCase().includes(lower) ||
-          p.supplier.toLowerCase().includes(lower)
+    setCreatingOrder(true);
+
+    try {
+      const items: CreateOrderWithItemsRequest["items"] = cartItems.map(
+        (item) => ({
+          productid: item.id,
+          quantity: item.quantity,
+          price: item.price,
+        })
       );
-    }
-    if (categoryFilter !== "Tất cả") {
-      filtered = filtered.filter((p) => p.category === categoryFilter);
-    }
-    return filtered;
-  }, [products, searchTerm, categoryFilter]);
 
-  const paginatedProducts = filteredProducts.slice(
-    page * rowsPerPage,
-    page * rowsPerPage + rowsPerPage
-  );
+      const payload: CreateOrderWithItemsRequest = {
+        customerid: selectedCustomer.id,
+        userid: 2,
+        status: 1,
+        promotionCode: selectedPromotion?.promotionCode ?? null,
+        items,
+        paymentMethod,
+      };
 
-  // === CART ===
+      const result = await CreateOrderWithItemsService(payload);
+
+      if (result.success && result.data) {
+        const methodText = paymentMethod === 1 ? "Tiền mặt" : "Chuyển khoản";
+        setSnackbar({
+          open: true,
+          message: `Thanh toán thành công (${methodText})! Mã đơn: #${result.data.id}`,
+          severity: "success",
+        });
+
+        setCartItems([]);
+        setSelectedCustomer(null);
+        setSelectedPromotion(null);
+        setPaymentDialogOpen(false);
+      } else {
+        setSnackbar({
+          open: true,
+          message: result.message || "Thanh toán thất bại",
+          severity: "error",
+        });
+      }
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "Lỗi kết nối server";
+      setSnackbar({ open: true, message, severity: "error" });
+    } finally {
+      setCreatingOrder(false);
+    }
+  };
+
   const addToCart = (product: SimpleProduct) => {
     if (product.stock <= 0) {
       setSnackbar({
@@ -334,8 +358,7 @@ const Sale = () => {
           .map((item) => {
             if (item.id === id) {
               const newQty = item.quantity + delta;
-              const available = product.stock + item.quantity;
-              if (newQty > available) {
+              if (newQty > product.stock) {
                 setSnackbar({
                   open: true,
                   message: `Chỉ còn ${product.stock} ${product.unit}!`,
@@ -360,23 +383,10 @@ const Sale = () => {
     });
   };
 
-  const calculateTotal = () =>
-    cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
-  const handlePayment = () => {
-    setSnackbar({
-      open: true,
-      message: `Thanh toán thành công! Tổng: ${formatPrice(calculateTotal())}`,
-      severity: "success",
-    });
-    setCartItems([]);
-    setSelectedCustomer(null);
-    setPaymentDialogOpen(false);
-  };
-
   const handleNewOrder = () => {
     setCartItems([]);
     setSelectedCustomer(null);
+    setSelectedPromotion(null);
     setCustomerSearch("");
     setSnackbar({
       open: true,
@@ -398,7 +408,6 @@ const Sale = () => {
 
     try {
       const res = await customerService.create(newCustomer);
-
       if (res.success && res.data) {
         const newCust: CustomerResponse = {
           id: res.data.id,
@@ -407,18 +416,11 @@ const Sale = () => {
           email: res.data.email,
           address: res.data.address,
         };
-
-        // Cập nhật danh sách
         setCustomers((prev) => [newCust, ...prev]);
-
-        // Cập nhật thanh tìm kiếm + chọn khách
         setCustomerSearch(`${newCust.name} - ${newCust.phone}`);
         setSelectedCustomer(newCust);
-
-        // Reset
         setCreateCustomerOpen(false);
         setNewCustomer({ name: "", phone: "", email: "", address: "" });
-
         setSnackbar({
           open: true,
           message: "Tạo khách hàng thành công!",
@@ -434,8 +436,33 @@ const Sale = () => {
     }
   };
 
-  const formatPrice = (price: number) =>
-    new Intl.NumberFormat("vi-VN").format(price) + "₫";
+  // === FILTERS ===
+  const availableCategories = useMemo(
+    () => ["Tất cả", ...categories.map((c) => c.name).sort()],
+    [categories]
+  );
+
+  const filteredProducts = useMemo(() => {
+    let filtered = products.filter((p) => p.status === "active");
+    if (searchTerm.trim()) {
+      const lower = searchTerm.toLowerCase();
+      filtered = filtered.filter(
+        (p) =>
+          p.name.toLowerCase().includes(lower) ||
+          p.code.toLowerCase().includes(lower) ||
+          p.category.toLowerCase().includes(lower)
+      );
+    }
+    if (categoryFilter !== "Tất cả") {
+      filtered = filtered.filter((p) => p.category === categoryFilter);
+    }
+    return filtered;
+  }, [products, searchTerm, categoryFilter]);
+
+  const paginatedProducts = filteredProducts.slice(
+    page * rowsPerPage,
+    page * rowsPerPage + rowsPerPage
+  );
 
   return (
     <Box className="flex-grow p-6 bg-gray-50 min-h-screen">
@@ -492,20 +519,18 @@ const Sale = () => {
             cartItems={cartItems}
             products={products}
             loading={loadingCustomers}
-            onCustomerChange={setSelectedCustomer} // Đúng kiểu: (CustomerResponse | null) => void
+            onCustomerChange={setSelectedCustomer}
             onCustomerSearch={setCustomerSearch}
             onUpdateQuantity={updateQuantity}
             onRemoveItem={removeFromCart}
             onCheckout={() => setPaymentDialogOpen(true)}
             onCreateCustomer={() => setCreateCustomerOpen(true)}
-            // TRUYỀN KHUYẾN MÃI
             promotions={promotions}
             selectedPromotion={selectedPromotion}
             onPromotionChange={setSelectedPromotion}
             promotionSearch={promotionSearch}
             onPromotionSearch={setPromotionSearch}
             promotionLoading={promotionLoading}
-            // TRUYỀN TỔNG TIỀN
             total={total}
             discount={discount}
             finalTotal={finalTotal}
@@ -513,6 +538,7 @@ const Sale = () => {
         </Box>
       </Container>
 
+      {/* Payment Dialog */}
       <PaymentDialog
         open={paymentDialogOpen}
         total={total}
@@ -527,8 +553,10 @@ const Sale = () => {
         promotionCode={selectedPromotion?.promotionCode}
         onClose={() => setPaymentDialogOpen(false)}
         onConfirm={handlePayment}
+        loading={creatingOrder}
       />
 
+      {/* Create Customer Dialog */}
       <Dialog
         open={createCustomerOpen}
         onClose={() => setCreateCustomerOpen(false)}
@@ -549,8 +577,6 @@ const Sale = () => {
                 setNewCustomer({ ...newCustomer, name: e.target.value })
               }
               required
-              variant="outlined"
-              sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
             />
             <TextField
               label="Số điện thoại *"
@@ -560,8 +586,6 @@ const Sale = () => {
                 setNewCustomer({ ...newCustomer, phone: e.target.value })
               }
               required
-              variant="outlined"
-              sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
             />
             <TextField
               label="Email"
@@ -571,8 +595,6 @@ const Sale = () => {
                 setNewCustomer({ ...newCustomer, email: e.target.value })
               }
               type="email"
-              variant="outlined"
-              sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
             />
             <TextField
               label="Địa chỉ"
@@ -583,8 +605,6 @@ const Sale = () => {
               }
               multiline
               rows={2}
-              variant="outlined"
-              sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
             />
           </Box>
         </DialogContent>
@@ -600,6 +620,7 @@ const Sale = () => {
         </DialogActions>
       </Dialog>
 
+      {/* Snackbar */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={4000}
