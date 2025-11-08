@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Package, Plus, Eye, Edit, Trash2, AlertTriangle, CheckCircle } from 'lucide-react';
 import InventoryFilter from './inventory.filter';
 import InventoryPagination from './inventory.pagination';
@@ -24,70 +24,21 @@ import {
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import type { 
-  InventoryWithProduct, 
-  InventoryFormData, 
-  InventoryFilters,
   Product,
-  InventoryItem
+  InventoryFormData, 
+  InventoryFilters
 } from '../../../types/inventory.types';
-
-// Generate mock data
-const generateMockProducts = (): Product[] => {
-  const productNames = [
-    'Laptop Dell XPS 13', 'iPhone 14 Pro', 'Samsung Galaxy S23', 'iPad Air',
-    'MacBook Pro M2', 'ThinkPad X1 Carbon', 'Surface Pro 9', 'AirPods Pro',
-    'Sony WH-1000XM5', 'Bose QuietComfort', 'Logitech MX Master 3', 'Dell UltraSharp 27"',
-    'LG UltraGear 32"', 'Samsung SSD 1TB', 'WD Blue 2TB HDD', 'Corsair DDR5 32GB',
-    'NVIDIA RTX 4090', 'AMD Ryzen 9 7950X', 'Intel Core i9-13900K', 'Apple Watch Series 8',
-    'Fitbit Charge 5', 'Garmin Forerunner 255', 'JBL Flip 6', 'Sony PlayStation 5',
-    'Xbox Series X', 'Nintendo Switch OLED', 'Dyson V15 Detect', 'Roomba i7+',
-    'Instant Pot Duo', 'KitchenAid Mixer', 'Nespresso Vertuo', 'Breville Barista Express'
-  ];
-
-  const units = ['pcs', 'box', 'set', 'kg', 'liter', 'meter'];
-  
-  return productNames.map((name, index) => ({
-    productId: index + 1,
-    categoryId: Math.floor(Math.random() * 10) + 1,
-    supplierId: Math.floor(Math.random() * 5) + 1,
-    productName: name,
-    barcode: `SKU${String(index + 1).padStart(6, '0')}`,
-    price: Math.floor(Math.random() * 2000) + 50,
-    unit: units[Math.floor(Math.random() * units.length)],
-    createdAt: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000).toISOString(),
-  }));
-};
-
-const generateMockInventory = (products: Product[]): InventoryItem[] => {
-  return products.map((product, index) => ({
-    inventoryId: index + 1,
-    productId: product.productId,
-    quantity: Math.floor(Math.random() * 200) - 20, // Some items will be out of stock
-    updatedAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-  }));
-};
-
-// Combine inventory with product data
-const generateInventoryWithProducts = (): InventoryWithProduct[] => {
-  const products = generateMockProducts();
-  const inventory = generateMockInventory(products);
-  
-  return inventory.map(inv => ({
-    ...inv,
-    product: products.find(p => p.productId === inv.productId)!,
-  })).filter(item => item.product); // Filter out any items without products
-};
-
-const mockInventoryData = generateInventoryWithProducts();
+import { getInventory, updateInventory } from '../../../services/inventory.service';
 
 const InventoryManagement: React.FC = () => {
-  const [inventory, setInventory] = useState<InventoryWithProduct[]>(mockInventoryData);
-  const [filteredInventory, setFilteredInventory] = useState<InventoryWithProduct[]>(mockInventoryData);
+  const [inventory, setInventory] = useState<Product[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState<InventoryFilters>({
     search: '',
-    status: 'all',
+    status: 'ALL',
   });
-  const [page, setPage] = useState(0);
+  const [page, setPage] = useState(1); // API uses 1-based indexing
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const navigate = useNavigate();
 
@@ -95,7 +46,7 @@ const InventoryManagement: React.FC = () => {
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<InventoryWithProduct | null>(null);
+  const [selectedItem, setSelectedItem] = useState<Product | null>(null);
 
   // UI states
   const [snackbar, setSnackbar] = useState<{
@@ -109,36 +60,42 @@ const InventoryManagement: React.FC = () => {
   });
 
   // Get stock status
-  const getStockStatus = (quantity: number): 'in-stock' | 'low-stock' | 'out-of-stock' => {
-    if (quantity === 0) return 'out-of-stock';
-    if (quantity < 10) return 'low-stock';
-    return 'in-stock';
+  const getStockStatus = (quantity: number): 'IN_STOCK' | 'LOW_STOCK' | 'OUT_OF_STOCK' => {
+    if (quantity === 0) return 'OUT_OF_STOCK';
+    if (quantity < 10) return 'LOW_STOCK';
+    return 'IN_STOCK';
   };
 
-  // Filter and search logic
+  // Fetch inventory data
   useEffect(() => {
-    const filtered = inventory.filter((item) => {
-      const matchesSearch =
-        filters.search === '' ||
-        item.product.productName.toLowerCase().includes(filters.search.toLowerCase()) ||
-        item.product.barcode.toLowerCase().includes(filters.search.toLowerCase());
+    const fetchInventory = async () => {
+      setLoading(true);
+      try {
+        const response = await getInventory({
+          page,
+          pageSize: rowsPerPage,
+          search: filters.search,
+          status: filters.status,
+        });
+        
+        if (response.success && response.data) {
+          setInventory(response.data.products);
+          setTotalCount(response.data.totalCount);
+        } else {
+          setInventory([]);
+          setTotalCount(0);
+        }
+      } catch (error) {
+        console.error('Error fetching inventory:', error);
+        setInventory([]);
+        setTotalCount(0);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      const itemStatus = getStockStatus(item.quantity);
-      const matchesStatus = filters.status === 'all' || itemStatus === filters.status;
-
-      return matchesSearch && matchesStatus;
-    });
-
-    setFilteredInventory(filtered);
-    setPage(0); // Reset to first page when filters change
-  }, [inventory, filters]);
-
-  // Pagination logic
-  const paginatedInventory = useMemo(() => {
-    const startIndex = page * rowsPerPage;
-    const endIndex = startIndex + rowsPerPage;
-    return filteredInventory.slice(startIndex, endIndex);
-  }, [filteredInventory, page, rowsPerPage]);
+    fetchInventory();
+  }, [page, rowsPerPage, filters]);
 
   // Event handlers
   const handleFiltersChange = (newFilters: InventoryFilters) => {
@@ -148,7 +105,7 @@ const InventoryManagement: React.FC = () => {
   const handleClearFilters = () => {
     setFilters({
       search: '',
-      status: 'all',
+      status: 'ALL',
     });
   };
 
@@ -158,47 +115,69 @@ const InventoryManagement: React.FC = () => {
 
   const handleRowsPerPageChange = (newRowsPerPage: number) => {
     setRowsPerPage(newRowsPerPage);
-    setPage(0);
+    setPage(1);
   };
 
-  const handleViewItem = (item: InventoryWithProduct) => {
+  const handleViewItem = (item: Product) => {
     setSelectedItem(item);
     setViewModalOpen(true);
   };
 
-  const handleEditItem = (item: InventoryWithProduct) => {
+  const handleEditItem = (item: Product) => {
     setSelectedItem(item);
     setEditModalOpen(true);
   };
 
-  const handleDeleteItem = (item: InventoryWithProduct) => {
+  const handleDeleteItem = (item: Product) => {
     setSelectedItem(item);
     setDeleteModalOpen(true);
   };
 
-  const handleSaveItem = (data: InventoryFormData) => {
+  const handleSaveItem = async (data: InventoryFormData) => {
     if (selectedItem) {
-      setInventory(prev =>
-        prev.map(item =>
-          item.inventoryId === selectedItem.inventoryId
-            ? { ...item, quantity: data.quantity, updatedAt: new Date().toISOString() }
-            : item
-        )
-      );
-      setSnackbar({
-        open: true,
-        message: `Inventory for ${selectedItem.product.productName} updated successfully`,
-        severity: 'success',
-      });
+      try {
+        const response = await updateInventory(selectedItem.id, data.quantity);
+        
+        if (response.success) {
+          // Update local state to reflect the change
+          setInventory(prev =>
+            prev.map(item =>
+              item.id === selectedItem.id
+                ? { ...item, quantity: data.quantity }
+                : item
+            )
+          );
+          setSnackbar({
+            open: true,
+            message: `Inventory for ${selectedItem.productName} updated successfully`,
+            severity: 'success',
+          });
+          setEditModalOpen(false);
+          setSelectedItem(null);
+        } else {
+          setSnackbar({
+            open: true,
+            message: 'Failed to update inventory. Please try again.',
+            severity: 'error',
+          });
+        }
+      } catch (error) {
+        console.error('Error updating inventory:', error);
+        setSnackbar({
+          open: true,
+          message: 'Error updating inventory. Please try again.',
+          severity: 'error',
+        });
+      }
     }
   };
 
   const handleConfirmDelete = () => {
     if (selectedItem) {
-      setInventory(prev => prev.filter(item => item.inventoryId !== selectedItem.inventoryId));
+      setInventory(prev => prev.filter(item => item.id !== selectedItem.id));
       setSnackbar({
         open: true,
-        message: `Inventory item for ${selectedItem.product.productName} deleted successfully`,
+        message: `Inventory item for ${selectedItem.productName} deleted successfully`,
         severity: 'success',
       });
       setDeleteModalOpen(false);
@@ -213,9 +192,9 @@ const InventoryManagement: React.FC = () => {
   const getStatusChip = (quantity: number) => {
     const status = getStockStatus(quantity);
     const config = {
-      'in-stock': { color: 'success' as const, icon: CheckCircle, label: 'In Stock' },
-      'low-stock': { color: 'warning' as const, icon: AlertTriangle, label: 'Low Stock' },
-      'out-of-stock': { color: 'error' as const, icon: AlertTriangle, label: 'Out of Stock' },
+      'IN_STOCK': { color: 'success' as const, icon: CheckCircle, label: 'In Stock' },
+      'LOW_STOCK': { color: 'warning' as const, icon: AlertTriangle, label: 'Low Stock' },
+      'OUT_OF_STOCK': { color: 'error' as const, icon: AlertTriangle, label: 'Out of Stock' },
     };
     
     const { color, icon: Icon, label } = config[status];
@@ -281,10 +260,10 @@ const InventoryManagement: React.FC = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {paginatedInventory.length > 0 ? (
-                  paginatedInventory.map((item) => (
+                {inventory.length > 0 ? (
+                  inventory.map((item) => (
                     <TableRow
-                      key={item.inventoryId}
+                      key={item.id}
                       sx={{
                         '&:hover': {
                           backgroundColor: '#f9fafb',
@@ -294,21 +273,21 @@ const InventoryManagement: React.FC = () => {
                       <TableCell>
                         <Box>
                           <Typography variant="subtitle2" className="font-medium text-gray-900">
-                            {item.product.productName}
+                            {item.productName}
                           </Typography>
                           <Typography variant="body2" color="text.secondary">
-                            {item.product.unit}
+                            ID: {item.productId}
                           </Typography>
                         </Box>
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2" className="font-mono text-sm">
-                          {item.product.barcode}
+                          {item.barcode}
                         </Typography>
                       </TableCell>
                       <TableCell align="right">
                         <Typography variant="body2" className="font-medium">
-                          ${item.product.price.toFixed(2)}
+                          ${item.price.toLocaleString()}
                         </Typography>
                       </TableCell>
                       <TableCell align="center">
@@ -362,12 +341,12 @@ const InventoryManagement: React.FC = () => {
                       <Box className="flex flex-col items-center">
                         <Package className="w-12 h-12 text-gray-300 mb-4" />
                         <Typography variant="h6" className="text-lg font-medium text-gray-900 mb-2">
-                          No inventory items found
+                          {loading ? 'Loading...' : 'No inventory items found'}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                          {filters.search || filters.status !== 'all'
+                          {!loading && (filters.search || filters.status !== 'ALL')
                             ? 'Try adjusting your filters to see more results.'
-                            : 'Get started by adding your first inventory item.'}
+                            : !loading && 'Get started by adding your first inventory item.'}
                         </Typography>
                       </Box>
                     </TableCell>
@@ -379,12 +358,12 @@ const InventoryManagement: React.FC = () => {
         </Paper>
 
         {/* Pagination */}
-        {filteredInventory.length > 0 && (
+        {totalCount > 0 && (
           <InventoryPagination
-            inventory={filteredInventory}
-            page={page}
+            totalCount={totalCount}
+            page={page - 1} // Convert to 0-based for the component
             rowsPerPage={rowsPerPage}
-            onPageChange={handlePageChange}
+            onPageChange={(newPage) => handlePageChange(newPage + 1)} // Convert back to 1-based
             onRowsPerPageChange={handleRowsPerPageChange}
           />
         )}

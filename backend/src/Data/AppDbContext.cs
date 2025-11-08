@@ -39,6 +39,12 @@ public class AppDbContext : DbContext
             .WithOne()
             .HasForeignKey<Inventory>(i => i.ProductId);
 
+        modelBuilder.Entity<Inventory>()
+    .HasOne(i => i.Product)
+    .WithOne(p => p.Inventory)
+    .HasForeignKey<Inventory>(i => i.ProductId)
+    .OnDelete(DeleteBehavior.Cascade);
+
         base.OnModelCreating(modelBuilder);
     }
 
