@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState, useEffect, type ChangeEvent } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -9,28 +9,31 @@ import {
   Box,
   Typography,
   IconButton,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  type SelectChangeEvent,
 } from '@mui/material';
 import { Edit, X } from 'lucide-react';
 
-// Simplified Staff interface matching database structure
 interface SimpleStaff {
-  id: string;
+  id: number;
   username: string;
   fullName: string;
-  status: 'active' | 'inactive';
+  role: 'admin' | 'staff';
 }
 
-// Simplified form data
 interface SimpleStaffFormData {
   fullName: string;
-  username: string;
+  role: 'admin' | 'staff';
 }
 
 interface EditStaffModalProps {
   staff: SimpleStaff | null;
   open: boolean;
   onClose: () => void;
-  onSave: (data: SimpleStaffFormData) => void;
+  onSave: (data: SimpleStaff & SimpleStaffFormData) => void;
 }
 
 export const EditStaffModal = ({
@@ -41,54 +44,53 @@ export const EditStaffModal = ({
 }: EditStaffModalProps) => {
   const [formData, setFormData] = useState<SimpleStaffFormData>({
     fullName: staff?.fullName || '',
-    username: staff?.username || '',
+    role: staff?.role || 'staff',
   });
 
   const [errors, setErrors] = useState<Partial<SimpleStaffFormData>>({});
 
   const validateForm = (): boolean => {
     const newErrors: Partial<SimpleStaffFormData> = {};
-
     if (!formData.fullName.trim()) {
       newErrors.fullName = 'Full name is required';
     }
-    if (!formData.username.trim()) {
-      newErrors.username = 'Username is required';
-    } else if (!/^[a-zA-Z0-9._]+$/.test(formData.username)) {
-      newErrors.username = 'Username can only contain letters, numbers, dots, and underscores';
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = () => {
-    if (validateForm()) {
-      onSave(formData);
+    if (validateForm() && staff) {
+      onSave({
+        id: staff.id,
+        username: staff.username, // vẫn giữ username để backend không bị undefined
+        fullName: formData.fullName,
+        role: formData.role,
+      });
       onClose();
     }
   };
 
-  const handleChange = (field: keyof SimpleStaffFormData) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: e.target.value,
-    }));
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors(prev => ({
+  const handleChange =
+    (field: keyof SimpleStaffFormData) =>
+    (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | SelectChangeEvent<string>) => {
+      setFormData((prev) => ({
         ...prev,
-        [field]: undefined,
+        [field]: e.target.value as string,
       }));
-    }
-  };
 
-  // Reset form when staff changes
-  React.useEffect(() => {
+      if (errors[field]) {
+        setErrors((prev) => ({
+          ...prev,
+          [field]: undefined,
+        }));
+      }
+    };
+
+  useEffect(() => {
     if (staff) {
       setFormData({
         fullName: staff.fullName,
-        username: staff.username,
+        role: staff.role,
       });
       setErrors({});
     }
@@ -105,6 +107,7 @@ export const EditStaffModal = ({
           <X className="w-4 h-4" />
         </IconButton>
       </DialogTitle>
+
       <DialogContent dividers>
         <Box className="flex flex-col gap-4">
           <TextField
@@ -117,23 +120,31 @@ export const EditStaffModal = ({
             size="small"
             placeholder="Enter full name"
           />
+
           <TextField
             label="Username"
             fullWidth
-            value={formData.username}
-            onChange={handleChange('username')}
-            error={!!errors.username}
-            helperText={errors.username || 'Username can only contain letters, numbers, dots, and underscores'}
+            value={staff?.username ?? ''}
+            disabled 
             size="small"
-            placeholder="Enter username"
           />
+
+          <FormControl fullWidth size="small">
+            <InputLabel>Role</InputLabel>
+            <Select label="Role" value={formData.role} onChange={handleChange('role')}>
+              <MenuItem value="staff">Staff</MenuItem>
+              <MenuItem value="admin">Admin</MenuItem>
+            </Select>
+          </FormControl>
+
           <Box className="bg-gray-50 p-3 rounded-md">
             <Typography variant="caption" color="text.secondary">
-              Note: Only name and username can be edited. Other fields are managed by the system.
+              Note: You can change the staff role here. Other system fields are managed automatically.
             </Typography>
           </Box>
         </Box>
       </DialogContent>
+
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
         <Button onClick={handleSubmit} variant="contained">

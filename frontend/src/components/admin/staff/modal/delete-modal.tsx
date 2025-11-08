@@ -3,10 +3,10 @@ import { Trash2, X } from "lucide-react";
 
 // Simplified Staff interface matching database structure
 interface SimpleStaff {
-  id: string;
+  id: number;
   username: string;
   fullName: string;
-  status: 'active' | 'inactive';
+  role: 'admin' | 'staff';
 }
 
 interface DeleteStaffModalProps {
@@ -48,7 +48,7 @@ export const DeleteStaffModal = ({
           </Typography>
           <br />
           <Typography variant="caption" color="text.secondary">
-            Status: {staff.status}
+            Status: {staff.role}
           </Typography>
         </Box>
       </DialogContent>

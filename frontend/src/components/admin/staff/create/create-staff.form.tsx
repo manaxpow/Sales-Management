@@ -10,382 +10,205 @@ import {
   CircularProgress,
   InputAdornment,
   IconButton,
+  Snackbar,
 } from '@mui/material';
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { StaffService }  from '../../../../services/staff.service';
 
-// Form data interface
 interface CreateStaffFormData {
   username: string;
   fullName: string;
   password: string;
   confirmPassword: string;
+  role?: 'admin' | 'staff';
 }
 
-// Form validation errors interface
 interface FormErrors {
   username?: string;
   fullName?: string;
   password?: string;
   confirmPassword?: string;
+  role?: string;
 }
 
-interface CreateStaffFormProps {
-  onSubmit?: (data: CreateStaffFormData) => Promise<void>;
-  onCancel?: () => void;
-  isLoading?: boolean;
-}
+const CreateStaffForm: React.FC = () => {
+  const navigate = useNavigate();
 
-const CreateStaffForm = ({
-  onSubmit,
-  onCancel,
-  isLoading = false,
-}: CreateStaffFormProps) => {
-  // Form state
   const [formData, setFormData] = useState<CreateStaffFormData>({
     username: '',
     fullName: '',
     password: '',
     confirmPassword: '',
+    role: 'staff',
   });
 
-  // Validation errors state
   const [errors, setErrors] = useState<FormErrors>({});
-
-  // Password visibility states
+  const [submitError, setSubmitError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
 
-  // General error state
-  const [submitError, setSubmitError] = useState<string>('');
-
-  // Validation rules
+  // --- Validation ---
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
 
-    // Username validation
-    if (!formData.username.trim()) {
-      newErrors.username = 'Username is required';
-    } else if (formData.username.length < 3) {
-      newErrors.username = 'Username must be at least 3 characters';
-    } else if (!/^[a-zA-Z0-9._]+$/.test(formData.username)) {
-      newErrors.username = 'Username can only contain letters, numbers, dots, and underscores';
-    }
+    if (!formData.username.trim()) newErrors.username = 'Username is required';
+    else if (formData.username.length < 3) newErrors.username = 'Username must be at least 3 characters';
+    else if (!/^[a-zA-Z0-9._]+$/.test(formData.username))
+      newErrors.username = 'Username can only contain letters, numbers, dots, underscores';
 
-    // Full name validation
-    if (!formData.fullName.trim()) {
-      newErrors.fullName = 'Full name is required';
-    } else if (formData.fullName.length < 2) {
-      newErrors.fullName = 'Full name must be at least 2 characters';
-    }
+    if (!formData.fullName.trim()) newErrors.fullName = 'Full name is required';
+    else if (formData.fullName.length < 2) newErrors.fullName = 'Full name must be at least 2 characters';
 
-    // Password validation
-    if (!formData.password) {
-      newErrors.password = 'Password is required';
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
-    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
-      newErrors.password = 'Password must contain at least one uppercase letter, one lowercase letter, and one number';
-    }
+    if (!formData.password) newErrors.password = 'Password is required';
+    else if (formData.password.length < 6) newErrors.password = 'Password must be at least 6 characters';
+    else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password))
+      newErrors.password = 'Password must contain uppercase, lowercase, and number';
 
-    // Confirm password validation
-    if (!formData.confirmPassword) {
-      newErrors.confirmPassword = 'Please confirm your password';
-    } else if (formData.password !== formData.confirmPassword) {
+    if (!formData.confirmPassword) newErrors.confirmPassword = 'Please confirm your password';
+    else if (formData.password !== formData.confirmPassword)
       newErrors.confirmPassword = 'Passwords do not match';
-    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  // Handle input changes
-  const handleInputChange = (field: keyof CreateStaffFormData) => (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: event.target.value,
-    }));
-
-    // Clear error for this field when user starts typing
-    if (errors[field]) {
-      setErrors(prev => ({
-        ...prev,
-        [field]: undefined,
-      }));
-    }
-
-    // Clear general error when user makes changes
-    if (submitError) {
-      setSubmitError('');
-    }
+  // --- Handle input ---
+  const handleChange = (field: keyof CreateStaffFormData) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({ ...prev, [field]: e.target.value }));
+    setErrors(prev => ({ ...prev, [field]: undefined }));
+    setSubmitError('');
   };
 
-  // Handle form submission
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
+  // --- Submit form ---
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateForm()) return;
 
     try {
+      setIsLoading(true);
       setSubmitError('');
-      if (onSubmit) {
-        await onSubmit(formData);
-      }
-    } catch (error) {
-      setSubmitError(error instanceof Error ? error.message : 'An error occurred while creating staff');
-    }
-  };
 
-  // Handle cancel
-  const handleCancel = () => {
-    if (onCancel) {
-      onCancel();
-    } else {
-      // Reset form if no cancel handler provided
-      setFormData({
-        username: '',
-        fullName: '',
-        password: '',
-        confirmPassword: '',
+      const res = await StaffService.create({
+        username: formData.username,
+        fullName: formData.fullName,
+        password: formData.password,
+        role: formData.role || 'staff',
       });
-      setErrors({});
-      setSubmitError('');
+
+      if (res.success) {
+        setSnackbar({ open: true, message: `Staff ${formData.fullName} created successfully`, severity: 'success' });
+        setTimeout(() => {
+          navigate('/admin/users');
+        }, 1500);
+      } else {
+        setSubmitError(res.message || 'Failed to create staff');
+      }
+    } catch (err: any) {
+      setSubmitError(err?.message || 'An error occurred');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Toggle password visibility
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
-
-  const toggleConfirmPasswordVisibility = () => {
-    setShowConfirmPassword(!showConfirmPassword);
+  // --- Cancel ---
+  const handleCancel = () => {
+    navigate('/admin/users');
   };
 
   return (
     <Box className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <Card 
-        className="w-full max-w-md shadow-lg"
-        sx={{
-          borderRadius: 2,
-          boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
-        }}
-      >
+      <Card className="w-full max-w-md shadow-lg" sx={{ borderRadius: 2 }}>
         <CardContent className="p-8">
           {/* Header */}
-          <Box className="mb-6">
-            <Box className="flex items-center gap-3 mb-4">
-              {onCancel && (
-                <IconButton
-                  onClick={handleCancel}
-                  className="text-gray-500 hover:text-gray-700"
-                  size="small"
-                >
-                  <ArrowLeft className="w-5 h-5" />
-                </IconButton>
-              )}
-              <Typography 
-                variant="h4" 
-                component="h1" 
-                className="text-2xl font-bold text-gray-900 text-center flex-1"
-              >
-                Create New Staff
-              </Typography>
-            </Box>
-            <Typography 
-              variant="body2" 
-              color="text.secondary" 
-              className="text-center"
-            >
-              Fill in the information below to create a new staff account
+          <Box className="mb-6 flex items-center gap-3">
+            <IconButton onClick={handleCancel} size="small" className="text-gray-500">
+              <ArrowLeft className="w-5 h-5" />
+            </IconButton>
+            <Typography variant="h4" component="h1" className="text-center flex-1">
+              Create New Staff
             </Typography>
           </Box>
+          <Typography variant="body2" color="text.secondary" className="text-center mb-4">
+            Fill in the information below to create a new staff account
+          </Typography>
 
-          {/* General Error Alert */}
-          {submitError && (
-            <Alert 
-              severity="error" 
-              className="mb-4"
-              onClose={() => setSubmitError('')}
-            >
-              {submitError}
-            </Alert>
-          )}
+          {/* General error */}
+          {submitError && <Alert severity="error" className="mb-4">{submitError}</Alert>}
 
           {/* Form */}
-          <Box 
-            component="form" 
-            onSubmit={handleSubmit}
-            className="flex flex-col gap-4"
-          >
-            {/* Username Field */}
+          <Box component="form" onSubmit={handleSubmit} className="flex flex-col gap-4">
             <TextField
               fullWidth
               label="Username"
               value={formData.username}
-              onChange={handleInputChange('username')}
+              onChange={handleChange('username')}
               error={!!errors.username}
               helperText={errors.username}
               disabled={isLoading}
               placeholder="Enter username"
-              variant="outlined"
-              size="medium"
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 2,
-                },
-              }}
             />
 
-            {/* Full Name Field */}
             <TextField
               fullWidth
               label="Full Name"
               value={formData.fullName}
-              onChange={handleInputChange('fullName')}
+              onChange={handleChange('fullName')}
               error={!!errors.fullName}
               helperText={errors.fullName}
               disabled={isLoading}
               placeholder="Enter full name"
-              variant="outlined"
-              size="medium"
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 2,
-                },
-              }}
             />
 
-            {/* Password Field */}
             <TextField
               fullWidth
               label="Password"
               type={showPassword ? 'text' : 'password'}
               value={formData.password}
-              onChange={handleInputChange('password')}
+              onChange={handleChange('password')}
               error={!!errors.password}
               helperText={errors.password || 'Must contain uppercase, lowercase, and number'}
               disabled={isLoading}
               placeholder="Enter password"
-              variant="outlined"
-              size="medium"
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
-                    <IconButton
-                      onClick={togglePasswordVisibility}
-                      edge="end"
-                      disabled={isLoading}
-                      className="text-gray-500"
-                    >
-                      {showPassword ? (
-                        <EyeOff className="w-5 h-5" />
-                      ) : (
-                        <Eye className="w-5 h-5" />
-                      )}
+                    <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
+                      {showPassword ? <EyeOff /> : <Eye />}
                     </IconButton>
                   </InputAdornment>
                 ),
               }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 2,
-                },
-              }}
             />
 
-            {/* Confirm Password Field */}
             <TextField
               fullWidth
               label="Confirm Password"
               type={showConfirmPassword ? 'text' : 'password'}
               value={formData.confirmPassword}
-              onChange={handleInputChange('confirmPassword')}
+              onChange={handleChange('confirmPassword')}
               error={!!errors.confirmPassword}
               helperText={errors.confirmPassword}
               disabled={isLoading}
               placeholder="Confirm password"
-              variant="outlined"
-              size="medium"
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
-                    <IconButton
-                      onClick={toggleConfirmPasswordVisibility}
-                      edge="end"
-                      disabled={isLoading}
-                      className="text-gray-500"
-                    >
-                      {showConfirmPassword ? (
-                        <EyeOff className="w-5 h-5" />
-                      ) : (
-                        <Eye className="w-5 h-5" />
-                      )}
+                    <IconButton onClick={() => setShowConfirmPassword(!showConfirmPassword)} edge="end">
+                      {showConfirmPassword ? <EyeOff /> : <Eye />}
                     </IconButton>
                   </InputAdornment>
                 ),
               }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 2,
-                },
-              }}
             />
 
-            {/* Action Buttons */}
             <Box className="flex flex-col gap-3 pt-4">
-              {/* Submit Button */}
-              <Button
-                type="submit"
-                fullWidth
-                variant="contained"
-                disabled={isLoading}
-                size="large"
-                className="normal-case"
-                sx={{
-                  py: 1.5,
-                  borderRadius: 2,
-                  backgroundColor: '#3b82f6',
-                  '&:hover': {
-                    backgroundColor: '#2563eb',
-                  },
-                  '&.Mui-disabled': {
-                    backgroundColor: '#9ca3af',
-                  },
-                }}
-              >
-                {isLoading ? (
-                  <Box className="flex items-center justify-center gap-2">
-                    <CircularProgress size={20} className="text-white" />
-                    <span>Creating Staff...</span>
-                  </Box>
-                ) : (
-                  'Create Staff'
-                )}
+              <Button type="submit" fullWidth variant="contained" disabled={isLoading}>
+                {isLoading ? <CircularProgress size={20} /> : 'Create Staff'}
               </Button>
-
-              {/* Cancel Button */}
-              <Button
-                fullWidth
-                variant="outlined"
-                disabled={isLoading}
-                size="large"
-                onClick={handleCancel}
-                className="normal-case"
-                sx={{
-                  py: 1.5,
-                  borderRadius: 2,
-                  borderColor: '#d1d5db',
-                  color: '#6b7280',
-                  '&:hover': {
-                    borderColor: '#9ca3af',
-                    backgroundColor: '#f9fafb',
-                  },
-                }}
-              >
+              <Button type="button" fullWidth variant="outlined" onClick={handleCancel}>
                 Cancel
               </Button>
             </Box>
@@ -408,6 +231,15 @@ const CreateStaffForm = ({
           </Box>
         </CardContent>
       </Card>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert severity={snackbar.severity}>{snackbar.message}</Alert>
+      </Snackbar>
     </Box>
   );
 };

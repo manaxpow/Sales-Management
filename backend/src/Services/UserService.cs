@@ -57,6 +57,9 @@ public class UserService : IUserService {
         user.UserName = updatedUser.UserName;
         user.UpdatedAt = DateTime.Now;
 
+        if (!string.IsNullOrEmpty(updatedUser.Role))
+            user.Role = updatedUser.Role;
+
         await _context.SaveChangesAsync();
 
         var response = new UserResponse {
@@ -90,6 +93,9 @@ public class UserService : IUserService {
 
         newUser.CreatedAt = DateTime.Now;
         newUser.UpdatedAt = DateTime.Now;
+
+        if (string.IsNullOrEmpty(newUser.Role))
+            newUser.Role = "staff";
 
         _context.Users.Add(newUser);
         await _context.SaveChangesAsync();
