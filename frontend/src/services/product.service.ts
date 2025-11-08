@@ -63,9 +63,15 @@ const DeleteProductService = async (
   }
 };
 
-export {
-  createProductService,
-  GetProductsService,
-  UpdateProductService,
-  DeleteProductService,
+const getProductsBySupplierIdService = async (
+  supplierId: number
+): Promise<ApiResponse<ProductResponse[]>> => { 
+  try {
+    const res = await instance.get<ApiResponse<ProductResponse[]>>(`${URL_API}/supplier/${supplierId}`);
+    return res.data;
+  } catch (error) {
+    const err = error as ErrorApiResponse;
+    return err;
+  }
 };
+export { createProductService, GetProductsService, UpdateProductService, DeleteProductService, getProductsBySupplierIdService };
