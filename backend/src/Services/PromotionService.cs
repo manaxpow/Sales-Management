@@ -69,7 +69,7 @@ public class PromotionService(AppDbContext context, ILogger<PromotionService> lo
         if (res.Status.HasValue)
             query = query.Where(u => res.Status == u.Status);
         // sorting
-     
+
         query = res.SortBy?.ToLower() switch
         {
             "promotionCode" => res.SortOrder == "asc"
@@ -187,5 +187,47 @@ public class PromotionService(AppDbContext context, ILogger<PromotionService> lo
             EndDate = promotion.EndDate,
             Status = promotion.Status
         }, "Update promotion success");
+    }
+
+    public async Task<ApiResponse<PromotionResponse>> GetPromotionByCode(string code)
+    {
+        if (string.IsNullOrWhiteSpace(code))
+            return new ApiResponse<PromotionResponse>().ErrorResponse("Promotion code is required");
+
+        var promo = await context.Promotions
+            .FirstOrDefaultAsync(p => p.Code == code.Trim().ToUpper() && p.Status != 3);
+
+        if (promo == null)
+            return new ApiResponse<PromotionResponse>().ErrorResponse("Promotion not found");
+
+        return new ApiResponse<PromotionResponse>().SuccessResponse(new PromotionResponse
+        {
+            PromotionId = promo.PromotionId,
+            PromotionCode = promo.Code,
+            Description = promo.Description,
+            DiscountType = promo.DiscountType,
+            DiscountValue = promo.DiscountValue,
+            MinOrderAmount = promo.MinOrderAmount,
+            Usagelimit = promo.Usagelimit,
+            Usedcount = promo.Usedcount,
+            StartDate = promo.StartDate,
+            EndDate = promo.EndDate,
+            Status = promo.Status
+        });
+    }
+
+    public async Task<ApiResponse<bool>> IncrementUsageCount(int promotionId)
+    {
+        var promo = await context.Promotions.FindAsync(promotionId);
+        if (promo == null || promo.Status == 3)
+            return new ApiResponse<bool>().ErrorResponse("Promotion not found");
+
+        if (promo.Usagelimit > 0 && promo.Usedcount >= promo.Usagelimit)
+            return new ApiResponse<bool>().ErrorResponse("Usage limit exceeded");
+
+        promo.Usedcount++;
+        await context.SaveChangesAsync();
+
+        return new ApiResponse<bool>().SuccessResponse(true);
     }
 }

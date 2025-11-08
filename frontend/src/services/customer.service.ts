@@ -44,7 +44,7 @@ export const customerService = {
         success: true,
         message: "Tạo khách hàng thành công",
         statusCode: 200,
-        data: res.data as CustomerResponse,
+        data: res.data.data as CustomerResponse,
       };
     } catch (error) {
       const err = error as ErrorApiResponse;
@@ -94,6 +94,27 @@ export const customerService = {
         message: err.message ?? "Lỗi khách hàng mục",
         statusCode: err.statusCode ?? 500,
         data: null,
+      };
+    }
+  },
+
+  async getById(id: number): Promise<ApiResponse<CustomerResponse>> {
+    try {
+      const res = await axios.get<ApiResponse<CustomerResponse>>(
+        `${BASE_URL}/${id}`
+      );
+      return {
+        success: true,
+        message: "Lấy khách hàng thành công",
+        statusCode: 200,
+        data: res.data.data,
+      };
+    } catch (error) {
+      const err = error as ErrorApiResponse;
+      return {
+        success: false,
+        message: err.message ?? "Không tìm thấy khách hàng",
+        statusCode: err.statusCode ?? 404,
       };
     }
   },
