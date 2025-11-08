@@ -9,9 +9,9 @@ import SupplierProductsPage from "../pages/admin/supplier/suppliers-products.pag
 import ManageCategoryPage from "../pages/admin/manage-category.page";
 import ManagePromotion from "../pages/admin/manage-promotion";
 import CreatePromotion from "../pages/admin/create-promotion";
-import { ManageOrder } from "../pages/admin/manage-order";
 import CreateCustomerPage from "../pages/admin/create-customer";
 import { ManageInventory } from "../pages/admin/manage-inventory";
+import OrderManagement from "../pages/staff/order";
 
 export const adminRoutes: RouteObject[] = [
   {
@@ -40,7 +40,7 @@ export const adminRoutes: RouteObject[] = [
   },
   {
     path: "orders",
-    element: <ManageOrder />,
+    element: <OrderManagement />,
   },
   {
     path: "suppliers",
@@ -65,5 +65,5 @@ export const adminRoutes: RouteObject[] = [
   {
     path: "inventory",
     element: <ManageInventory />,
-  }
+  },
 ];
