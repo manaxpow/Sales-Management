@@ -1,33 +1,8 @@
 import React from 'react';
 import { TablePagination } from '@mui/material';
 
-// Product interface matching database structure
-interface Product {
-  productId: number;
-  categoryId: number;
-  supplierId: number;
-  productName: string;
-  barcode: string;
-  price: number;
-  unit: string;
-  createdAt: string;
-}
-
-// Inventory interface matching database structure
-interface InventoryItem {
-  inventoryId: number;
-  productId: number;
-  quantity: number;
-  updatedAt: string;
-}
-
-// Combined interface for display
-interface InventoryWithProduct extends InventoryItem {
-  product: Product;
-}
-
 interface InventoryPaginationProps {
-  inventory: InventoryWithProduct[];
+  totalCount: number;
   page: number;
   rowsPerPage: number;
   onPageChange: (newPage: number) => void;
@@ -35,7 +10,7 @@ interface InventoryPaginationProps {
 }
 
 const InventoryPagination = ({
-  inventory,
+  totalCount,
   page,
   rowsPerPage,
   onPageChange,
@@ -58,7 +33,7 @@ const InventoryPagination = ({
   return (
     <TablePagination
       component="div"
-      count={inventory.length}
+      count={totalCount}
       page={page}
       onPageChange={handleChangePage}
       rowsPerPage={rowsPerPage}

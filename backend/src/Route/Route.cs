@@ -15,6 +15,7 @@ public class Routes
         .MapProductEndponit()
         .MapOrderItemEndPoint()
         .MapSupplierEndPoint()
-        .MapPaymentEndPoint();
+        .MapPaymentEndPoint()
+        .MapInventoryEndPoint();
     }
 }

@@ -9,10 +9,10 @@ import {
   IconButton,
 } from '@mui/material';
 import { X, Trash2, Package, AlertTriangle } from 'lucide-react';
-import type { InventoryWithProduct } from '../../../../types/inventory.types';
+import type { Product } from '../../../../types/inventory.types';
 
 interface DeleteInventoryModalProps {
-  inventory: InventoryWithProduct | null;
+  inventory: Product | null;
   open: boolean;
   onClose: () => void;
   onConfirm: () => void;
@@ -63,16 +63,16 @@ export const DeleteInventoryModal = ({
             <Package className="w-6 h-6 text-blue-600" />
             <Box className="flex-1">
               <Typography variant="subtitle1" className="font-semibold">
-                {inventory.product.productName}
+                {inventory.productName}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                SKU: {inventory.product.barcode}
+                SKU: {inventory.barcode}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Current Quantity: {inventory.quantity} {inventory.product.unit}
+                Current Quantity: {inventory.quantity}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Unit Price: ${inventory.product.price.toFixed(2)}
+                Unit Price: ${inventory.price.toLocaleString()}
               </Typography>
             </Box>
           </Box>
