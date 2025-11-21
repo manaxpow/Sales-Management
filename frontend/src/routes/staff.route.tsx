@@ -4,6 +4,7 @@ import Sale from "../pages/staff/sale";
 import CreateCustomerPage from "../pages/admin/create-customer";
 import OrderManagement from "../pages/staff/order";
 import InventoryManagementPage from "../pages/staff/inventory.management";
+import ProductManagement from "../pages/staff/manage-product";
 
 export const staffRoutes: RouteObject[] = [
   {
@@ -25,5 +26,9 @@ export const staffRoutes: RouteObject[] = [
   {
     path: "inventory",
     element: <InventoryManagementPage />,
+  },
+  {
+    path: "products",
+    element: <ProductManagement />,
   },
 ];

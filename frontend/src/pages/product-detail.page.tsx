@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import ProductDetail from "../components/product/detailproduct/product-detail.tsx";
 import ProductListCart from "../components/product/detailproduct/product-list-card.component.tsx";
 import ExclusiveCard from "../components/product/detailproduct/exclusive-card.tsx";
-import RelatedProducts from "../components/product/detailproduct/related-products";
+import RelatedProducts from "../components/product/detailproduct/related-products.tsx";
 
 const ProductDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
