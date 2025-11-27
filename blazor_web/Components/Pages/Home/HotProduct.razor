@@ -34,14 +34,14 @@
     </div>
 
     @code {
-        public List<Product> HotProducts { get; set; } = new();
+        public List<blazor_web.Models.Product> HotProducts { get; set; } = new();
 
         protected override void OnInitialized()
         {
             // Initialize hot products data matching database structure
-            HotProducts = new List<Product>
+            HotProducts = new List<blazor_web.Models.Product>
             {
-                new Product
+                new blazor_web.Models.Product
                 {
                     ProductId = 1,
                     CategoryId = 1,
@@ -52,7 +52,7 @@
                     Unit = "pcs",
                     CreatedAt = DateTime.Now.AddDays(-30)
                 },
-                new Product
+                new blazor_web.Models.Product
                 {
                     ProductId = 2,
                     CategoryId = 2,
@@ -63,7 +63,7 @@
                     Unit = "pcs",
                     CreatedAt = DateTime.Now.AddDays(-25)
                 },
-                new Product
+                new blazor_web.Models.Product
                 {
                     ProductId = 3,
                     CategoryId = 1,
@@ -74,7 +74,7 @@
                     Unit = "pcs",
                     CreatedAt = DateTime.Now.AddDays(-20)
                 },
-                new Product
+                new blazor_web.Models.Product
                 {
                     ProductId = 4,
                     CategoryId = 3,
@@ -85,7 +85,7 @@
                     Unit = "pcs",
                     CreatedAt = DateTime.Now.AddDays(-15)
                 },
-                new Product
+                new blazor_web.Models.Product
                 {
                     ProductId = 5,
                     CategoryId = 4,
@@ -96,7 +96,7 @@
                     Unit = "pcs",
                     CreatedAt = DateTime.Now.AddDays(-10)
                 },
-                new Product
+                new blazor_web.Models.Product
                 {
                     ProductId = 6,
                     CategoryId = 5,
@@ -107,7 +107,7 @@
                     Unit = "pcs",
                     CreatedAt = DateTime.Now.AddDays(-5)
                 },
-                new Product
+                new blazor_web.Models.Product
                 {
                     ProductId = 7,
                     CategoryId = 4,
@@ -118,7 +118,7 @@
                     Unit = "pcs",
                     CreatedAt = DateTime.Now.AddDays(-3)
                 },
-                new Product
+                new blazor_web.Models.Product
                 {
                     ProductId = 8,
                     CategoryId = 6,
@@ -132,7 +132,7 @@
             };
         }
 
-        private void HandleAddToCart(Product product)
+        private void HandleAddToCart(blazor_web.Models.Product product)
         {
             Console.WriteLine($"Add to cart product: {product.ProductName}");
         }

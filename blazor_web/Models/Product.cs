@@ -1,4 +1,5 @@
-
+namespace blazor_web.Models
+{
     public class Product
     {
         public int ProductId { get; set; }
@@ -10,4 +11,4 @@
         public string Unit { get; set; } = "pcs";
         public DateTime CreatedAt { get; set; } = DateTime.Now;
     }
-
+}

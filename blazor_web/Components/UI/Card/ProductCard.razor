@@ -70,10 +70,10 @@
 
 @code {
     [Parameter]
-    public Product Product { get; set; } = new();
+    public blazor_web.Models.Product Product { get; set; } = new();
 
     [Parameter]
-    public EventCallback<Product> OnAddToCartClick { get; set; }
+    public EventCallback<blazor_web.Models.Product> OnAddToCartClick { get; set; }
 
     private void HandleAddToCartClick()
     {
