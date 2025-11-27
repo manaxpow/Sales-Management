@@ -1,0 +1,111 @@
+<div class="group bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden">
+
+    <!-- Product Image -->
+    <div class="relative overflow-hidden h-48 sm:h-56">
+        <img src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=300&fit=crop"
+             alt="@Product.ProductName"
+             class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+    </div>
+
+    <!-- Product Info -->
+    <div class="p-4">
+
+        <!-- Product ID & Barcode -->
+        <div class="flex justify-between items-center mb-2">
+            <span class="text-xs text-gray-500 font-semibold">ID: @Product.ProductId</span>
+
+            @if (!string.IsNullOrEmpty(Product.Barcode))
+            {
+                <span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
+                    @Product.Barcode
+                </span>
+            }
+        </div>
+
+        <!-- Product Name - Fixed Height + 2 lines -->
+        <div class="product-name-container mb-3">
+            <h3 class="product-name">
+                @Product.ProductName
+            </h3>
+        </div>
+
+        <!-- Category & Supplier -->
+        <div class="flex items-center justify-between mb-3">
+            <div class="text-xs text-blue-600 font-semibold uppercase tracking-wide">
+                Category: @Product.CategoryId
+            </div>
+            <div class="text-xs text-green-600 font-semibold">
+                Supplier: @Product.SupplierId
+            </div>
+        </div>
+
+        <!-- Price & Unit -->
+        <div class="flex items-center justify-between mb-4">
+            <div>
+                <span class="text-2xl font-bold text-blue-600">
+                    $@Product.Price.ToString("F2")
+                </span>
+                <span class="text-sm text-gray-500 ml-1">/@Product.Unit</span>
+            </div>
+        </div>
+
+        <!-- Created Date -->
+        <div class="text-xs text-gray-400 mb-4">
+            Created: @Product.CreatedAt.ToString("MMM dd, yyyy")
+        </div>
+
+        <!-- Action Button -->
+        <div class="flex space-x-2">
+            <button class="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-3 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg flex items-center justify-center text-sm"
+                    @onclick="HandleAddToCartClick">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                Add to Cart
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public Product Product { get; set; } = new();
+
+    [Parameter]
+    public EventCallback<Product> OnAddToCartClick { get; set; }
+
+    private void HandleAddToCartClick()
+    {
+        if (OnAddToCartClick.HasDelegate)
+            OnAddToCartClick.InvokeAsync(Product);
+    }
+}
+
+@*
+    ProductItem Model - Matching the database structure
+*@
+
+<style>
+    .product-name-container {
+    height: 48px;  /* cố định chiều cao để thẻ không bị lệch */
+    overflow: hidden;
+}
+
+.product-name {
+    font-size: 0.9rem;         /* nhỏ hơn mặc định để không quá to */
+    font-weight: 600;
+    color: #374151;            /* text-gray-700 */
+    line-height: 1.25rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;     /* tối đa 2 dòng */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    transition: color .2s ease;
+}
+
+.group:hover .product-name {
+    color: #2563eb; /* text-blue-600 */
+}
+
+</style>
