@@ -19,7 +19,7 @@ public class Users
     public string FullName { get; set; } = string.Empty;
 
     [Required]
-    [Column(TypeName = "ENUM('admin','staff')")]
+    [Column(TypeName = "ENUM('admin','staff', 'customer')")]
     public string Role { get; set; } = "staff"; 
 
     public DateTime CreatedAt { get; set; }

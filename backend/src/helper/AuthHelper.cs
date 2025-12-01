@@ -11,4 +11,10 @@ public static class AuthHelpers
         return result == PasswordVerificationResult.Success
                || result == PasswordVerificationResult.SuccessRehashNeeded;
     }
+
+    public static string HashPassword(Users user, string password)
+    {
+        var result = hasher.HashPassword(user, password);
+        return result;
+    }
 }
