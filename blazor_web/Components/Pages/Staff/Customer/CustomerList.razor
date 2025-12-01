@@ -1,0 +1,102 @@
+@page "/staff/customers"
+@inject CustomerService CustomerService
+@using blazor_web.Models;
+@rendermode InteractiveServer
+
+
+<h3>Quản lý Customer</h3>
+
+<div class="d-flex justify-content-between mb-3">
+    <div class="input-group w-50">
+        <input type="text" class="form-control" placeholder="Tìm theo tên, email..." 
+               @bind="searchTerm" @bind:event="oninput" />
+    </div>
+    
+    <a href="/staff/customers/create" class="btn btn-primary">
+        <i class="oi oi-plus"></i> Thêm mới
+    </a>
+</div>
+
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Phone</th>
+            <th>Email</th>
+            <th>Address</th>
+            <th>CreatedAt</th>
+            <th>UpdatedAt</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in FilteredCustomers)
+        {
+            <tr>
+                <td>@item.CustomerId</td>
+                <td class="text-success">@item.Name</td>
+                <td class="text-success">@item.Phone</td>
+                <td class="text-success">@item.Email</td>
+                <td class="text-success">@item.Address</td>
+                <td class="text-danger">@item.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                <td class="text-danger">@item.UpdatedAt?.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                <td>
+                    <button class="btn btn-sm btn-warning" @onclick="() => OpenEditDialog(item)">Sửa</button>
+                    <button class="btn btn-sm btn-danger" @onclick="() => OpenDeleteDialog(item)">Xóa</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<EditCustomerDialog @ref="editDialog" OnSave="SaveCustomer" />
+<DeleteConfirmationDialog @ref="deleteDialog" OnConfirm="DeleteCustomer" />
+
+@code {
+    private List<Customer> customers = new();
+    private string searchTerm = "";
+    
+    // Tham chiếu đến Component con
+    private EditCustomerDialog editDialog = default!;
+private DeleteConfirmationDialog deleteDialog = default!;
+
+    protected override void OnInitialized()
+    {
+        customers = CustomerService.GetAll();
+    }
+
+    // Logic Filter
+    private List<Customer> FilteredCustomers => 
+        string.IsNullOrWhiteSpace(searchTerm) 
+        ? customers 
+        : customers.Where(c => c.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) || 
+                               c.Email.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)).ToList();
+
+    // Mở Dialog Edit
+    private void OpenEditDialog(Customer customer)
+    {
+        editDialog.Show(customer);
+    }
+
+    // Callback khi bấm Save ở Dialog Edit
+    private void SaveCustomer(Customer updatedCustomer)
+    {
+        CustomerService.Update(updatedCustomer);
+        customers = CustomerService.GetAll(); // Reload list
+    }
+
+    // Mở Dialog Delete
+    private void OpenDeleteDialog(Customer customer)
+    {
+        Console.WriteLine("Đã bấm nút sửa!");
+        deleteDialog.Show(customer.CustomerId, customer.Name);
+    }
+
+    // Callback khi bấm Confirm ở Dialog Delete
+    private void DeleteCustomer(int id)
+    {
+        CustomerService.Delete(id);
+        customers = CustomerService.GetAll(); // Reload list
+    }
+}

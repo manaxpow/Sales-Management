@@ -1,0 +1,48 @@
+@if (ShowDialog)
+{
+    <div class="modal fade show d-block" style="background-color: rgba(0,0,0,0.5); z-index: 99;">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-danger">Xác nhận xóa</h5>
+                    <button type="button" class="btn-close" @onclick="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Bạn có chắc muốn xóa khách hàng <b>@_customerName</b> không?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="Close">Hủy</button>
+                    <button type="button" class="btn btn-danger" @onclick="ConfirmDelete">Xóa</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    public bool ShowDialog { get; set; }
+    private int _customerId;
+    private string _customerName = "";
+
+    [Parameter] public EventCallback<int> OnConfirm { get; set; }
+
+    public void Show(int id, string name)
+    {
+        _customerId = id;
+        _customerName = name;
+        ShowDialog = true;
+        StateHasChanged();
+    }
+
+    public void Close()
+    {
+        ShowDialog = false;
+        StateHasChanged();
+    }
+
+    private async Task ConfirmDelete()
+    {
+        await OnConfirm.InvokeAsync(_customerId);
+        Close();
+    }
+}
