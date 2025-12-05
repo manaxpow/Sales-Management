@@ -6,7 +6,7 @@ export interface Promotion {
   discountValue: number;
   minOrderAmount: number;
   usagelimit: number;
-  usedCount: number;
+  usedcount: number;
   status: number;
   startDate: string;
   endDate: string;

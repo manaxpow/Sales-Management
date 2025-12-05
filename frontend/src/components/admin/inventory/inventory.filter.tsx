@@ -6,7 +6,7 @@ import { styled } from '@mui/material/styles';
 // Filters interface
 interface InventoryFilters {
   search: string;
-  status: 'all' | 'in-stock' | 'low-stock' | 'out-of-stock';
+  status: 'ALL' | 'IN_STOCK' | 'LOW_STOCK' | 'OUT_OF_STOCK';
 }
 
 const StyledFormControl = styled(FormControl)(() => ({
@@ -48,11 +48,11 @@ const InventoryFilter = ({
   const handleStatusChange = (e: React.ChangeEvent<{ value: unknown }> | { target: { value: unknown } }) => {
     onFiltersChange({
       ...filters,
-      status: e.target.value as 'all' | 'in-stock' | 'low-stock' | 'out-of-stock',
+      status: e.target.value as 'ALL' | 'IN_STOCK' | 'LOW_STOCK' | 'OUT_OF_STOCK',
     });
   };
 
-  const hasActiveFilters = filters.search || filters.status !== 'all';
+  const hasActiveFilters = filters.search || filters.status !== 'ALL';
 
   return (
     <Box className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
@@ -98,10 +98,10 @@ const InventoryFilter = ({
             label="Stock Status"
             inputProps={{ 'aria-label': 'Stock status filter' }}
           >
-            <MenuItem value="all">All Status</MenuItem>
-            <MenuItem value="in-stock">In Stock</MenuItem>
-            <MenuItem value="low-stock">Low Stock</MenuItem>
-            <MenuItem value="out-of-stock">Out of Stock</MenuItem>
+            <MenuItem value="ALL">All Status</MenuItem>
+            <MenuItem value="IN_STOCK">In Stock</MenuItem>
+            <MenuItem value="LOW_STOCK">Low Stock</MenuItem>
+            <MenuItem value="OUT_OF_STOCK">Out of Stock</MenuItem>
           </StyledSelect>
         </StyledFormControl>
       </Box>

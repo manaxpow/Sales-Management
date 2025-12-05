@@ -73,7 +73,10 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
     if (response.success) {
       setSuppliers(response.data || []);
     } else {
-      console.error('API Error Response:', response.message || 'No message provided');
+      console.error(
+        "API Error Response:",
+        response.message || "No message provided"
+      );
       setSuppliers([]);
     }
   };

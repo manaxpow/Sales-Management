@@ -1,0 +1,49 @@
+@*
+    Simple Banner Component
+*@
+
+<div class="relative w-full h-96 md:h-[500px] rounded-lg shadow-2xl overflow-hidden">
+    <img src="@CurrentBanner.ImageUrl" 
+         alt="@CurrentBanner.Title" 
+         class="w-full h-full object-cover" />
+    <div class="absolute inset-0 bg-gradient-to-r from-black/50 to-transparent">
+        <div class="flex flex-col justify-center h-full px-8 md:px-16">
+            <h2 class="text-3xl md:text-5xl font-bold text-white mb-4">
+                @CurrentBanner.Title
+            </h2>
+            <p class="text-lg md:text-xl text-white mb-6 max-w-md">
+                @CurrentBanner.Description
+            </p>
+            <a href="@CurrentBanner.Link" 
+               class="no-underline inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg">
+                @CurrentBanner.ButtonText
+            </a>
+        </div>
+    </div>
+</div>
+
+@code {
+    public class BannerItem
+    {
+        public string ImageUrl { get; set; } = "";
+        public string Title { get; set; } = "";
+        public string Description { get; set; } = "";
+        public string Link { get; set; } = "";
+        public string ButtonText { get; set; } = "";
+    }
+
+    public BannerItem CurrentBanner { get; set; } = new();
+
+    protected override void OnInitialized()
+    {
+        // Initialize single banner data
+        CurrentBanner = new BannerItem
+        {
+            ImageUrl = "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&h=500&fit=crop",
+            Title = "Summer Sale 2025",
+            Description = "Get up to 50% off on selected items. Limited time offer!",
+            Link = "/products/sale",
+            ButtonText = "Shop Now"
+        };
+    }
+}

@@ -17,68 +17,24 @@ import {
   TableRow,
   Paper,
   Avatar,
-  Chip,
   IconButton,
   Tooltip,
   Alert,
   Snackbar,
+  CircularProgress,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { StaffService } from '../../../services/staff.service';
+import type { Staff } from '../../../types/staff.types';
 
-// Simplified Staff interface matching database structure
-interface SimpleStaff {
-  id: string;
-  username: string;
-  fullName: string;
-  status: 'active' | 'inactive';
-}
-
-// Simplified form data
-interface SimpleStaffFormData {
-  fullName: string;
-  username: string;
-}
-
-// Simplified filters
 interface SimpleStaffFilters {
   search: string;
-  status: 'all' | 'active' | 'inactive';
 }
 
-// Generate simplified mock data
-const generateSimpleMockStaffs = (): SimpleStaff[] => {
-  const firstNames = ['John', 'Sarah', 'Michael', 'Emily', 'David', 'Jessica', 'Robert', 'Lisa', 'James', 'Jennifer', 'William', 'Amanda', 'Richard', 'Michelle', 'Charles', 'Laura', 'Joseph', 'Sarah', 'Thomas', 'Karen'];
-  const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez', 'Wilson', 'Anderson', 'Taylor', 'Thomas', 'Moore', 'Jackson', 'Martin', 'Lee', 'Perez', 'Thompson'];
-  
-  const staffs: SimpleStaff[] = [];
-  
-  for (let i = 1; i <= 50; i++) {
-    const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
-    const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
-    const fullName = `${firstName} ${lastName}`;
-    const username = `${firstName.toLowerCase()}.${lastName.toLowerCase()}${Math.floor(Math.random() * 100)}`;
-    const status = Math.random() > 0.2 ? 'active' : 'inactive';
-    
-    staffs.push({
-      id: `STAFF-${String(i).padStart(3, '0')}`,
-      username,
-      fullName,
-      status,
-    });
-  }
-  
-  return staffs.sort((a, b) => a.fullName.localeCompare(b.fullName));
-};
-
-const mockSimpleStaffs = generateSimpleMockStaffs();
-
 const StaffManagement: React.FC = () => {
-  const [staff, setStaff] = useState<SimpleStaff[]>(mockSimpleStaffs);
-  const [filteredStaff, setFilteredStaff] = useState<SimpleStaff[]>(mockSimpleStaffs);
-  const [filters, setFilters] = useState<SimpleStaffFilters>({
-    search: '',
-    status: 'all',
-  });
+  const [staff, setStaff] = useState<Staff[]>([]);
+  const [filteredStaff, setFilteredStaff] = useState<Staff[]>([]);
+  const [filters, setFilters] = useState<SimpleStaffFilters>({ search: '' });
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const navigate = useNavigate();
@@ -87,124 +43,145 @@ const StaffManagement: React.FC = () => {
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [selectedStaff, setSelectedStaff] = useState<SimpleStaff | null>(null);
+  const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
 
-  // UI states
-  const [snackbar, setSnackbar] = useState<{
-    open: boolean;
-    message: string;
-    severity: 'success' | 'error' | 'warning' | 'info';
-  }>({
+  // Snackbar
+  const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
-    severity: 'success',
+    severity: 'success' as 'success' | 'error' | 'warning' | 'info',
   });
 
-  // Filter and search logic
+  // Loading
+  const [loading, setLoading] = useState(true);
+
+  // --- Fetch staff from API ---
+  useEffect(() => {
+    const fetchStaff = async () => {
+      setLoading(true);
+      const res = await StaffService.getAll();
+      if (res.success && res.data) {
+        // ✅ Chỉ lấy những người có role === 'staff'
+        const staffOnly = res.data.filter((emp) => emp.role === 'staff');
+        setStaff(staffOnly);
+      } else {
+        setSnackbar({
+          open: true,
+          message: res.message || 'Không thể tải danh sách nhân viên',
+          severity: 'error',
+        });
+      }
+      setLoading(false);
+    };
+    fetchStaff();
+  }, []);
+
+  // --- Filtering logic ---
   useEffect(() => {
     const filtered = staff.filter((employee) => {
       const matchesSearch =
         filters.search === '' ||
         employee.username.toLowerCase().includes(filters.search.toLowerCase()) ||
         employee.fullName.toLowerCase().includes(filters.search.toLowerCase());
-
-      const matchesStatus =
-        filters.status === 'all' || employee.status === filters.status;
-
-      return matchesSearch && matchesStatus;
+      return matchesSearch;
     });
 
     setFilteredStaff(filtered);
-    setPage(0); // Reset to first page when filters change
+    setPage(0);
   }, [staff, filters]);
 
-  // Pagination logic
+  // --- Pagination logic ---
   const paginatedStaff = useMemo(() => {
     const startIndex = page * rowsPerPage;
     const endIndex = startIndex + rowsPerPage;
     return filteredStaff.slice(startIndex, endIndex);
   }, [filteredStaff, page, rowsPerPage]);
 
-  // Event handlers
-  const handleFiltersChange = (newFilters: SimpleStaffFilters) => {
-    setFilters(newFilters);
-  };
+  // --- Handlers ---
+  const handleFiltersChange = (newFilters: SimpleStaffFilters) => setFilters(newFilters);
+  const handleClearFilters = () => setFilters({ search: '' });
 
-  const handleClearFilters = () => {
-    setFilters({
-      search: '',
-      status: 'all',
-    });
-  };
-
-  const handlePageChange = (newPage: number) => {
-    setPage(newPage);
-  };
-
+  const handlePageChange = (newPage: number) => setPage(newPage);
   const handleRowsPerPageChange = (newRowsPerPage: number) => {
     setRowsPerPage(newRowsPerPage);
     setPage(0);
   };
 
-  const handleViewStaff = (staffMember: SimpleStaff) => {
+  const handleViewStaff = (staffMember: Staff) => {
     setSelectedStaff(staffMember);
     setViewModalOpen(true);
   };
 
-  const handleEditStaff = (staffMember: SimpleStaff) => {
+  const handleEditStaff = (staffMember: Staff) => {
     setSelectedStaff(staffMember);
     setEditModalOpen(true);
   };
 
-  const handleDeleteStaff = (staffMember: SimpleStaff) => {
+  const handleDeleteStaff = (staffMember: Staff) => {
     setSelectedStaff(staffMember);
     setDeleteModalOpen(true);
   };
 
-  const handleSaveStaff = (data: SimpleStaffFormData) => {
-    if (selectedStaff) {
-      setStaff(prev =>
-        prev.map(emp =>
-          emp.id === selectedStaff.id
-            ? { ...emp, ...data }
-            : emp
-        )
+  const handleSaveStaff = async (data: { id: number; fullName: string; username: string; role: 'admin' | 'staff' }) => {
+    const res = await StaffService.update(data.id, {
+      fullName: data.fullName,
+      username: data.username,
+      role: data.role,
+    });
+
+    if (res.success && res.data) {
+      setStaff((prev) =>
+        prev.map((emp) => (emp.id === data.id ? res.data! : emp))
       );
       setSnackbar({
         open: true,
-        message: `Staff ${data.fullName} updated successfully`,
+        message: `Nhân viên ${data.fullName} đã được cập nhật`,
         severity: 'success',
       });
-    }
-  };
-
-  const handleConfirmDelete = () => {
-    if (selectedStaff) {
-      setStaff(prev => prev.filter(emp => emp.id !== selectedStaff.id));
+    } else {
       setSnackbar({
         open: true,
-        message: `Staff ${selectedStaff.fullName} deleted successfully`,
-        severity: 'success',
+        message: res.message ?? 'Lỗi khi cập nhật nhân viên',
+        severity: 'error',
       });
+    }
+    setEditModalOpen(false);
+    setSelectedStaff(null);
+  };
+
+  // ✅ Delete staff
+  const handleConfirmDelete = async () => {
+    if (selectedStaff) {
+      const res = await StaffService.delete(selectedStaff.id);
+      if (res.success) {
+        setStaff((prev) => prev.filter((emp) => emp.id !== selectedStaff.id));
+        setSnackbar({
+          open: true,
+          message: `Đã xoá nhân viên ${selectedStaff.fullName}`,
+          severity: 'success',
+        });
+      } else {
+        setSnackbar({
+          open: true,
+          message: res.message ?? 'Lỗi khi xoá nhân viên',
+          severity: 'error',
+        });
+      }
       setDeleteModalOpen(false);
       setSelectedStaff(null);
     }
   };
 
-  const handleCloseSnackbar = () => {
-    setSnackbar(prev => ({ ...prev, open: false }));
-  };
+  const handleCloseSnackbar = () => setSnackbar((prev) => ({ ...prev, open: false }));
 
-  const getStatusChip = (status: 'active' | 'inactive') => {
+  // --- Render ---
+  if (loading) {
     return (
-      <Chip
-        label={status}
-        color={status === 'active' ? 'success' : 'error'}
-        size="small"
-        variant="filled"
-      />
+      <Box className="flex items-center justify-center h-screen">
+        <CircularProgress />
+      </Box>
     );
-  };
+  }
 
   return (
     <Box className="p-6 bg-gray-50 min-h-screen">
@@ -215,7 +192,7 @@ const StaffManagement: React.FC = () => {
             <Box className="flex items-center gap-3">
               <Users className="w-8 h-8 text-blue-600" />
               <Box>
-                <Typography variant="h4" component="h1" className="text-2xl font-bold text-gray-900" gutterBottom={false}>
+                <Typography variant="h4" className="text-2xl font-bold text-gray-900" gutterBottom={false}>
                   Staff Management
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
@@ -235,46 +212,34 @@ const StaffManagement: React.FC = () => {
         </Box>
 
         {/* Filters */}
-        <StaffFilter
-          filters={filters}
-          onFiltersChange={handleFiltersChange}
-          onClearFilters={handleClearFilters}
-        />
+        <StaffFilter filters={filters} onFiltersChange={handleFiltersChange} onClearFilters={handleClearFilters} />
 
-        {/* Staff Table */}
+        {/* Table */}
         <Paper className="mb-6" elevation={1}>
           <TableContainer>
             <Table>
               <TableHead sx={{ backgroundColor: '#f9fafb' }}>
                 <TableRow>
-                  <TableCell>
-                    Staff Member
-                  </TableCell>
-                  <TableCell>
-                    Status
-                  </TableCell>
-                  <TableCell align="right">
-                    Actions
-                  </TableCell>
+                  <TableCell>Staff Member</TableCell>
+                  <TableCell align="right">Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {paginatedStaff.length > 0 ? (
-                  paginatedStaff.map((staffMember) => (
+                  paginatedStaff.map((staffMember, index) => (
                     <TableRow
-                      key={staffMember.id}
-                      sx={{
-                        '&:hover': {
-                          backgroundColor: '#f9fafb',
-                        },
-                      }}
+                      key={staffMember.id ?? `${staffMember.username}-${index}`}
+                      sx={{ '&:hover': { backgroundColor: '#f9fafb' } }}
                     >
                       <TableCell>
                         <Box className="flex items-center">
-                          <Avatar
-                            className="mr-3"
-                          >
-                            {staffMember.fullName.split(' ').map(n => n[0]).join('')}
+                          <Avatar className="mr-3">
+                            {staffMember.fullName
+                              ? staffMember.fullName
+                                .split(' ')
+                                .map((n) => n[0])
+                                .join('')
+                              : '?'}
                           </Avatar>
                           <Box>
                             <Typography variant="subtitle2" className="font-medium text-gray-900">
@@ -286,35 +251,21 @@ const StaffManagement: React.FC = () => {
                           </Box>
                         </Box>
                       </TableCell>
-                      <TableCell>
-                        {getStatusChip(staffMember.status)}
-                      </TableCell>
+
                       <TableCell align="right">
                         <Box className="flex items-center justify-end gap-1">
                           <Tooltip title="View Details" arrow>
-                            <IconButton
-                              size="small"
-                              onClick={() => handleViewStaff(staffMember)}
-                              
-                            >
+                            <IconButton size="small" onClick={() => handleViewStaff(staffMember)}>
                               <Eye className="w-4 h-4" />
                             </IconButton>
                           </Tooltip>
                           <Tooltip title="Edit Staff" arrow>
-                            <IconButton
-                              size="small"
-                              onClick={() => handleEditStaff(staffMember)}
-                              
-                            >
+                            <IconButton size="small" onClick={() => handleEditStaff(staffMember)}>
                               <Edit className="w-4 h-4" />
                             </IconButton>
                           </Tooltip>
                           <Tooltip title="Delete Staff" arrow>
-                            <IconButton
-                              size="small"
-                              onClick={() => handleDeleteStaff(staffMember)}
-                              
-                            >
+                            <IconButton size="small" onClick={() => handleDeleteStaff(staffMember)}>
                               <Trash2 className="w-4 h-4" />
                             </IconButton>
                           </Tooltip>
@@ -324,15 +275,15 @@ const StaffManagement: React.FC = () => {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={3} align="center" sx={{ py: 6 }}>
+                    <TableCell colSpan={2} align="center" sx={{ py: 6 }}>
                       <Box className="flex flex-col items-center">
                         <Users className="w-12 h-12 text-gray-300 mb-4" />
                         <Typography variant="h6" className="text-lg font-medium text-gray-900 mb-2">
                           No staff found
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                          {filters.search || filters.status !== 'all'
-                            ? 'Try adjusting your filters to see more results.'
+                          {filters.search
+                            ? 'Try adjusting your search to see more results.'
                             : 'Get started by adding your first staff member.'}
                         </Typography>
                       </Box>
@@ -385,18 +336,14 @@ const StaffManagement: React.FC = () => {
           onConfirm={handleConfirmDelete}
         />
 
-        {/* Success/Error Snackbar */}
+        {/* Snackbar */}
         <Snackbar
           open={snackbar.open}
           autoHideDuration={6000}
           onClose={handleCloseSnackbar}
           anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         >
-          <Alert
-            onClose={handleCloseSnackbar}
-            severity={snackbar.severity}
-            sx={{ width: '100%' }}
-          >
+          <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
             {snackbar.message}
           </Alert>
         </Snackbar>

@@ -11,10 +11,10 @@ import {
   Divider,
 } from '@mui/material';
 import { X, Eye, Package, AlertTriangle, CheckCircle } from 'lucide-react';
-import type { InventoryWithProduct } from '../../../../types/inventory.types';
+import type { Product } from '../../../../types/inventory.types';
 
 interface ViewInventoryModalProps {
-  inventory: InventoryWithProduct | null;
+  inventory: Product | null;
   open: boolean;
   onClose: () => void;
 }
@@ -53,16 +53,6 @@ export const ViewInventoryModal = ({
 }: ViewInventoryModalProps) => {
   if (!inventory) return null;
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
-
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle className="flex items-center justify-between">
@@ -83,10 +73,10 @@ export const ViewInventoryModal = ({
             </Box>
             <Box className="flex-1">
               <Typography variant="h6" className="font-semibold">
-                {inventory.product.productName}
+                {inventory.productName}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                SKU: {inventory.product.barcode}
+                SKU: {inventory.barcode}
               </Typography>
             </Box>
           </Box>
@@ -105,34 +95,16 @@ export const ViewInventoryModal = ({
                   Product ID
                 </Typography>
                 <Typography variant="body2" className="font-mono">
-                  {inventory.product.productId}
+                  {inventory.productId}
                 </Typography>
               </Box>
               
               <Box>
                 <Typography variant="subtitle2" color="text.secondary" className="mb-1">
-                  Category ID
+                  Price
                 </Typography>
                 <Typography variant="body2">
-                  {inventory.product.categoryId}
-                </Typography>
-              </Box>
-              
-              <Box>
-                <Typography variant="subtitle2" color="text.secondary" className="mb-1">
-                  Supplier ID
-                </Typography>
-                <Typography variant="body2">
-                  {inventory.product.supplierId}
-                </Typography>
-              </Box>
-              
-              <Box>
-                <Typography variant="subtitle2" color="text.secondary" className="mb-1">
-                  Unit
-                </Typography>
-                <Typography variant="body2">
-                  {inventory.product.unit}
+                  ${inventory.price.toLocaleString()}
                 </Typography>
               </Box>
             </Box>
@@ -159,7 +131,7 @@ export const ViewInventoryModal = ({
                     'text-green-600'
                   }`}
                 >
-                  {inventory.quantity} {inventory.product.unit}
+                  {inventory.quantity}
                 </Typography>
               </Box>
               
@@ -172,44 +144,12 @@ export const ViewInventoryModal = ({
               
               <Box>
                 <Typography variant="subtitle2" color="text.secondary" className="mb-1">
-                  Unit Price
-                </Typography>
-                <Typography variant="h6" className="font-semibold text-blue-600">
-                  ${inventory.product.price.toFixed(2)}
-                </Typography>
-              </Box>
-              
-              <Box>
-                <Typography variant="subtitle2" color="text.secondary" className="mb-1">
                   Total Value
                 </Typography>
                 <Typography variant="h6" className="font-semibold text-green-600">
-                  ${(inventory.product.price * inventory.quantity).toFixed(2)}
+                  ${(inventory.price * inventory.quantity).toLocaleString()}
                 </Typography>
               </Box>
-            </Box>
-          </Box>
-
-          <Divider />
-
-          {/* Timestamps */}
-          <Box className="space-y-2">
-            <Box>
-              <Typography variant="subtitle2" color="text.secondary" className="mb-1">
-                Product Created
-              </Typography>
-              <Typography variant="body2">
-                {formatDate(inventory.product.createdAt)}
-              </Typography>
-            </Box>
-            
-            <Box>
-              <Typography variant="subtitle2" color="text.secondary" className="mb-1">
-                Last Updated
-              </Typography>
-              <Typography variant="body2">
-                {formatDate(inventory.updatedAt)}
-              </Typography>
             </Box>
           </Box>
         </Box>

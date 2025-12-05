@@ -68,6 +68,9 @@ namespace backend.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
                     b.HasKey("CustomerId");
 
                     b.ToTable("Customers");
@@ -328,8 +331,9 @@ namespace backend.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<int>("Role")
-                        .HasColumnType("int");
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasColumnType("ENUM('admin','staff', 'customer')");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime(6)");
@@ -345,11 +349,13 @@ namespace backend.Migrations
 
             modelBuilder.Entity("Inventory", b =>
                 {
-                    b.HasOne("Products", null)
+                    b.HasOne("Products", "Product")
                         .WithOne("Inventory")
                         .HasForeignKey("Inventory", "ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Product");
                 });
 
             modelBuilder.Entity("Products", b =>

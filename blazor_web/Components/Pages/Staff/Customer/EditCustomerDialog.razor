@@ -1,0 +1,86 @@
+@using blazor_web.Models
+
+@if (ShowDialog)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5); z-index: 9999;">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Cập nhật khách hàng</h5>
+                    <button type="button" class="btn-close" @onclick="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="@CurrentCustomer" OnValidSubmit="HandleValidSubmit">
+                        <DataAnnotationsValidator />
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Tên <span class="text-danger">*</span></label>
+                            <InputText class="form-control" @bind-Value="CurrentCustomer.Name" />
+                            <ValidationMessage For="@(() => CurrentCustomer.Name)" class="text-danger" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">SĐT <span class="text-danger">*</span></label>
+                            <InputText class="form-control" @bind-Value="CurrentCustomer.Phone" />
+                            <ValidationMessage For="@(() => CurrentCustomer.Phone)" class="text-danger" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Email <span class="text-danger">*</span></label>
+                            <InputText class="form-control" @bind-Value="CurrentCustomer.Email" />
+                            <ValidationMessage For="@(() => CurrentCustomer.Email)" class="text-danger" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Địa chỉ</label>
+                            <InputText class="form-control" @bind-Value="CurrentCustomer.Address" />
+                            <ValidationMessage For="@(() => CurrentCustomer.Address)" class="text-danger" />
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" @onclick="Close">Hủy</button>
+                            <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    public bool ShowDialog { get; set; }
+    public Customer CurrentCustomer { get; set; } = new Customer();
+
+    [Parameter] public EventCallback<Customer> OnSave { get; set; }
+
+    public void Show(Customer customer)
+    {
+        // Clone object để tách biệt dữ liệu với danh sách gốc
+        CurrentCustomer = new Customer
+        {
+            CustomerId = customer.CustomerId,
+            Name = customer.Name,
+            Phone = customer.Phone,
+            Email = customer.Email,
+            Address = customer.Address,
+            CreatedAt = customer.CreatedAt,
+            UpdatedAt = DateTime.Now 
+        };
+        ShowDialog = true;
+        StateHasChanged();
+    }
+
+    public void Close()
+    {
+        ShowDialog = false;
+        StateHasChanged();
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        // Chỉ chạy khi dữ liệu hợp lệ (xanh)
+        await OnSave.InvokeAsync(CurrentCustomer);
+        Close();
+    }
+}

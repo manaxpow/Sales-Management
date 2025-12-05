@@ -11,10 +11,10 @@ import {
 } from '@mui/material';
 import { X, Edit, Package } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import type { InventoryWithProduct, InventoryFormData } from '../../../../types/inventory.types';
+import type { Product, InventoryFormData, InventoryFormErrors } from '../../../../types/inventory.types';
 
 interface EditInventoryModalProps {
-  inventory: InventoryWithProduct | null;
+  inventory: Product | null;
   open: boolean;
   onClose: () => void;
   onSave: (data: InventoryFormData) => void;
@@ -29,7 +29,7 @@ export const EditInventoryModal = ({
   const [formData, setFormData] = useState<InventoryFormData>({
     quantity: 0,
   });
-  const [errors, setErrors] = useState<Partial<InventoryFormData>>({});
+  const [errors, setErrors] = useState<InventoryFormErrors>({});
 
   useEffect(() => {
     if (inventory) {
@@ -41,7 +41,7 @@ export const EditInventoryModal = ({
   }, [inventory, open]);
 
   const validateForm = (): boolean => {
-    const newErrors: Partial<InventoryFormData> = {};
+    const newErrors: InventoryFormErrors = {};
 
     if (typeof formData.quantity === 'number' && formData.quantity < 0) {
       newErrors.quantity = 'Quantity cannot be negative';
@@ -100,10 +100,10 @@ export const EditInventoryModal = ({
             <Package className="w-6 h-6 text-blue-600" />
             <Box>
               <Typography variant="subtitle1" className="font-semibold">
-                {inventory.product.productName}
+                {inventory.productName}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                SKU: {inventory.product.barcode} | Current Stock: {inventory.quantity} {inventory.product.unit}
+                SKU: {inventory.barcode} | Current Stock: {inventory.quantity}
               </Typography>
             </Box>
           </Box>

@@ -2,10 +2,10 @@ import React from 'react';
 import { TablePagination } from '@mui/material';
 
 interface SimpleStaff {
-  id: string;
+  id: number;
   username: string;
   fullName: string;
-  status: 'active' | 'inactive';
+  role: 'admin' | 'staff';
 }
 
 interface StaffPaginationProps {
