@@ -1,0 +1,49 @@
+<div class="@ModalCssClass">
+    <div class="bg-white rounded-2xl shadow-lg w-full max-w-md p-6">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Xóa nhà cung cấp</h2>
+        <p class="text-gray-600 mb-6">
+            Bạn có chắc chắn muốn xóa{" "}
+            <span class="font-semibold text-red-600">@SupplierName</span> khỏi hệ thống?
+            Hành động này không thể hoàn tác.
+        </p>
+        <div class="flex justify-end space-x-3">
+            <button @onclick="OnClose"
+                class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition">
+                Hủy
+            </button>
+            <button @onclick="HandleConfirm"
+                class="px-4 py-2 text-sm font-medium rounded-lg text-white bg-red-600 hover:bg-red-700">
+                Xóa
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public bool IsOpen { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> IsOpenChanged { get; set; }
+
+    [Parameter]
+    public EventCallback OnConfirm { get; set; }
+
+    [Parameter]
+    public string? SupplierName { get; set; }
+
+    private string ModalCssClass => IsOpen ? "fixed inset-0 bg-black/35 flex items-center justify-center z-50 p-4" :
+    "hidden";
+
+    private Task OnClose()
+    {
+        return IsOpenChanged.InvokeAsync(false);
+    }
+
+    private async Task HandleConfirm()
+    {
+        await OnConfirm.InvokeAsync();
+
+        await OnClose();
+    }
+}

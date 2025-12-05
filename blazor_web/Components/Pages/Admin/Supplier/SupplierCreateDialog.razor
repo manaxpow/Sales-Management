@@ -1,0 +1,135 @@
+@page "/admin/suppliers/create"
+@layout AdminLayout
+@rendermode InteractiveServer
+
+@using blazor_web.DTOs.Supplier
+@using blazor_web.Services.Supplier
+@using Microsoft.AspNetCore.Components.Forms
+@using System.ComponentModel.DataAnnotations
+@inject ISupplierService SupplierService
+@inject NavigationManager Navigation
+
+<div class="p-6 bg-gray-50 min-h-screen">
+    <div class="max-w-4xl mx-auto">
+        <a href="/admin/suppliers" class="text-blue-600 hover:underline mb-4 inline-flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            Quay lại danh sách
+        </a>
+
+        <div class="bg-white rounded-2xl shadow-xl w-full p-8 mt-4">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-3">
+                Thêm nhà cung cấp mới
+            </h2>
+
+            <EditForm Model="@formData" OnValidSubmit="HandleSubmit" FormName="createSupplierForm">
+                <DataAnnotationsValidator />
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="text-sm font-medium text-gray-600 block mb-1" for="name">Tên nhà cung cấp</label>
+                        <InputText id="name" @bind-Value="formData.Name" class="@GetInputClass("Name")" placeholder="Nhập tên nhà cung cấp" />
+                        <ValidationMessage For="() => formData.Name" />
+                        @if (errors.TryGetValue("name", out var nameError) && !string.IsNullOrEmpty(nameError))
+                        {
+                            <p class="text-red-500 text-sm mt-1">@nameError</p>
+                        }
+                    </div>
+
+                    <div>
+                        <label class="text-sm font-medium text-gray-600 block mb-1" for="phone">Số điện thoại</label>
+                        <InputText id="phone" @bind-Value="formData.Phone" class="@GetInputClass("Phone")" placeholder="Nhập số điện thoại" />
+                        <ValidationMessage For="() => formData.Phone" />
+                        @if (errors.TryGetValue("phone", out var phoneError) && !string.IsNullOrEmpty(phoneError))
+                        {
+                            <p class="text-red-500 text-sm mt-1">@phoneError</p>
+                        }
+                    </div>
+
+                    <div class="col-span-1 md:col-span-2">
+                        <label class="text-sm font-medium text-gray-600 block mb-1" for="email">Email</label>
+                        <InputText id="email" @bind-Value="formData.Email" class="@GetInputClass("Email")" placeholder="Nhập email" />
+                        <ValidationMessage For="() => formData.Email" />
+                        @if (errors.TryGetValue("email", out var emailError) && !string.IsNullOrEmpty(emailError))
+                        {
+                            <p class="text-red-500 text-sm mt-1">@emailError</p>
+                        }
+                    </div>
+
+                    <div class="col-span-1 md:col-span-2">
+                        <label class="text-sm font-medium text-gray-600 block mb-1" for="address">Địa chỉ</label>
+                        <InputText id="address" @bind-Value="formData.Address" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-blue-500" placeholder="Nhập địa chỉ" />
+                        <ValidationMessage For="() => formData.Address" />
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrEmpty(apiError))
+                {
+                    <div class="mt-6 text-red-600 bg-red-50 p-3 rounded-lg text-sm">
+                        @apiError
+                    </div>
+                }
+
+                <div class="flex justify-end space-x-3 mt-8 pt-4 border-t">
+                    <button
+                        type="button"
+                        @onclick='() => Navigation.NavigateTo("/admin/suppliers")' 
+                        class="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition"
+                        disabled="@isSubmitting"
+                    >
+                        Hủy
+                    </button>
+                    <button
+                        type="submit"
+                        class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:bg-blue-300"
+                        disabled="@isSubmitting"
+                    >
+                        @(isSubmitting ? "Đang thêm..." : "Thêm mới")
+                    </button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@code {
+    private CreateSupplierRequest formData = new CreateSupplierRequest();
+    private Dictionary<string, string> errors = new Dictionary<string, string>(); 
+    private string? apiError;
+    private bool isSubmitting = false;
+
+    private string GetInputClass(string fieldName)
+    {
+        string baseClass = "w-full border rounded-lg px-3 py-2 focus:outline-blue-500";
+        bool hasError = errors.ContainsKey(fieldName.ToLower()) && !string.IsNullOrEmpty(errors[fieldName.ToLower()]);
+        return $"{baseClass} {(hasError ? "border-red-500" : "border-gray-300")}";
+    }
+
+    private async Task HandleSubmit()
+    {
+        isSubmitting = true;
+        errors.Clear();
+        apiError = null;
+
+        var response = await SupplierService.CreateSupplierAsync(formData);
+        
+        if (response.Success)
+        {
+            Navigation.NavigateTo("/admin/suppliers");
+        }
+        else
+        {
+            var errorMessage = response.Message ?? "Lỗi không xác định.";
+            
+            if (errorMessage.Contains("Tên nhà cung cấp đã tồn tại")) errors.Add("name", "Tên nhà cung cấp đã tồn tại.");
+            if (errorMessage.Contains("Số điện thoại đã tồn tại")) errors.Add("phone", "Số điện thoại đã tồn tại.");
+            if (errorMessage.Contains("Email đã tồn tại")) errors.Add("email", "Email đã tồn tại.");
+            
+            if (errors.Count == 0)
+            {
+                 apiError = errorMessage;
+            }
+
+            isSubmitting = false;
+        }
+    }
+}
