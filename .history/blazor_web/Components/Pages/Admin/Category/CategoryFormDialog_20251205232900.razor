@@ -1,0 +1,64 @@
+<!-- Components/Admin/Category/CategoryFormDialog.razor -->
+
+<div class="@(Open ? "modal fade show d-block" : "modal d-none")" 
+     tabindex="-1" style="background: rgba(0,0,0,0.5);">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">@(Initial != null ? "Sửa danh mục" : "Thêm danh mục")</h5>
+                <button type="button" class="btn-close" @onclick="OnClose"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Tên danh mục</label>
+                    <input type="text" class="form-control" 
+                           @bind="Name" @bind:event="oninput"
+                           @onkeydown="OnKeyDown"
+                           placeholder="Nhập tên danh mục..." />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" @onclick="OnClose">Hủy</button>
+                <button type="button" class="btn btn-primary" 
+                        disabled="@string.IsNullOrWhiteSpace(Name)"
+                        @onclick="HandleSave">
+                    Lưu
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public bool Open { get; set; }
+    [Parameter] public CategoryDto? Initial { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<(string Name, int? Id)> OnSave { get; set; }
+
+    private string Name { get; set; } = string.Empty;
+
+    protected override void OnParametersSet()
+    {
+        Name = Initial?.Name ?? string.Empty;
+        StateHasChanged();
+    }
+
+    private async Task HandleSave()
+    {
+        if (string.IsNullOrWhiteSpace(Name)) return;
+        await OnSave.InvokeAsync((Name.Trim(), Initial?.Id));
+        await OnClose.InvokeAsync();
+    }
+
+    private async Task OnKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+            await HandleSave();
+    }
+
+    public class CategoryDto
+    {
+        public int? Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+    }
+}

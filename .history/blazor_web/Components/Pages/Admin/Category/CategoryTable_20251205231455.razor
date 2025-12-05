@@ -1,0 +1,85 @@
+@using blazor_web.Models
+
+<div class="card shadow-sm">
+    <div class="card-header d-flex justify-content-between">
+        <h4 class="fw-bold">Quản lý danh mục</h4>
+
+        <button class="btn btn-primary" @onclick="OnAddClick">
+            Thêm danh mục
+        </button>
+    </div>
+
+    <div class="p-3">
+        <input class="form-control" placeholder="Tìm kiếm..."
+               @oninput="Filter" />
+    </div>
+
+    <table class="table table-hover">
+        <thead class="table-light">
+            <tr>
+                <th>ID</th>
+                <th>Tên</th>
+                <th class="text-end">Hành động</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var c in Paged)
+            {
+                <tr>
+                    <td>@c.Id</td>
+                    <td>@c.Name</td>
+                    <td class="text-end">
+                        <button class="btn btn-sm btn-info me-2" @onclick="() => OnEditClick(c)">Sửa</button>
+                        <button class="btn btn-sm btn-danger" @onclick="() => OnDeleteClick(c)">Xoá</button>
+                    </td>
+                </tr>
+            }
+
+            @if (!Paged.Any())
+            {
+                <tr><td colspan="3" class="text-center">Không có danh mục</td></tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="d-flex justify-content-between p-3">
+        <span>Page @Page + 1</span>
+        <button class="btn btn-outline-secondary btn-sm"
+                @onclick="NextPage">
+            Trang tiếp
+        </button>
+    </div>
+</div>
+
+@code {
+    [Parameter] public List<Category> Categories { get; set; } = new();
+    [Parameter] public EventCallback<Category> OnEdit { get; set; }
+    [Parameter] public EventCallback<Category> OnDelete { get; set; }
+    [Parameter] public EventCallback OnAdd { get; set; }
+
+    private string search = "";
+    private int Page = 0;
+    private int RowsPerPage = 10;
+
+    IEnumerable<Category> Filtered => 
+        Categories.Where(c => c.Name.Contains(search, StringComparison.OrdinalIgnoreCase));
+
+    IEnumerable<Category> Paged =>
+        Filtered.Skip(Page * RowsPerPage).Take(RowsPerPage);
+
+    void Filter(ChangeEventArgs e)
+    {
+        search = e.Value?.ToString() ?? "";
+        Page = 0;
+    }
+
+    async Task OnEditClick(Category c) => await OnEdit.InvokeAsync(c);
+    async Task OnDeleteClick(Category c) => await OnDelete.InvokeAsync(c);
+    async Task OnAddClick() => await OnAdd.InvokeAsync();
+
+    void NextPage()
+    {
+        if ((Page + 1) * RowsPerPage < Filtered.Count())
+            Page++;
+    }
+}

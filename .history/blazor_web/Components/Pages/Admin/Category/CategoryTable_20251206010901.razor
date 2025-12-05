@@ -1,0 +1,143 @@
+<div class="card shadow-sm">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-3 py-3">
+        <h5 class="mb-0 text-primary fw-bold">Danh sách danh mục</h5>
+        <div class="d-flex gap-2">
+            @* Ô tìm kiếm *@
+            <div class="input-group input-group-sm" style="width: 250px;">
+                <span class="input-group-text bg-light border-end-0">
+                    <i class="bi bi-search"></i>
+                </span>
+                <input type="text" class="form-control border-start-0" 
+                       placeholder="Tìm kiếm..."
+                       @bind="FilterText" @bind:event="oninput" />
+            </div>
+            
+            @* Nút Thêm Mới (DUY NHẤT) *@
+            <button class="btn btn-success btn-sm d-flex align-items-center" @onclick="OnAdd">
+                <i class="bi bi-plus-lg me-1"></i> Thêm mới
+            </button>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th style="width: 80px;" class="text-center">ID</th>
+                    <th>Tên danh mục</th>
+                    <th style="width: 150px;" class="text-end">Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Paginated.Any())
+                {
+                    <tr>
+                        <td colspan="3" class="text-center py-5 text-muted">
+                            <i class="bi bi-inbox fs-4 d-block mb-2"></i>
+                            @(string.IsNullOrEmpty(FilterText) ? "Chưa có dữ liệu" : "Không tìm thấy kết quả")
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var item in Paginated)
+                    {
+                        <tr>
+                            <td class="text-center fw-bold text-secondary">@item.Id</td>
+                            <td>@item.Name</td>
+                            <td class="text-end">
+                                <button class="btn btn-sm btn-outline-primary me-1" title="Sửa"
+                                        @onclick="() => OnEdit.InvokeAsync(item)">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" title="Xóa"
+                                        @onclick="() => OnDelete.InvokeAsync(item)">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @* Footer: Phân trang *@
+    @if (Filtered.Any())
+    {
+        <div class="card-footer bg-white d-flex justify-content-between align-items-center py-2">
+            <small class="text-muted">
+                Hiển thị @(Paginated.Count) / @Filtered.Count bản ghi
+            </small>
+
+            <div class="d-flex align-items-center gap-3">
+                <nav>
+                    <ul class="pagination pagination-sm mb-0">
+                        <li class="page-item @(Page <= 0 ? "disabled" : "")">
+                            <button class="page-link" @onclick="() => ChangePage(Page - 1)">Previous</button>
+                        </li>
+                        @for (int i = Math.Max(0, Page - 2); i < Math.Min(TotalPages, Page + 3); i++)
+                        {
+                            int pageNum = i;
+                            <li class="page-item @(i == Page ? "active" : "")">
+                                <button class="page-link" @onclick="() => ChangePage(pageNum)">@(i + 1)</button>
+                            </li>
+                        }
+                        <li class="page-item @(Page >= TotalPages - 1 ? "disabled" : "")">
+                            <button class="page-link" @onclick="() => ChangePage(Page + 1)">Next</button>
+                        </li>
+                    </ul>
+                </nav>
+
+                <select class="form-select form-select-sm" style="width: 70px;" 
+                        @onchange="ChangeRowsPerPage">
+                    <option value="5">5</option>
+                    <option value="10" selected>10</option>
+                    <option value="20">20</option>
+                </select>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public List<CategoryDto> Categories { get; set; } = new();
+    [Parameter] public EventCallback OnAdd { get; set; }
+    [Parameter] public EventCallback<CategoryDto> OnEdit { get; set; }
+    [Parameter] public EventCallback<CategoryDto> OnDelete { get; set; }
+
+    private string FilterText { get; set; } = string.Empty;
+    private int RowsPerPage { get; set; } = 10;
+    private int Page { get; set; } = 0;
+
+    private List<CategoryDto> Filtered => Categories
+        .Where(c => c.Name.Contains(FilterText, StringComparison.OrdinalIgnoreCase))
+        .ToList();
+
+    private List<CategoryDto> Paginated => Filtered
+        .Skip(Page * RowsPerPage)
+        .Take(RowsPerPage)
+        .ToList();
+
+    private int TotalPages => Math.Max(1, (int)Math.Ceiling(Filtered.Count / (double)RowsPerPage));
+
+    private void ChangePage(int newPage)
+    {
+        if (newPage >= 0 && newPage < TotalPages) Page = newPage;
+    }
+
+    private void ChangeRowsPerPage(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int val))
+        {
+            RowsPerPage = val;
+            Page = 0;
+        }
+    }
+
+    public class CategoryDto
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+    }
+}

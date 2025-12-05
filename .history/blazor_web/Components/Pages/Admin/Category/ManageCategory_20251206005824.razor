@@ -1,0 +1,224 @@
+@page "/admin/categories"
+@using blazor_web.Models
+@using blazor_web.Services.Category
+@using blazor_web.Components.Pages.Admin.Category
+
+@* Inject Service *@
+@inject CategoryService CategoryService
+@inject IJSRuntime JS
+
+<PageTitle>Quản lý danh mục</PageTitle>
+
+<div class="container-fluid p-0">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="text-primary fw-bold mb-0">Quản lý danh mục</h3>
+        <button class="btn btn-success" @onclick="OpenAdd">
+            <i class="bi bi-plus-lg me-2"></i>Thêm mới
+        </button>
+    </div>
+
+    @* Hiển thị thông báo lỗi/thành công *@
+    @if (!string.IsNullOrEmpty(Message))
+    {
+        <div class="alert @(IsSuccess ? "alert-success" : "alert-danger") alert-dismissible fade show shadow-sm" role="alert">
+            @if(IsSuccess) { <i class="bi bi-check-circle-fill me-2"></i> } else { <i class="bi bi-exclamation-triangle-fill me-2"></i> }
+            @Message
+            <button type="button" class="btn-close" @onclick="() => Message = null"></button>
+        </div>
+    }
+
+    @* Bảng danh sách *@
+    @if (isLoading)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2 text-muted">Đang tải dữ liệu...</p>
+        </div>
+    }
+    else
+    {
+        <CategoryTable Categories="categories"
+                       OnAdd="OpenAdd"
+                       OnEdit="OpenEdit"
+                       OnDelete="@(c => { deleting = c; showDelete = true; })" />
+    }
+</div>
+
+@* Dialog Thêm/Sửa *@
+<CategoryFormDialog Open="showForm"
+                    Initial="editing"
+                    OnClose="() => showForm = false"
+                    OnSave="SaveCategory" />
+
+@* Dialog Xóa *@
+<CategoryDeleteDialog Open="showDelete"
+                      Name="@(deleting?.Name)"
+                      OnClose="() => showDelete = false"
+                      OnConfirm="DeleteCategory" />
+
+@code {
+    // State
+    private List<CategoryTable.CategoryDto> categories = new();
+    private bool isLoading = true;
+    
+    // Modal state
+    private bool showForm = false;
+    private CategoryFormDialog.CategoryDto? editing;
+    
+    private bool showDelete = false;
+    private CategoryTable.CategoryDto? deleting;
+
+    // Notification state
+    private string? Message;
+    private bool IsSuccess;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCategories();
+    }
+
+    private async Task LoadCategories()
+    {
+        isLoading = true;
+        try
+        {
+            var result = await CategoryService.GetAll();
+            if (result.Success && result.Data != null)
+            {
+                // Map từ CategoryResponse (Service) sang CategoryDto (View)
+                categories = result.Data.Select(x => new CategoryTable.CategoryDto 
+                { 
+                    Id = x.Id, 
+                    Name = x.Name 
+                }).OrderBy(x => x.Id).ToList();
+            }
+            else
+            {
+                ShowMessage(result.Message ?? "Lỗi tải danh mục", false);
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowMessage($"Lỗi hệ thống: {ex.Message}", false);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void OpenAdd() 
+    {
+        editing = null;
+        showForm = true;
+    }
+
+    private void OpenEdit(CategoryTable.CategoryDto c) 
+    {
+        // Copy data để tránh sửa trực tiếp vào list khi chưa lưu
+        editing = new CategoryFormDialog.CategoryDto { Id = c.Id, Name = c.Name };
+        showForm = true;
+    }
+
+    private async Task SaveCategory((string Name, int? Id) data)
+    {
+        try
+        {
+            // Update
+            if (data.Id.HasValue)
+            {
+                var req = new CategoryCreateRequest(data.Name);
+                var res = await CategoryService.Update(data.Id.Value, req);
+                
+                if (res.Success && res.Data != null)
+                {
+                    // Cập nhật UI ngay lập tức
+                    var item = categories.FirstOrDefault(x => x.Id == data.Id);
+                    if (item != null)
+                    {
+                        item.Name = res.Data.Name; // Lấy tên từ server trả về cho chuẩn
+                        ShowMessage("Cập nhật thành công!", true);
+                    }
+                }
+                else 
+                {
+                    ShowMessage(res.Message ?? "Lỗi cập nhật", false);
+                }
+            }
+            // Create
+            else
+            {
+                var req = new CategoryCreateRequest(data.Name);
+                var res = await CategoryService.Create(req);
+                
+                if (res.Success && res.Data != null)
+                {
+                    // Thêm vào list UI
+                    categories.Add(new CategoryTable.CategoryDto 
+                    { 
+                        Id = res.Data.Id, // ID từ database
+                        Name = res.Data.Name 
+                    });
+                    
+                    // Sắp xếp lại danh sách
+                    categories = categories.OrderBy(x => x.Id).ToList();
+                    ShowMessage("Thêm mới thành công!", true);
+                }
+                else 
+                {
+                    ShowMessage(res.Message ?? "Lỗi thêm mới", false);
+                }
+            }
+            
+            showForm = false; // Đóng form sau khi lưu thành công
+        }
+        catch 
+        { 
+            ShowMessage("Lỗi xử lý kết nối", false); 
+        }
+    }
+
+    private async Task DeleteCategory()
+    {
+        if (deleting == null) return;
+        
+        try
+        {
+            var res = await CategoryService.Delete(deleting.Id);
+            if (res.Success)
+            {
+                categories.Remove(deleting);
+                ShowMessage("Xóa danh mục thành công!", true);
+            }
+            else 
+            {
+                ShowMessage(res.Message ?? "Không thể xóa danh mục này", false);
+            }
+        }
+        catch
+        {
+            ShowMessage("Lỗi khi gọi API xóa", false);
+        }
+        finally
+        {
+            showDelete = false;
+            deleting = null;
+        }
+    }
+
+    private void ShowMessage(string msg, bool success)
+    {
+        Message = msg;
+        IsSuccess = success;
+        StateHasChanged();
+
+        // Tự động ẩn thông báo sau 4 giây
+        _ = Task.Delay(4000).ContinueWith(_ => 
+        { 
+            Message = null; 
+            InvokeAsync(StateHasChanged); 
+        });
+    }
+}

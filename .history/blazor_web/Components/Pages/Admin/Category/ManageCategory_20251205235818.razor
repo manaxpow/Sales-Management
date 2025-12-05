@@ -1,0 +1,114 @@
+@page "/admin/categories"
+@using blazor_web.Components.Pages.Admin.Category
+@using blazor_web.Services.Category
+@inject CategoryService CategoryService
+@inject IJSRuntime JS
+
+<PageTitle>Quản lý danh mục</PageTitle>
+
+<h3 class="mb-4">Quản lý danh mục</h3>
+
+<CategoryTable Categories="categories"
+               OnAdd="OpenAdd"
+               OnEdit="OpenEdit"
+               OnDelete="c => deleting = c; showDelete = true" />
+
+<CategoryFormDialog Open="showForm"
+                    Initial="editing"
+                    OnClose="() => showForm = false"
+                    OnSave="SaveCategory" />
+
+<CategoryDeleteDialog Open="showDelete"
+                      Name="deleting?.Name"
+                      OnClose="() => showDelete = false"
+                      OnConfirm="DeleteCategory" />
+
+@if (!string.IsNullOrEmpty(Message))
+{
+    <div class="alert @(IsSuccess ? "alert-success" : "alert-danger") alert-dismissible fade show mt-3">
+        @Message
+        <button type="button" class="btn-close" @onclick="() => Message = null"></button>
+    </div>
+}
+
+@code {
+    private List<CategoryTable.CategoryDto> categories = new();
+    private bool showForm = false;
+    private CategoryFormDialog.CategoryDto? editing;
+    private bool showDelete = false;
+    private CategoryTable.CategoryDto? deleting;
+
+    private string? Message;
+    private bool IsSuccess;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCategories();
+    }
+
+    private async Task LoadCategories()
+    {
+        var result = await CategoryService.GetAll();
+        if (result.Success && result.Data != null)
+            categories = result.Data.Select(x => new CategoryTable.CategoryDto { Id = x.Id, Name = x.Name }).ToList();
+        else
+            ShowMessage(result.Message ?? "Lỗi tải danh mục", false);
+    }
+
+    private void OpenAdd() => (editing, showForm) = (null, true);
+    private void OpenEdit(CategoryTable.CategoryDto c) => (editing, showForm) = (new() { Id = c.Id, Name = c.Name }, true);
+
+    private async Task SaveCategory((string Name, int? Id) data)
+    {
+        try
+        {
+            if (data.Id.HasValue)
+            {
+                var res = await CategoryService.Update(data.Id.Value, new CategoryCreateRequest(data.Name));
+                if (res.Success && res.Data != null)
+                {
+                    var item = categories.First(x => x.Id == data.Id);
+                    item.Name = data.Name;
+                    ShowMessage("Cập nhật thành công!", true);
+                }
+                else ShowMessage(res.Message ?? "Lỗi cập nhật", false);
+            }
+            else
+            {
+                var res = await CategoryService.Create(new CategoryCreateRequest(data.Name));
+                if (res.Success && res.Data != null)
+                {
+                    categories.Add(new CategoryTable.CategoryDto { Id = res.Data.Id, Name = res.Data.Name });
+                    ShowMessage("Thêm thành công!", true);
+                }
+                else ShowMessage(res.Message ?? "Lỗi thêm mới", false);
+            }
+            categories = categories.OrderBy(x => x.Id).ToList();
+            StateHasChanged();
+        }
+        catch { ShowMessage("Lỗi hệ thống", false); }
+    }
+
+    private async Task DeleteCategory()
+    {
+        if (deleting == null) return;
+        var res = await CategoryService.Delete(deleting.Id);
+        if (res.Success)
+        {
+            categories.Remove(deleting);
+            ShowMessage("Xóa thành công!", true);
+        }
+        else ShowMessage(res.Message ?? "Không thể xóa", false);
+
+        showDelete = false;
+        deleting = null;
+    }
+
+    private void ShowMessage(string msg, bool success)
+    {
+        Message = msg;
+        IsSuccess = success;
+        InvokeAsync(StateHasChanged);
+        Task.Delay(4000).ContinueWith(_ => { Message = null; InvokeAsync(StateHasChanged); });
+    }
+}

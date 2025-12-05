@@ -1,0 +1,55 @@
+@using blazor_web.Models
+@using blazor_web.DTOs.Category
+@inject IJSRuntime JS
+
+<div class="modal fade" id="@ModalId" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">@((Initial != null) ? "Edit Category" : "Add Category")</h5>
+                <button type="button" class="btn-close" @onclick="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                <input class="form-control" 
+                       placeholder="Category name"
+                       value="@Name"
+                       @oninput="(e => Name = e.Value?.ToString() ?? "")" />
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" @onclick="Close">Cancel</button>
+                <button class="btn btn-primary" @onclick="Save">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string ModalId { get; set; } = "categoryFormModal";
+    [Parameter] public Category? Initial { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<(CategoryRequest req, int? id)> OnSave { get; set; }
+
+    private string Name = "";
+
+    protected override void OnParametersSet()
+    {
+        Name = Initial?.Name ?? "";
+    }
+
+    async Task Save()
+    {
+        if (string.IsNullOrWhiteSpace(Name)) return;
+
+        await OnSave.InvokeAsync((new CategoryRequest { Name = Name.Trim() }, Initial?.Id));
+        await Close();
+    }
+
+    async Task Close()
+    {
+        await JS.InvokeVoidAsync("bootstrapHide", $"#{ModalId}");
+        await OnClose.InvokeAsync();
+    }
+}

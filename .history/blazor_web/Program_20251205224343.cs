@@ -1,0 +1,56 @@
+using blazor_web.Components;
+using blazor_web.Services.Auth;
+using blazor_web.Services.Storage;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Add services to the container.
+builder.Services.AddRazorComponents()
+    .AddInteractiveServerComponents();
+
+builder.Services.AddScoped<CustomerService>();
+var configuration = builder.Configuration;
+var apiBaseUrl = configuration["Api:Url"]
+                 ?? "http://localhost:8081/api/";
+
+builder.Services.AddScoped(sp =>
+{
+    var handler = new HttpClientHandler();
+
+    // Bypass SSL chỉ trong development
+    if (builder.Environment.IsDevelopment())
+    {
+        handler.ServerCertificateCustomValidationCallback =
+            HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+    }
+
+    return new HttpClient(handler)
+    {
+        BaseAddress = new Uri(apiBaseUrl),
+        Timeout = TimeSpan.FromSeconds(30)
+    };
+});
+
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
+
+var app = builder.Build();
+
+// Configure the HTTP request pipeline.
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler("/Error", createScopeForErrors: true);
+    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore/hsts.
+    app.UseHsts();
+}
+
+// Remove HTTPS redirection to avoid the warning
+// app.UseHttpsRedirection();
+
+app.UseAntiforgery();
+
+app.MapStaticAssets();
+app.MapRazorComponents<App>()
+    .AddInteractiveServerRenderMode();
+
+app.Run();
