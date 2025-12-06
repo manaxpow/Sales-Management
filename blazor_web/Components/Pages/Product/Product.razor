@@ -1,10 +1,26 @@
 @page "/products"
 
+@rendermode InteractiveServer
+
+@using blazor_web.Models
+@using blazor_web.Services.Cart
+
+@inject ICartService CartService
+
 <PageTitle>Products</PageTitle>
 
 <!-- Page Header -->
 <div class="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-8 px-4 rounded-lg mb-8 shadow-xl">
     <div class="max-w-7xl mx-auto">
+        <div class="mb-4">
+            @if (showAddToCartMessage && !string.IsNullOrEmpty(addToCartMessage))
+            {
+                <div class="p-3 rounded-lg bg-green-50 border border-green-200 text-sm text-green-700">
+                    @addToCartMessage
+                </div>
+            }
+        </div>
+
         <div class="flex items-center justify-between">
             <div>
                 <h1 class="text-3xl font-bold mb-2">Product Catalog</h1>
@@ -61,7 +77,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 @foreach (var product in paginatedProducts)
                 {
-                    <blazor_web.Components.UI.Card.ProductCard Product="@product" OnAddToCartClick="HandleAddToCart" />
+                    <blazor_web.Components.UI.Card.ProductCard Product="@product" OnAddToCartClick="@( (blazor_web.Models.Product p) => HandleAddToCart(p) )" />
                 }
             </div>
         }
@@ -98,6 +114,9 @@
     private int? categoryId = null;
     private int? supplierId = null;
     private decimal? maxPrice = null;
+
+    private string? addToCartMessage;
+    private bool showAddToCartMessage;
 
     // Fake product data
     private List<blazor_web.Models.Product> allProducts = new();
@@ -191,9 +210,13 @@
         StateHasChanged();
     }
 
-    private void HandleAddToCart(blazor_web.Models.Product product)
+    private async Task HandleAddToCart(blazor_web.Models.Product product)
     {
-        // Placeholder for add to cart functionality
-        Console.WriteLine($"Added to cart: {product.ProductName}");
+        Console.WriteLine($"[Products] HandleAddToCart: {product.ProductId} - {product.ProductName}");
+        await CartService.AddItemAsync(product, 1);
+
+        addToCartMessage = $"Đã thêm \"{product.ProductName}\" vào giỏ hàng.";
+        showAddToCartMessage = true;
     }
+
 }
