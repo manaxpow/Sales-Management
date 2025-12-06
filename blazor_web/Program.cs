@@ -4,6 +4,7 @@ using blazor_web.Services.Storage;
 using blazor_web.Services.Category;
 using blazor_web.Services.Cart;
 using blazor_web.Services.Orders;
+using blazor_web.Services.Category;
 
 var builder = WebApplication.CreateBuilder(args);
 
