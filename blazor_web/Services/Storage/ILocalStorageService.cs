@@ -1,4 +1,4 @@
-using blazor_web.Dtos.Auth;
+using blazor_web.DTOs.Auth;
 
 namespace blazor_web.Services.Storage
 {

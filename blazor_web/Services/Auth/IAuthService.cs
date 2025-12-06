@@ -1,6 +1,5 @@
-using blazor_web.Dtos.Auth;
+using blazor_web.DTOs.Auth;
 using blazor_web.Models;
-using blazor_web.Dtos.Auth;
 
 namespace blazor_web.Services.Auth
 {

@@ -1,4 +1,4 @@
-namespace blazor_web.Dtos.Auth
+namespace blazor_web.DTOs.Auth
 {
     public class LoginRequest
     {

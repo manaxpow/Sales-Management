@@ -1,4 +1,4 @@
-namespace blazor_web.Dtos.User
+namespace blazor_web.DTOs.User
 {
     public class UserResponse
     {
