@@ -1,0 +1,147 @@
+@using blazor_web.DTOs.Inventory
+
+<div class="card shadow-sm">
+    <div class="card-header bg-white">
+        <h5 class="mb-0 text-primary fw-bold">Danh sách tồn kho</h5>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th style="width: 80px;" class="text-center">ID</th>
+                    <th>Tên sản phẩm</th>
+                    <th style="width: 150px;">Mã vạch</th>
+                    <th style="width: 100px;" class="text-center">Số lượng</th>
+                    <th style="width: 120px;" class="text-end">Giá</th>
+                    <th style="width: 120px;" class="text-center">Trạng thái</th>
+                    <th style="width: 100px;" class="text-end">Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Inventory == null || !Inventory.Any())
+                {
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            <i class="bi bi-inbox fs-4 d-block mb-2"></i>
+                            Chưa có dữ liệu tồn kho
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var item in Inventory)
+                    {
+                        <tr>
+                            <td class="text-center fw-bold text-secondary">@item.Id</td>
+                            <td>@item.ProductName</td>
+                            <td><code>@item.Barcode</code></td>
+                            <td class="text-center">
+                                <span class="fw-bold @(GetStatusClass(item.Quantity))">@item.Quantity</span>
+                            </td>
+                            <td class="text-end">@item.Price.ToString("N0") đ</td>
+                            <td class="text-center">
+                                <span class="badge @(GetStatusBadgeClass(item.Quantity))">
+                                    @GetStatusText(item.Quantity)
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                <button class="btn btn-sm btn-primary" title="Cập nhật số lượng"
+                                        @onclick="() => OnUpdate.InvokeAsync(item)">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @* Footer: Phân trang *@
+    @if (TotalCount > 0)
+    {
+        <div class="card-footer bg-white d-flex justify-content-between align-items-center py-2">
+            <small class="text-muted">
+                Hiển thị @((Page - 1) * PageSize + 1)-@Math.Min(Page * PageSize, TotalCount) / @TotalCount bản ghi
+            </small>
+
+            <div class="d-flex align-items-center gap-3">
+                <nav>
+                    <ul class="pagination pagination-sm mb-0">
+                        <li class="page-item @(Page <= 1 ? "disabled" : "")">
+                            <button class="page-link" @onclick="() => ChangePage(Page - 1)">Previous</button>
+                        </li>
+                        @for (int i = Math.Max(1, Page - 2); i <= Math.Min(TotalPages, Page + 2); i++)
+                        {
+                            int pageNum = i;
+                            <li class="page-item @(i == Page ? "active" : "")">
+                                <button class="page-link" @onclick="() => ChangePage(pageNum)">@i</button>
+                            </li>
+                        }
+                        <li class="page-item @(Page >= TotalPages ? "disabled" : "")">
+                            <button class="page-link" @onclick="() => ChangePage(Page + 1)">Next</button>
+                        </li>
+                    </ul>
+                </nav>
+
+                <select class="form-select form-select-sm" style="width: 70px;" 
+                        @onchange="ChangePageSize">
+                    <option value="5">5</option>
+                    <option value="10" selected>10</option>
+                    <option value="20">20</option>
+                    <option value="50">50</option>
+                </select>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public List<ProductInventory> Inventory { get; set; } = new();
+    [Parameter] public int Page { get; set; } = 1;
+    [Parameter] public int PageSize { get; set; } = 10;
+    [Parameter] public int TotalCount { get; set; } = 0;
+    [Parameter] public EventCallback<int> OnPageChanged { get; set; }
+    [Parameter] public EventCallback<int> OnPageSizeChanged { get; set; }
+    [Parameter] public EventCallback<ProductInventory> OnUpdate { get; set; }
+
+    private int TotalPages => Math.Max(1, (int)Math.Ceiling(TotalCount / (double)PageSize));
+
+    private void ChangePage(int newPage)
+    {
+        if (newPage >= 1 && newPage <= TotalPages)
+        {
+            OnPageChanged.InvokeAsync(newPage);
+        }
+    }
+
+    private void ChangePageSize(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int newPageSize))
+        {
+            OnPageSizeChanged.InvokeAsync(newPageSize);
+        }
+    }
+
+    private string GetStatusText(int quantity)
+    {
+        if (quantity == 0) return "Hết hàng";
+        if (quantity <= 10) return "Sắp hết hàng";
+        return "Còn hàng";
+    }
+
+    private string GetStatusClass(int quantity)
+    {
+        if (quantity == 0) return "text-danger";
+        if (quantity <= 10) return "text-warning";
+        return "text-success";
+    }
+
+    private string GetStatusBadgeClass(int quantity)
+    {
+        if (quantity == 0) return "bg-danger";
+        if (quantity <= 10) return "bg-warning";
+        return "bg-success";
+    }
+}

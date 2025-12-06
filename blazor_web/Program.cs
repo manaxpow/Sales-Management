@@ -4,7 +4,7 @@ using blazor_web.Services.Storage;
 using blazor_web.Services.Category;
 using blazor_web.Services.Cart;
 using blazor_web.Services.Orders;
-using blazor_web.Services.Category;
+using blazor_web.Services.Inventory;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -40,6 +40,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<IInventoryService, InventoryService>();
 
 var app = builder.Build();
 
