@@ -1,4 +1,4 @@
-namespace blazor_web.Dtos.Customer
+namespace blazor_web.DTOs.Customer
 {
     public class CustomerResponse
     {

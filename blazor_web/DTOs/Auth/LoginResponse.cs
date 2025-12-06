@@ -1,7 +1,7 @@
-using blazor_web.Dtos.Customer;
-using blazor_web.Dtos.User;
+using blazor_web.DTOs.Customer;
+using blazor_web.DTOs.User;
 
-namespace blazor_web.Dtos.Auth
+namespace blazor_web.DTOs.Auth
 {
 
     public record LoginResponse
