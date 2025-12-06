@@ -1,3 +1,7 @@
+@using blazor_web.Services.Cart
+@inject ICartService CartService
+@inject NavigationManager Navigation
+
 <header class="bg-white shadow-md sticky top-0 z-50">
     <nav class="container mx-auto px-4">
         <div class="flex justify-between items-center h-16">
@@ -31,8 +35,30 @@
                 </a>
             </div>
 
-            <!-- Login/Register Buttons - Right side -->
+            <!-- Login/Register/Cart Buttons - Right side -->
             <div class="hidden md:flex items-center space-x-4">
+                <a href="/cart"
+                   class="relative no-underline px-3 py-2 rounded-md hover:bg-gray-100 transition-all duration-200 transform hover:scale-105">
+                    <div class="flex items-center">
+                        <svg class="w-6 h-6 text-gray-700 hover:text-blue-600 transition-colors"
+                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5
+                                     M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17
+                                     m0 0a2 2 0 100 4 2 2 0 000-4
+                                     m-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+
+                        @* Badge số lượng *@
+                        @if (_cartInitialized && cartCount > 0)
+                        {
+                            <span class="absolute -top-1 -right-1 bg-red-600 text-white text-xs
+                                         w-5 h-5 rounded-full flex items-center justify-center">
+                                @cartCount
+                            </span>
+                        }
+                    </div>
+                </a>
                 <a href="/login" class="no-underline bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition-all duration-200 transform hover:scale-105 hover:shadow-lg">
                     Login
                 </a>
@@ -68,3 +94,38 @@
         </div>
     </nav>
 </header>
+
+@code {
+    private int cartCount = 0;
+    private bool _cartInitialized = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Đợi render lần đầu xong rồi mới gọi CartService (vì bên dưới có JS/localStorage)
+            await LoadCartCountAsync();
+            _cartInitialized = true;
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadCartCountAsync()
+    {
+        try
+        {
+            var cart = await CartService.GetCartAsync();
+            cartCount = cart.Sum(x => x.Quantity);
+            Console.WriteLine($"[Header] Cart count = {cartCount}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Header] Error loading cart count: {ex.Message}");
+        }
+    }
+
+    private void GoToCart()
+    {
+        Navigation.NavigateTo("/cart");
+    }
+}
