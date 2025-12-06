@@ -5,61 +5,52 @@ using System.Collections.Generic;
 
 namespace blazor_web.Services.Supplier
 {
-    // Lớp triển khai ISupplierService, chịu trách nhiệm gọi API liên quan đến Nhà cung cấp
     public class SupplierService : ISupplierService
     {
         private readonly HttpClient _httpClient;
-        private const string URL_API = "suppliers"; // Endpoint chính của Supplier
+        private const string URL_API = "suppliers";
 
         public SupplierService(HttpClient httpClient)
         {
             _httpClient = httpClient;
         }
 
-        // --- GET Suppliers (Lấy danh sách) ---
+        // --- GET Suppliers ---
         public async Task<ApiResponse<List<SupplierResponse>>> GetSuppliersAsync()
         {
             try
             {
-                // GET: /suppliers
                 var response = await _httpClient.GetFromJsonAsync<ApiResponse<List<SupplierResponse>>>(URL_API);
 
-                if (response == null)
-                {
-                     return new ApiResponse<List<SupplierResponse>> { Success = false, Message = "Phản hồi API rỗng hoặc không hợp lệ." };
-                }
-
-                return response;
+                return response ?? new ApiResponse<List<SupplierResponse>> { Success = false, Message = "Phản hồi API rỗng hoặc không hợp lệ." };
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error fetching suppliers: {ex.Message}");
-                return new ApiResponse<List<SupplierResponse>> { Success = false, Message = $"Lỗi mạng: {ex.Message}" };
+                return new ApiResponse<List<SupplierResponse>> { Success = false, Message = $"Vui lòng điền đúng thông tin" };
             }
         }
 
-        // --- GET Supplier By ID (Lấy chi tiết) ---
+        // --- GET Supplier By ID ---
         public async Task<ApiResponse<SupplierResponse>> GetSupplierByIdAsync(int id)
         {
             try
             {
-                // GET: /suppliers/{id}
                 var response = await _httpClient.GetFromJsonAsync<ApiResponse<SupplierResponse>>($"{URL_API}/{id}");
                 return response ?? new ApiResponse<SupplierResponse> { Success = false, Message = "Phản hồi API rỗng." };
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error fetching supplier {id}: {ex.Message}");
-                return new ApiResponse<SupplierResponse> { Success = false, Message = $"Lỗi mạng: {ex.Message}" };
+                return new ApiResponse<SupplierResponse> { Success = false, Message = $"Vui lòng điền đúng thông tin" };
             }
         }
 
-        // --- POST Create Supplier (Tạo mới) ---
+        // --- POST Create Supplier ---
         public async Task<ApiResponse<SupplierResponse>> CreateSupplierAsync(CreateSupplierRequest request)
         {
             try
             {
-                // POST: /suppliers, Body: CreateSupplierRequest (JSON)
                 var httpResponse = await _httpClient.PostAsJsonAsync(URL_API, request);
 
                 if (!httpResponse.IsSuccessStatusCode)
@@ -68,25 +59,23 @@ namespace blazor_web.Services.Supplier
                     return errorContent ?? new ApiResponse<SupplierResponse> { Success = false, Message = $"Tạo nhà cung cấp thất bại. (HTTP {httpResponse.StatusCode})" };
                 }
 
-                // Đọc response thành công (Results.Created trả về 201 Created)
                 var successContent = await httpResponse.Content.ReadFromJsonAsync<ApiResponse<SupplierResponse>>();
                 return successContent ?? new ApiResponse<SupplierResponse> { Success = false, Message = "Tạo thành công nhưng dữ liệu trả về rỗng." };
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error creating supplier: {ex.Message}");
-                return new ApiResponse<SupplierResponse> { Success = false, Message = $"Lỗi mạng: {ex.Message}" };
+                return new ApiResponse<SupplierResponse> { Success = false, Message = $"Vui lòng điền đúng thông tin" };
             }
         }
 
-        // --- PATCH Update Supplier (Cập nhật) ---
+        // --- PATCH Update Supplier ---
         public async Task<ApiResponse<SupplierResponse>> UpdateSupplierAsync(int id, UpdateSupplierRequest request)
         {
             try
             {
-                // Backend API dùng PATCH /suppliers và mong đợi UpdateSupplierRequest có ID trong body
-                request.Id = id; // Đảm bảo ID được đặt trong request body
-                
+                request.Id = id;
+
                 var httpResponse = await _httpClient.PatchAsJsonAsync(URL_API, request);
 
                 if (!httpResponse.IsSuccessStatusCode)
@@ -101,32 +90,29 @@ namespace blazor_web.Services.Supplier
             catch (Exception ex)
             {
                 Console.WriteLine($"Error updating supplier {id}: {ex.Message}");
-                return new ApiResponse<SupplierResponse> { Success = false, Message = $"Lỗi mạng: {ex.Message}" };
+                return new ApiResponse<SupplierResponse> { Success = false, Message = $"Vui lòng điền đúng thông tin" };
             }
         }
 
-        // --- DELETE Supplier (Xóa) ---
+        // --- DELETE Supplier ---
         public async Task<ApiResponse<bool>> DeleteSupplierAsync(int id)
         {
             try
             {
-                // API: DELETE /suppliers/{id}
                 var httpResponse = await _httpClient.DeleteAsync($"{URL_API}/{id}");
 
                 if (httpResponse.IsSuccessStatusCode)
                 {
-                    // Thường là 204 No Content hoặc 200 OK
                     return new ApiResponse<bool> { Success = true, Data = true, Message = "Xóa thành công." };
                 }
-                
-                // Đọc phản hồi lỗi
+
                 var errorContent = await httpResponse.Content.ReadFromJsonAsync<ApiResponse<bool>>();
                 return errorContent ?? new ApiResponse<bool> { Success = false, Message = $"Xóa nhà cung cấp thất bại. (HTTP {httpResponse.StatusCode})" };
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error deleting supplier {id}: {ex.Message}");
-                return new ApiResponse<bool> { Success = false, Message = $"Lỗi mạng: {ex.Message}" };
+                return new ApiResponse<bool> { Success = false, Message = $"Vui lòng điền đúng thông tin" };
             }
         }
     }

@@ -31,7 +31,6 @@
                     <DataAnnotationsValidator />
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        @* Tên nhà cung cấp *@
                         <div>
                             <label class="text-sm font-medium text-gray-600 block mb-1" for="name">Tên nhà cung cấp</label>
                             <InputText id="name" @bind-Value="formData.Name" class="@GetInputClass("Name")" />
@@ -42,7 +41,6 @@
                             }
                         </div>
 
-                        @* Số điện thoại *@
                         <div>
                             <label class="text-sm font-medium text-gray-600 block mb-1" for="phone">Số điện thoại</label>
                             <InputText id="phone" @bind-Value="formData.Phone" class="@GetInputClass("Phone")" />
@@ -53,7 +51,6 @@
                             }
                         </div>
 
-                        @* Email *@
                         <div class="col-span-1 md:col-span-2">
                             <label class="text-sm font-medium text-gray-600 block mb-1" for="email">Email</label>
                             <InputText id="email" @bind-Value="formData.Email" class="@GetInputClass("Email")" />
@@ -64,7 +61,6 @@
                             }
                         </div>
 
-                        @* Địa chỉ *@
                         <div class="col-span-1 md:col-span-2">
                             <label class="text-sm font-medium text-gray-600 block mb-1" for="address">Địa chỉ</label>
                             <InputText id="address" @bind-Value="formData.Address" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-blue-500" />

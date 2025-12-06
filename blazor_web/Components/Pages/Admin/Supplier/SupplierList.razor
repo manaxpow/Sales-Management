@@ -318,7 +318,7 @@
 
         checkingSupplierId = supplier.Id;
         selectedSupplier = supplier;
-        StateHasChanged(); // Cập nhật UI để hiển thị Spinner
+        StateHasChanged(); 
 
         try
         {
@@ -347,7 +347,7 @@
         }
         catch (Exception ex)
         {
-            var message = $"Đã xảy ra lỗi mạng: {ex.Message}";
+            var message = $"Đã xảy ra lỗi";
             var url = $"/admin/suppliers/alert?Title=Lỗi%20hệ%20thống&Message={System.Web.HttpUtility.UrlEncode(message)}&ReturnUrl={System.Web.HttpUtility.UrlEncode("/admin/suppliers")}";
             Navigation.NavigateTo(url);
         }
