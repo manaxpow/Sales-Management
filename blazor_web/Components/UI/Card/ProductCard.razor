@@ -1,3 +1,5 @@
+@using blazor_web.Models
+
 <div class="group bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden">
 
     <!-- Product Image -->
@@ -75,10 +77,12 @@
     [Parameter]
     public EventCallback<blazor_web.Models.Product> OnAddToCartClick { get; set; }
 
-    private void HandleAddToCartClick()
+    private Task HandleAddToCartClick()
     {
-        if (OnAddToCartClick.HasDelegate)
-            OnAddToCartClick.InvokeAsync(Product);
+        Console.WriteLine($"[ProductCard] Click AddToCart: {Product.ProductId} - {Product.ProductName}");
+        return OnAddToCartClick.HasDelegate
+            ? OnAddToCartClick.InvokeAsync(Product)
+            : Task.CompletedTask;
     }
 }
 

@@ -1,4 +1,4 @@
-namespace DTOs.Auth
+namespace blazor_web.Dtos.Auth
 {
     public class RegisterRequest
     {

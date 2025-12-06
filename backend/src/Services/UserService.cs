@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 
 public class UserService : IUserService {
     private readonly AppDbContext _context;
@@ -50,15 +51,40 @@ public class UserService : IUserService {
     public async Task<ApiResponse<UserResponse>> UpdateUser(int id, Users updatedUser) {
         var user = await _context.Users.FindAsync(id);
         if (user == null)
-            return new ApiResponse<UserResponse>().ErrorResponse("User not found");
+            return new ApiResponse<UserResponse>().ErrorResponse("User not found", 404);
+
+        var validator = new UserValidator();
+        var validation = await validator.ValidateAsync(updatedUser);
+
+        if (string.IsNullOrEmpty(updatedUser.Password))
+            validation.Errors.RemoveAll(e => e.PropertyName == "Password");
+
+        if (!validation.IsValid) {
+            var errors = validation.Errors
+                .Select(e => new { field = e.PropertyName, message = e.ErrorMessage });
+
+            return new ApiResponse<UserResponse>().ErrorResponse("Validation failed");
+        }
+
+
+        var usernameExists = await _context.Users
+            .AnyAsync(u => u.UserName == updatedUser.UserName && u.Id != id);
+
+        if (usernameExists)
+            return new ApiResponse<UserResponse>().ErrorResponse("Username already exists");
 
         user.FullName = updatedUser.FullName;
-        user.Role = updatedUser.Role;
         user.UserName = updatedUser.UserName;
-        user.UpdatedAt = DateTime.Now;
 
         if (!string.IsNullOrEmpty(updatedUser.Role))
             user.Role = updatedUser.Role;
+
+        if (!string.IsNullOrEmpty(updatedUser.Password)) {
+            var hasher = new PasswordHasher<Users>();
+            user.Password = hasher.HashPassword(user, updatedUser.Password);
+        }
+
+        user.UpdatedAt = DateTime.Now;
 
         await _context.SaveChangesAsync();
 
@@ -71,7 +97,8 @@ public class UserService : IUserService {
             UpdatedAt = user.UpdatedAt
         };
 
-        return new ApiResponse<UserResponse>().SuccessResponse(response, "Updated user successfully");
+        return new ApiResponse<UserResponse>()
+            .SuccessResponse(response, "Updated user successfully");
     }
 
     public async Task<ApiResponse<string>> DeleteUser(int id) {
@@ -86,16 +113,25 @@ public class UserService : IUserService {
     }
 
     public async Task<ApiResponse<UserResponse>> CreateUser(Users newUser) {
-        // Kiểm tra trùng username
+        var validator = new UserValidator();
+        var validation = await validator.ValidateAsync(newUser);
+        if (!validation.IsValid) {
+            var errors = validation.Errors
+                .Select(e => new { field = e.PropertyName, message = e.ErrorMessage });
+
+            return new ApiResponse<UserResponse>().ErrorResponse("Validation failed");
+        }
+
         var exist = await _context.Users.AnyAsync(u => u.UserName == newUser.UserName);
         if (exist)
             return new ApiResponse<UserResponse>().ErrorResponse("Username already exists");
 
+        var hasher = new PasswordHasher<Users>();
+        newUser.Password = hasher.HashPassword(newUser, newUser.Password);
+
+        newUser.Role = string.IsNullOrEmpty(newUser.Role) ? "staff" : newUser.Role;
         newUser.CreatedAt = DateTime.Now;
         newUser.UpdatedAt = DateTime.Now;
-
-        if (string.IsNullOrEmpty(newUser.Role))
-            newUser.Role = "staff";
 
         _context.Users.Add(newUser);
         await _context.SaveChangesAsync();
@@ -109,7 +145,8 @@ public class UserService : IUserService {
             UpdatedAt = newUser.UpdatedAt
         };
 
-        return new ApiResponse<UserResponse>().SuccessResponse(response, "Created user successfully");
+        return new ApiResponse<UserResponse>()
+            .SuccessResponse(response, "Created user successfully");
     }
 
 }

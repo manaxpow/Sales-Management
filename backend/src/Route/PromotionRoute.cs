@@ -138,6 +138,25 @@ public static class PromotionRoute
                 return Results.Json(err);
             }
         });
+        PromotionRoute.MapGet("/by-code/{code}", async (string code, IPromotionService promotionService) => {
+            try {
+                var result = await promotionService.GetPromotionByCode(code);
+
+                if (!result.Success || result.Data == null) {
+                    return Results.BadRequest(result);
+                }
+
+                return Results.Ok(result);
+            } catch (Exception e) {
+                Console.WriteLine("Error", e.Data);
+                var err = new ErrorResponse {
+                    Message = e.Message ?? "Un expected error",
+                    StatusCode = 400,
+                    Title = "Something wrong"
+                };
+                return Results.Json(err, statusCode: 400);
+            }
+        });
         return group;
     }
 }
