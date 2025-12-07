@@ -1,10 +1,11 @@
-using blazor_web.Components;
 using blazor_web.Services.Auth;
 using blazor_web.Services.Storage;
 using blazor_web.Services.Category;
 using blazor_web.Services.Cart;
 using blazor_web.Services.Orders;
 using blazor_web.Services.Inventory;
+using Blazored.Toast;
+using blazor_web.Components;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,10 +38,13 @@ builder.Services.AddScoped(sp =>
 });
 
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IPromotionService, PromotionService>();
 builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IInventoryService, InventoryService>();
+builder.Services.AddBlazoredToast();
+
 
 var app = builder.Build();
 

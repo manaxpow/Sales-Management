@@ -1,0 +1,114 @@
+@using System.Threading.Tasks
+@using blazor_web.Models
+
+
+@if (ShowDialog)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5); z-index: 9999;">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+
+                <!-- Header -->
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-eye me-2"></i>
+                        Promotion Details
+                    </h5>
+                    <button type="button" class="btn-close" @onclick="Close"></button>
+                </div>
+
+                <!-- Body -->
+                <div class="modal-body">
+
+                    <h4 class="fw-bold mb-3">@promotion.Code</h4>
+
+                    <div class="row g-3">
+
+                        <div class="col-12">
+                            <label class="text-muted">Promotion ID</label>
+                            <div class="fw-semibold">Promotion-@promotion.Id</div>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="text-muted">Promotion description</label>
+                            <div class="fw-semibold">@promotion.Description</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="text-muted">Discount type</label>
+                            <div class="fw-semibold">@promotion.DiscountType</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="text-muted">Discount value</label>
+                            <div class="fw-semibold">@promotion.DiscountValue</div>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="text-muted">Time range</label>
+                            <div class="fw-semibold">@promotion.StartDate - @promotion.EndDate</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="text-muted">Promotion min order amount</label>
+                            <div class="fw-semibold">@promotion.MinOrderAmount</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="text-muted">Usage limit</label>
+                            <div class="fw-semibold">@promotion.UsageLimit</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="text-muted">Used count</label>
+                            <div class="fw-semibold">@promotion.Usedcount</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="text-muted">Status</label>
+                            <div class="mt-1">
+                                <span class="@GetStatusClass(promotion.Status)">
+                                    @GetStatusText(promotion.Status)
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+}
+
+@code {
+    public bool ShowDialog { get; set; }
+    public PromotionRes promotion = new();
+    public async Task Show(PromotionRes response)
+    {
+
+        if (response != null)
+        {
+            promotion = response;
+        }
+        ShowDialog = true;
+        StateHasChanged();
+    }
+
+    public void Close()
+    {
+        ShowDialog = false;
+        StateHasChanged();
+    }
+    private string GetStatusClass(int status)
+    {
+        return status == 1
+        ? "badge bg-success"
+        : "badge bg-danger";
+    }
+
+    private string GetStatusText(int status)
+    {
+        return status == 1 ? "active" : "inactive";
+    }
+}

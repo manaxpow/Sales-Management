@@ -1,0 +1,246 @@
+@page "/admin/promotions"
+@inject IPromotionService promotionService
+@using blazor_web.Models;
+@rendermode InteractiveServer
+
+<div class="d-flex justify-content-between items-center mb-3">
+    <h3>Quản lý Promotions</h3>
+    <a href="/admin/promotions/create" class="btn btn-primary text-center">
+        Thêm mới
+    </a>
+</div>
+
+<!-- FILTER -->
+<div class="mb-3">
+    <div class="bg-white border rounded-md p-6">
+        <div class="d-flex gap-2 mb-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M6 12h12M9.75 17.25h4.5" />
+            </svg>
+            <p class="font-bold text-xl">Filter</p>
+        </div>
+
+        <div class="d-flex justify-content-between">
+            <div class="d-flex gap-3">
+
+                <input type="text" class="form-control" placeholder="Tìm theo mã" @bind="searchTerm"
+                    @bind:event="oninput" />
+
+                <select class="border rounded-lg px-3 py-2" @onchange="OnStatusChange">
+                    <option value="">All Status</option>
+                    <option value=" 1">Active</option>
+                    <option value="0">Inactive</option>
+                </select>
+
+            </div>
+
+            <div class="d-flex gap-3">
+
+                <button class="btn btn-primary" @onclick="Search">
+                    Search
+                </button>
+
+                <button class="btn btn-primary" @onclick="Clear">
+                    Clear
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- TABLE -->
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Promotion code</th>
+            <th>Status</th>
+            <th class="d-flex justify-content-end ">Action</th>
+        </tr>
+    </thead>
+    @if (promotions.Count == 0)
+    {
+        <tbody class="h-48 ">
+            <tr class="align-middle">
+                <td colspan="4" class="text-center">No data available</td>
+            </tr>
+        </tbody>
+    }
+    <tbody>
+        @foreach (var item in promotions)
+        {
+            <tr>
+                <td>@item.Id</td>
+                <td>@item.Code</td>
+
+                <td> @if (item.Status == 1)
+                    {
+                        <span class="px-2 py-1 rounded-full bg-green-100 text-bg-success text-sm font-semibold"> Active </span>
+                    }
+                                else
+                    {
+
+                        <span class="px-2 py-1 border rounded-full bg-red text-white text-bg-danger text-sm font-semibold">
+                            Inactive </span>
+                    }
+                </td>
+
+                <td class="d-flex justify-content-end w-48 gap-2">
+                    <button class="btn btn-primary btn-sm" @onclick="() => ViewDetail(item)">Chi Tiết</button>
+                    <button class="btn btn-warning btn-sm" @onclick="() => EditPromotionDialog(item)">Sửa</button>
+                    <button class="btn btn-danger btn-sm" @onclick="() => OpenDeleteDialog(item)">Xóa</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (dataRes.TotalPages > 1)
+{
+    <!-- PAGINATION -->
+    <div class="flex items-center justify-between mt-6">
+
+        <!-- Limit -->
+        <div class="flex items-center gap-2">
+            <label>Hiển thị:</label>
+
+            <select @onchange="OnLimitChange">class="border px-3 py-1 rounded">
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+            </select>
+        </div>
+
+        <!-- Pagination -->
+        <nav>
+            <ul class="inline-flex items-center space-x-1">
+                <li>
+                    <button class="px-3 py-1 border rounded" disabled="@(!CanGoPrev)" @onclick="PrevPage">
+                        Previous
+                    </button>
+                </li>
+
+                @for (int p = 1; p <= dataRes.TotalPages; p++)
+                {
+                    var pageIndex = p;
+                    <li>
+                        <button class="@($"px-3 py-1 border rounded {(p == page ? "bg-blue-600 text-white" : "")}")"
+                            @onclick="() => GoPage(pageIndex)">
+                            @p
+                        </button>
+                    </li>
+                }
+
+                <li>
+                    <button class="px-3 py-1 border rounded" disabled="@(!CanGoNext)" @onclick="NextPage">
+                        Next
+                    </button>
+                </li>
+
+            </ul>
+        </nav>
+    </div>
+}
+<DetailPromotionDialog @ref="detailsDialog" />
+<EditPromotionDialog @ref="editDialog" onSave="LoadData" />
+<ConfirmDeletePromotion @ref="deleteConfirmDialog" onSave="LoadData" />
+
+@code {
+    private List<PromotionRes> promotions = new();
+
+    private GetAllPromotionResponse dataRes = new();
+    private DetailPromotionDialog? detailsDialog;
+    private string searchTerm = "";
+    private string statusFilter = "";
+    private int page = 1;
+    private int limit = 10;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+    void ViewDetail(PromotionRes p)
+    {
+        detailsDialog?.Show(p);
+    }
+    private EditPromotionDialog? editDialog;
+    private ConfirmDeletePromotion? deleteConfirmDialog;
+
+    private void EditPromotionDialog(PromotionRes p)
+    {
+        editDialog?.Show(p);
+    }
+
+    private void OpenDeleteDialog(PromotionRes p)
+    {
+        deleteConfirmDialog?.Show(p);
+    }
+    private async Task LoadData()
+    {
+        var response = await promotionService.GetAll(new GetAllPromotionReq
+        {
+            Page = page,
+            Limit = limit,
+            PromotionCode = string.IsNullOrEmpty(searchTerm) ? null : searchTerm,
+            Status = string.IsNullOrEmpty(statusFilter) ? null : int.Parse(statusFilter)
+        });
+
+        promotions = response.Data.Promotions ?? new();
+        dataRes = response.Data;
+
+        StateHasChanged();
+    }
+
+    private async Task Search()
+    {
+        page = 1;
+        await LoadData();
+    }
+    private async Task Clear()
+    {
+        page = 1;
+        limit = 10;
+        searchTerm = "";
+        statusFilter = "";
+        await LoadData();
+    }
+
+    private bool CanGoPrev => page > 1;
+    private bool CanGoNext => page < dataRes.TotalPages;
+
+    private async Task PrevPage()
+    {
+        if (!CanGoPrev) return;
+        page--;
+        await LoadData();
+    }
+
+    private async Task NextPage()
+    {
+        if (!CanGoNext) return;
+        page++;
+        await LoadData();
+    }
+
+    private async Task GoPage(int p)
+    {
+        page = p;
+        await LoadData();
+    }
+    private async Task OnLimitChange(ChangeEventArgs e)
+    {
+        limit = int.Parse(e.Value?.ToString() ?? "10");
+        page = 1; // reset về trang đầu khi đổi limit
+        await LoadData();
+    }
+
+    private async Task OnStatusChange(ChangeEventArgs e)
+    {
+        statusFilter = e.Value?.ToString() ?? "";
+        page = 1; // reset về trang đầu khi đổi limit
+        await LoadData();
+    }
+
+
+}
