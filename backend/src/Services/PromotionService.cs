@@ -12,15 +12,16 @@ public class PromotionService(AppDbContext context, ILogger<PromotionService> lo
 
     public async Task<ApiResponse<PromotionResponse>> CreatePromotion(CreatePromotionRequest createPromotionRequest)
     {
-
         var exist = await context.Promotions.AnyAsync(u => u.Code == createPromotionRequest.PromotionCode && u.Status != 3);
         if (exist)
             return new ApiResponse<PromotionResponse>().ErrorResponse("Promotion code already exists");
 
-        if (DateTimeHelper.ConvertStringToDateTime(createPromotionRequest.StartDate) < DateTime.UtcNow)
+        if (DateTimeHelper.ConvertStringToDateTime(createPromotionRequest.StartDate).Date
+        < DateTime.UtcNow.Date)
         {
             return response.ErrorResponse("Start date must be a future date");
         }
+
         var promotion = new Promotions
         {
             Code = createPromotionRequest.PromotionCode,
@@ -56,12 +57,13 @@ public class PromotionService(AppDbContext context, ILogger<PromotionService> lo
 
     public async Task<ApiResponse<GetPromotionResponse>> GetPromotion(GetPromotionRequest res)
     {
+
         var query = context.Promotions.Where(u => u.Status != 3).AsQueryable();
         var limit = res.Limit ?? 10;
         var page = res.Page ?? 1;
         var SortBy = res.SortBy ?? "CreatedAt";
         var SortOrder = res.SortOrder ?? "desc";
-
+        Console.WriteLine("chekc request" + res.ToString());
         if (!string.IsNullOrEmpty(res.PromotionCode))
             query = query.Where(u => u.Code.Contains(res.PromotionCode));
         if (res.DiscountType.HasValue)
@@ -85,7 +87,6 @@ public class PromotionService(AppDbContext context, ILogger<PromotionService> lo
                 ? query.OrderBy(u => u.StartDate)
                 : query.OrderByDescending(u => u.StartDate)
         };
-
         var promotions = await query
             .Select(u => new PromotionResponse
             {
@@ -171,7 +172,6 @@ public class PromotionService(AppDbContext context, ILogger<PromotionService> lo
                 return response.ErrorResponse("Start date must be before end date");
             }
         }
-
         await context.SaveChangesAsync();
         return response.SuccessResponse(new PromotionResponse
         {
@@ -227,7 +227,6 @@ public class PromotionService(AppDbContext context, ILogger<PromotionService> lo
 
         promo.Usedcount++;
         await context.SaveChangesAsync();
-
         return new ApiResponse<bool>().SuccessResponse(true);
     }
 }
