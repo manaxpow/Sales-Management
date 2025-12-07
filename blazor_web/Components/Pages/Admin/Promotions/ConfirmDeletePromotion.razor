@@ -1,0 +1,83 @@
+@inject IPromotionService promotionService
+
+@if (ShowDialog)
+{
+    <div class="modal fade show d-block" style="background-color: rgba(0,0,0,0.5); z-index: 99;">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-danger">Xác nhận xóa</h5>
+                    <button type="button" class="btn-close" @onclick="Close"></button>
+                </div>
+                <div class="modal-body">
+                    @if (IsReadOnly)
+                    {
+                        <div class="alert alert-warning" role="alert">
+                            <strong>Warning!</strong> Khuyến mãi đang trong thời gian áp dụng. Xóa khuyến mãi có thể ảnh hưởng
+                            đến các đơn hàng đã áp dụng khuyến mãi này.
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" @onclick="Close">Hủy</button>
+                            <button disabled type="button" class="btn btn-danger" @onclick="ConfirmDelete">Xóa</button>
+                        </div>
+                    }
+                    else
+                    {
+                        <p>Bạn có chắc muốn xóa khách hàng <b>@_promotionCode</b> không?</p>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" @onclick="Close">Hủy</button>
+                            <button type="button" class="btn btn-danger" @onclick="ConfirmDelete">Xóa</button>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    public bool ShowDialog { get; set; }
+    private int _promotionId;
+    private string _promotionCode = "";
+    bool IsReadOnly;
+
+
+    [Parameter] public EventCallback<int> OnSave { get; set; }
+
+    public void Show(PromotionRes promotion)
+    {
+        _promotionId = promotion.Id;
+        _promotionCode = promotion.Code;
+        IsReadOnly =
+        DateOnly.FromDateTime(DateTime.Today) >= DateOnly.FromDateTime(promotion.StartDate) &&
+        DateOnly.FromDateTime(DateTime.Today) <= DateOnly.FromDateTime(promotion.EndDate);
+        ShowDialog = true;
+        StateHasChanged();
+        StateHasChanged();
+    }
+
+    public void Close()
+    {
+        ShowDialog = false;
+        StateHasChanged();
+    }
+
+    private async Task ConfirmDelete()
+    {
+        var req = new DeletePromotionReq
+        {
+            Id = _promotionId,
+        };
+
+        await promotionService.DeletePromotion(req);
+
+        var result = await promotionService.DeletePromotion(req);
+        Console.WriteLine($"API call completed. Success: {result.Success}, Message: {result.Message}");
+
+
+        await OnSave.InvokeAsync(_promotionId);
+
+        Close();
+    }
+}

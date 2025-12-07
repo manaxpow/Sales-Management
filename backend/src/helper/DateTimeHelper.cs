@@ -54,8 +54,8 @@ public static class DateTimeHelper
         {
             if (DateTime.TryParseExact(date, format, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var parsed))
             {
-                Console.WriteLine(parsed >= DateTime.Now);
-                return parsed >= DateTime.UtcNow;
+                Console.WriteLine(parsed > DateTime.Now);
+                return parsed > DateTime.UtcNow;
             }
         }
         return false;
