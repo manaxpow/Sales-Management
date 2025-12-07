@@ -1,0 +1,90 @@
+@using blazor_web.DTOs.Inventory
+
+<div class="@(Open ? "modal fade show d-block" : "modal d-none")" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">Cập nhật số lượng tồn kho</h5>
+                <button type="button" class="btn-close" @onclick="OnClose"></button>
+            </div>
+            <div class="modal-body">
+                @if (Product != null)
+                {
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Sản phẩm</label>
+                        <input type="text" class="form-control" value="@Product.ProductName" readonly />
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Mã vạch</label>
+                        <input type="text" class="form-control" value="@Product.Barcode" readonly />
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Số lượng hiện tại</label>
+                        <input type="number" class="form-control" value="@Product.Quantity" readonly />
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Số lượng mới <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" 
+                               @bind="Quantity" @bind:event="oninput"
+                               @onkeydown="OnKeyDown"
+                               min="0"
+                               placeholder="Nhập số lượng mới..." 
+                               autofocus />
+                        @if (Quantity < 0 && isTouched)
+                        {
+                            <div class="text-danger small mt-1">Số lượng không được âm.</div>
+                        }
+                    </div>
+                }
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" @onclick="OnClose">Hủy</button>
+                <button type="button" class="btn btn-primary" 
+                        disabled="@isDisabled"
+                        @onclick="HandleSave">
+                    <i class="bi bi-save me-1"></i> Cập nhật
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public bool Open { get; set; }
+    [Parameter] public ProductInventory? Product { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<(int Id, int Quantity)> OnSave { get; set; }
+
+    private int Quantity { get; set; }
+    private bool isTouched = false;
+    private bool _previousOpen = false;
+
+    private bool isDisabled => Product == null || Quantity < 0 || (isTouched && Quantity == Product?.Quantity);
+
+    // Chỉ reset dữ liệu khi Dialog CHUYỂN từ Đóng -> Mở
+    protected override void OnParametersSet()
+    {
+        if (Open && !_previousOpen)
+        {
+            Quantity = Product?.Quantity ?? 0;
+            isTouched = false;
+        }
+        _previousOpen = Open;
+    }
+
+    private async Task HandleSave()
+    {
+        isTouched = true;
+        if (Product == null || Quantity < 0) return;
+        
+        await OnSave.InvokeAsync((Product.Id, Quantity));
+    }
+
+    private async Task OnKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") await HandleSave();
+    }
+}
