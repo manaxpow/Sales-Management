@@ -1,0 +1,83 @@
+@if (ShowDialog)
+{
+    <div class="modal fade show d-block" style="background-color: rgba(0,0,0,0.5); z-index: 9999;">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header @GetHeaderClass()">
+                    <h5 class="modal-title text-white">@Title</h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full @GetIconBgClass() mb-4">
+                        @GetIconMarkup()
+                    </div>
+                    
+                    <p class="text-gray-700 font-medium">@Message</p>
+                    
+                    @if (!string.IsNullOrEmpty(Detail))
+                    {
+                        <p class="text-sm text-muted mt-2">Chi tiết: @Detail</p>
+                    }
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-primary" @onclick="Close">Đã hiểu</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    public bool ShowDialog { get; set; }
+    public string Title { get; set; } = "Thông báo";
+    public string Message { get; set; } = string.Empty;
+    public string Detail { get; set; } = string.Empty;
+    public string Type { get; set; } = "alert"; 
+
+    public void Show(string title, string message, string type = "warning", string detail = "")
+    {
+        Title = title;
+        Message = message;
+        Type = type;
+        Detail = detail;
+        ShowDialog = true;
+        StateHasChanged();
+    }
+
+    public void Close()
+    {
+        ShowDialog = false;
+        StateHasChanged();
+    }
+
+    private string GetHeaderClass()
+    {
+        return Type switch
+        {
+            "success" => "bg-success text-white",
+            "error" => "bg-danger text-white",
+            _ => "bg-warning text-dark", 
+        };
+    }
+
+    private string GetIconBgClass()
+    {
+        return Type switch
+        {
+            "success" => "bg-green-100",
+            "error" => "bg-red-100",
+            _ => "bg-yellow-100",
+        };
+    }
+    
+    private MarkupString GetIconMarkup()
+    {
+        string iconHtml = Type switch
+        {
+            "success" => "<svg class='h-6 w-6 text-green-600' fill='none' viewBox='0 0 24 24' stroke-width='2' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' d='M4.5 12.75l6 6 9-13.5' /></svg>", // Check
+            "error" => "<svg class='h-6 w-6 text-red-600' fill='none' viewBox='0 0 24 24' stroke-width='2' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' d='M6 18L18 6M6 6l12 12' /></svg>", // X
+            _ => "<svg class='h-6 w-6 text-yellow-600' fill='none' viewBox='0 0 24 24' stroke-width='2' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' d='M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z' /></svg>", // Warning
+        };
+        return new MarkupString(iconHtml);
+    }
+}

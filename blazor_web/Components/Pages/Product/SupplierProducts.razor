@@ -7,8 +7,9 @@
 @using blazor_web.DTOs.Supplier
 @using blazor_web.Services.Supplier
 @using Microsoft.AspNetCore.Components.Web.Virtualization
-@using System.Globalization 
-@using blazor_web.Components.Layout.Admin 
+@using System.Globalization
+@using blazor_web.Components.Layout.Admin
+@using blazor_web.Components.Pages.Admin.Supplier
 @inject IProductService ProductService
 @inject ISupplierService SupplierService
 @inject NavigationManager Navigation
@@ -21,50 +22,93 @@
         return string.Format(viCulture, "{0:C0}", value).Replace("₫", " VNĐ").Trim();
     }
 
-    private RenderFragment RenderProductStatus(int status) => @<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold @(status == 1 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800")">
-        <span class="w-2 h-2 mr-1.5 @(status == 1 ? "bg-green-500" : "bg-red-500") rounded-full"></span>
+    private RenderFragment RenderProductStatus(int status) => @<span
+            class="badge @(status == 1 ? "bg-success" : "bg-danger") fw-normal">
         @(status == 1 ? "Đang kinh doanh" : "Ngừng kinh doanh")
     </span>;
 
-    private RenderFragment InfoRow(RenderFragment icon, string label, object? value) => @<div class="flex flex-row items-center justify-between py-3">
-        <dt class="text-sm font-medium text-gray-600 flex items-center gap-2 w-1/2">
-            <span class="text-gray-400">@icon</span>
-            <span>@label</span>
-        </dt>
-        <dd class="text-sm text-gray-800 text-right font-semibold w-1/2">@(value?.ToString() ?? "(Không có)")</dd>
-    </div>;
+private RenderFragment InfoRow(RenderFragment icon, string label, object? value) => @<li
+    class="list-group-item d-flex justify-content-between align-items-center py-3">
+    <dt class="text-sm text-secondary d-flex align-items-center gap-2">
+        <span class="text-muted">@icon</span>
+        <span>@label</span>
+    </dt>
+    <dd class="text-sm text-dark fw-bold mb-0">@(value?.ToString() ?? "(Không có)")</dd>
+</li>;
 
 
-    private RenderFragment IconArrowLeft = @<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>;
-    private RenderFragment IconInfo = @<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>;
-    private RenderFragment IconPhone = @<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-5.65-5.65 19.79 19.79 0 0 1-3.07-8.63A2 2 0 0 1 3.08 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>;
-    private RenderFragment IconMail = @<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>;
-    private RenderFragment IconMapPin = @<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>;
-    private RenderFragment IconCalendar = @<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>;
-    private RenderFragment IconHash = @<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>;
-    private RenderFragment IconLoader2 = @<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="animate-spin text-blue-600"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>;
-    private RenderFragment IconSearch = @<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>;
+private RenderFragment IconArrowLeft = @<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+    stroke-linejoin="round">
+    <path d="m12 19-7-7 7-7" />
+    <path d="M19 12H5" />
+</svg>;
+private RenderFragment IconInfo = @<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10" />
+    <path d="M12 16v-4" />
+    <path d="M12 8h.01" />
+</svg>;
+private RenderFragment IconPhone = @<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path
+        d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-5.65-5.65 19.79 19.79 0 0 1-3.07-8.63A2 2 0 0 1 3.08 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+</svg>;
+private RenderFragment IconMail = @<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+    <polyline points="22,6 12,13 2,6" />
+</svg>;
+private RenderFragment IconMapPin = @<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+    <circle cx="12" cy="10" r="3" />
+</svg>;
+private RenderFragment IconCalendar = @<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+    stroke-linejoin="round">
+    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+    <line x1="16" y1="2" x2="16" y2="6" />
+    <line x1="8" y1="2" x2="8" y2="6" />
+    <line x1="3" y1="10" x2="21" y2="10" />
+</svg>;
+private RenderFragment IconHash = @<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24"
+    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="4" y1="9" x2="20" y2="9" />
+    <line x1="4" y1="15" x2="20" y2="15" />
+    <line x1="10" y1="3" x2="8" y2="21" />
+    <line x1="16" y1="3" x2="14" y2="21" />
+</svg>;
+private RenderFragment IconLoader2 = @<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24"
+    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+    class="animate-spin text-primary">
+    <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+</svg>;
+private RenderFragment IconSearch = @<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="11" cy="11" r="8" />
+    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+</svg>;
 }
 
 
 
 @if (isLoading)
 {
-    <div class="min-h-screen bg-gray-50 flex items-center justify-center">
+    <div class="min-vh-100 bg-light d-flex align-items-center justify-content-center">
         <div class="text-center">
             @IconLoader2
-            <p class="mt-3 text-lg font-medium text-gray-700">Đang tải dữ liệu...</p>
+            <p class="mt-3 fs-5 fw-bold text-secondary">Đang tải dữ liệu...</p>
         </div>
     </div>
 }
 else if (error != null || supplier == null)
 {
-    <div class="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div class="text-center p-8 bg-white rounded-lg shadow-lg">
-            <h3 class="text-xl font-semibold text-red-600 mb-4">Đã xảy ra lỗi</h3>
-            <p class="text-gray-600 mb-6">@error</p>
-            <a href="/admin/suppliers"
-                class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-md">
+    <div class="min-vh-100 bg-light d-flex align-items-center justify-content-center">
+        <div class="text-center p-5 bg-white rounded-3 shadow">
+            <h3 class="fs-4 fw-bold text-danger mb-3">Đã xảy ra lỗi</h3>
+            <p class="text-secondary mb-4">@error</p>
+            <a href="/admin/suppliers" class="btn btn-primary d-inline-flex align-items-center gap-2 shadow-sm">
                 @IconArrowLeft
                 Quay lại danh sách
             </a>
@@ -73,136 +117,113 @@ else if (error != null || supplier == null)
 }
 else
 {
-    <div class="min-h-screen bg-gray-100">
-        <div class="bg-white shadow-lg sticky top-0 z-10"> 
-            <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between items-center py-4">
-                    <div class="flex items-center space-x-3">
-                        <button
-                            @onclick='() => Navigation.NavigateTo("/admin/suppliers")' 
-                            class="p-2 rounded-full text-gray-600 hover:text-gray-900 hover:bg-gray-200 transition-colors"
-                            title="Quay lại"
-                        >
-                            @IconArrowLeft
-                        </button>
-                        <div>
-                            <h1 class="text-2xl font-extrabold text-gray-900">
-                                @supplier.Name
-                            </h1>
-                            <p class="text-sm text-gray-500">Chi tiết nhà cung cấp</p>
-                        </div>
-                    </div>
-                </div>
+    <div class="bg-light min-vh-100">
+        <div class="container-fluid pt-3 pb-2">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="fs-4 fw-bold text-dark mb-0">
+                    @supplier.Name
+                </h3>
+                <a href="/admin/suppliers"
+                    class="text-gray-600 hover:text-gray-800 flex items-center gap-1 text-xl font-medium transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m15 18-6-6 6-6" />
+                    </svg>
+                    Quay lại danh sách
+                </a>
             </div>
         </div>
 
-        <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div class="container-fluid py-4">
+            <div class="row g-4">
 
-                <div class="lg:col-span-4 xl:col-span-3">
-                    <div class="bg-white rounded-2xl shadow-xl overflow-hidden sticky top-24"> 
-                        <div class="p-4 border-b border-gray-200 bg-blue-50"> 
-                            <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <div class="col-lg-4 col-xl-4">
+                    <div class="card shadow rounded-3 sticky-top" style="top: 100px;">
+                        <div class="card-header bg-primary bg-opacity-10 border-bottom-0">
+                            <h2 class="fs-6 fw-bold text-dark d-flex align-items-center gap-2 mb-0 py-3">
                                 @IconInfo
                                 Thông tin liên hệ
                             </h2>
                         </div>
-                        <dl class="divide-y divide-gray-200 px-6 pb-2">
+                        <ul class="list-group list-group-flush">
                             @InfoRow(IconPhone, "Số điện thoại", supplier.Phone)
                             @InfoRow(IconMail, "Email", supplier.Email)
                             @InfoRow(IconMapPin, "Địa chỉ", supplier.Address)
-                            @InfoRow(IconCalendar, "Ngày tạo", supplier.CreatedAt.ToShortDateString())
                             @InfoRow(IconCalendar, "Ngày cập nhật", supplier.UpdatedAt.ToShortDateString())
-                        </dl>
+                        </ul>
                     </div>
                 </div>
 
-                <div class="lg:col-span-8 xl:col-span-9">
-                    <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                <div class="col-lg-8 col-xl-8">
+                    <div class="card shadow rounded-3 overflow-hidden">
 
-                        <div class="p-6 border-b border-gray-200 flex justify-between items-center flex-wrap gap-4 bg-gray-50"> @* Thêm màu nền cho header bảng *@
-                            <h2 class="text-xl font-bold text-gray-900">
+                        <div
+                            class="card-header d-flex justify-content-between align-items-center flex-wrap gap-3 bg-light border-bottom py-3">
+                            <h2 class="fs-5 fw-bold text-dark mb-0">
                                 Danh sách sản phẩm (@filteredProducts.Count)
                             </h2>
-                            <div class="relative">
-                                <input
-                                    type="text"
-                                    placeholder="Tìm sản phẩm..."
-                                    @bind="productSearchTerm"
-                                    @bind:event="oninput"
-                                    class="pl-10 pr-4 py-2 w-64 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-                                />
-                                <div class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                            <div class="input-group input-group-sm w-auto">
+                                <span class="input-group-text bg-white text-muted">
                                     @IconSearch
-                                </div>
+                                </span>
+                                <input type="text" placeholder="Tìm sản phẩm..." @bind="productSearchTerm"
+                                    @bind:event="oninput" class="form-control" style="width: 250px;" />
                             </div>
                         </div>
 
                         @if (filteredProducts.Count == 0)
                         {
-                            <div class="text-center p-12 text-gray-500">
+                            <div class="text-center p-5 text-muted">
                                 @IconHash
-                                <p class="mt-2 text-lg font-medium">
-                                    @(string.IsNullOrEmpty(productSearchTerm) ? "Không có sản phẩm" : "Không tìm thấy sản phẩm")
+                                <p class="mt-2 fs-6 fw-bold">
+                                    @(string.IsNullOrEmpty(productSearchTerm) ? "Không có sản phẩm nào cho nhà cung cấp này" :
+                                                                "Không tìm thấy sản phẩm nào khớp với từ khóa")
                                 </p>
                             </div>
                         }
                         else
                         {
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-sm">
-                                    <thead class="bg-gray-100 text-left text-xs text-gray-600 uppercase tracking-wider">
+                            <div class="table-responsive">
+                                <table class="table table-hover table-striped table-borderless mb-0">
+                                    <thead class="table-light text-uppercase">
                                         <tr>
-                                            <th class="py-3 px-6 font-semibold">Tên sản phẩm</th>
-                                            <th class="py-3 px-6 font-semibold">Mã sản phẩm</th>
-                                            <th class="py-3 px-6 font-semibold">Danh mục</th>
-                                            <th class="py-3 px-6 font-semibold text-right">Giá bán</th>
-                                            <th class="py-3 px-6 font-semibold text-center">Trạng thái</th>
+                                            <th class="py-3 px-4 fw-bold">Tên sản phẩm</th>
+                                            <th class="py-3 px-4 fw-bold">Mã sản phẩm</th>
+                                            <th class="py-3 px-4 fw-bold">Danh mục</th>
+                                            <th class="py-3 px-4 fw-bold text-end">Giá bán</th>
+                                            <th class="py-3 px-4 fw-bold text-center">Trạng thái</th>
                                         </tr>
                                     </thead>
-                                    <tbody class="bg-white divide-y divide-gray-200">
+                                    <tbody>
                                         @foreach (var product in currentProducts)
                                         {
-                                            <tr key="@product.ProductId" class="hover:bg-blue-50/50 transition-colors"> 
-                                                <td class="py-4 px-6">
-                                                    <span class="text-gray-800 font-bold">@product.ProductName</span> 
+                                            <tr key="@product.ProductId">
+                                                <td class="py-3 px-4">
+                                                    <span class="text-dark fw-bold">@product.ProductName</span>
                                                 </td>
-                                                <td class="py-4 px-6">
-                                                    <span class="font-mono text-xs text-gray-600 bg-gray-100 px-2 py-0.5 rounded">
+                                                <td class="py-3 px-4">
+                                                    <span class="text-sm text-muted bg-light px-2 py-1 rounded">
                                                         @product.Barcode
                                                     </span>
                                                 </td>
-                                                <td class="py-4 px-6 text-gray-600">@product.CategoryName</td>
-                                                <td class="py-4 px-6 text-gray-800 text-right font-bold">
+                                                <td class="py-3 px-4 text-secondary">@product.CategoryName</td>
+                                                <td class="py-3 px-4 text-dark text-end fw-bold">
                                                     @FormatCurrency(product.Price)
                                                 </td>
-                                                <td class="py-4 px-6 text-center">
+                                                <td class="py-3 px-4 text-center">
                                                     @RenderProductStatus(product.Status)
                                                 </td>
                                             </tr>
                                         }
                                     </tbody>
                                 </table>
-                                
-                                @* PHẦN PHÂN TRANG CUSTOM *@
-                                <div class="flex justify-end items-center p-4 text-sm text-gray-700 border-t bg-white">
-                                    <label for="product-rows-per-page" class="mr-2">Số hàng mỗi trang:</label>
-                                    <select id="product-rows-per-page" @bind="rowsPerPage" class="border rounded-lg px-2 py-1 mr-4 focus:ring-blue-500">
-                                        @foreach (var option in new[] { 5, 10, 25, 50 })
-                                        {
-                                            <option value="@option">@option</option>
-                                        }
-                                    </select>
-                                    
-                                    <span class="mr-4 text-gray-600">@(page * rowsPerPage + 1) - @Math.Min((page + 1) * rowsPerPage, filteredProducts.Count) trên tổng @filteredProducts.Count</span>
+                            </div>
 
-                                    <button @onclick="() => HandlePageChange(page - 1)" disabled="@(page == 0)" class="px-3 py-1 mx-1 rounded-lg hover:bg-gray-200 disabled:text-gray-400 disabled:bg-white transition">
-                                        &lt;
-                                    </button>
-                                    <button @onclick="() => HandlePageChange(page + 1)" disabled="@((page + 1) * rowsPerPage >= filteredProducts.Count)" class="px-3 py-1 mx-1 rounded-lg hover:bg-gray-200 disabled:text-gray-400 disabled:bg-white transition">
-                                        &gt;
-                                    </button>
-                                </div>
+                            <div class="card-footer p-0">
+                                <SupplierPagination CurrentPage="@(page + 1)"
+                                    TotalPages="@((int)Math.Ceiling((double)filteredProducts.Count / rowsPerPage))"
+                                    TotalItems="@filteredProducts.Count" ItemsPerPage="@rowsPerPage"
+                                    OnPageChanged="HandlePaginationChange" OnItemsPerPageChanged="HandlePageSizeChange" />
                             </div>
                         }
                     </div>
@@ -224,12 +245,10 @@ else
     private bool isLoading = true;
     private string? error;
 
-    // State cho tìm kiếm và phân trang
     private int page = 0;
     private int _rowsPerPage = 5;
     private string _productSearchTerm = string.Empty;
 
-    // Setter/Getter cho rowsPerPage (Để kích hoạt ApplyFilter)
     private int rowsPerPage
     {
         get => _rowsPerPage;
@@ -243,8 +262,7 @@ else
             }
         }
     }
-    
-    // Setter/Getter cho ProductSearchTerm (Để kích hoạt ApplyFilter)
+
     private string productSearchTerm
     {
         get => _productSearchTerm;
@@ -253,7 +271,7 @@ else
             if (_productSearchTerm != value)
             {
                 _productSearchTerm = value;
-                page = 0; // Reset trang khi tìm kiếm
+                page = 0;
                 ApplyFilterAndPagination();
             }
         }
@@ -277,13 +295,11 @@ else
 
         try
         {
-            // Tải song song thông tin Nhà cung cấp và Sản phẩm
             var supplierTask = SupplierService.GetSupplierByIdAsync(SupplierId);
             var productsTask = ProductService.GetProductsBySupplierIdAsync(SupplierId);
 
             await Task.WhenAll(supplierTask, productsTask);
-            
-            // Xử lý kết quả Nhà cung cấp
+
             var supplierResponse = supplierTask.Result;
             if (supplierResponse.Success && supplierResponse.Data != null)
             {
@@ -294,7 +310,6 @@ else
                 error = supplierResponse.Message ?? "Không tìm thấy thông tin nhà cung cấp.";
             }
 
-            // Xử lý kết quả Sản phẩm
             var productResponse = productsTask.Result;
             if (productResponse.Success && productResponse.Data != null)
             {
@@ -323,31 +338,33 @@ else
     private void ApplyFilterAndPagination()
     {
         var search = productSearchTerm.ToLower();
-        
-        // 1. Lọc sản phẩm
-        filteredProducts = products
-            .Where(p => 
-                p.ProductName.ToLower().Contains(search) || 
-                p.Barcode.ToLower().Contains(search) ||
-                (p.CategoryName != null && p.CategoryName.ToLower().Contains(search))
-            )
-            .ToList();
 
-        // 2. Đảm bảo trang hợp lệ
+        filteredProducts = products
+        .Where(p =>
+        p.ProductName.ToLower().Contains(search) ||
+        p.Barcode.ToLower().Contains(search) ||
+        (p.CategoryName != null && p.CategoryName.ToLower().Contains(search))
+        )
+        .ToList();
+
         if (page * rowsPerPage >= filteredProducts.Count && page > 0)
         {
             page = 0;
         }
 
-        // 3. Áp dụng phân trang
         currentProducts = filteredProducts.Skip(page * rowsPerPage).Take(rowsPerPage).ToList();
-        
+
         StateHasChanged();
     }
 
-    private void HandlePageChange(int newPage)
+    private void HandlePaginationChange(int newPage)
     {
-        page = newPage;
+        page = newPage - 1;
         ApplyFilterAndPagination();
+    }
+
+    private void HandlePageSizeChange(int newPageSize)
+    {
+        rowsPerPage = newPageSize;
     }
 }
