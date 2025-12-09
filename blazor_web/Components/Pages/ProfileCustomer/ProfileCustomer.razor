@@ -8,7 +8,7 @@
 @using blazor_web.Services.Customer
 
 @inject ILocalStorageService LocalStorageService
-@inject ICustomerApiService CustomerApiService
+@inject ICustomerService CustomerService
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
 
@@ -136,10 +136,9 @@
                                     </svg>
                                 }
                                 <span>Lưu thay đổi</span>
-                                
+
                             </button>
-                            <div>@id</div>
-                            
+
                         </div>
                     </EditForm>
                 }
@@ -167,9 +166,6 @@
     private bool isLoading = true;
     private bool isSubmitting = false;
     private bool showSuccess = false;
-    string debugLog = "";
-
-    string id = "";
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -186,19 +182,21 @@
                 }
 
                 var myId = loginInfo.Customer.Id;
-                var apiResponse = await CustomerApiService.GetByIdAsync(myId);
-                id = myId.ToString();
-                debugLog += $" | API Success: {apiResponse.Success} | Data null = {apiResponse.Data == null}";
 
-                if (apiResponse.Success && apiResponse.Data != null)
+                var apiResponse = await CustomerService.GetCustomerAsync(new GetCustomerRequest
                 {
-                    var realData = apiResponse.Data;
-                    updateRequest.Name = realData.Name ?? "";
-                    updateRequest.Phone = realData.Phone ?? "";
-                    updateRequest.Email = realData.Email ?? "";
-                    updateRequest.Address = realData.Address ?? "";
+                    Search = myId.ToString(),
+                    Limit = 1
+                });
 
+                var customer = apiResponse.Data?.Customers?.FirstOrDefault(x => x.Id == myId);
 
+                if (customer != null)
+                {
+                    updateRequest.Name = customer.Name;
+                    updateRequest.Phone = customer.Phone;
+                    updateRequest.Email = customer.Email;
+                    updateRequest.Address = customer.Address;
                 }
 
                 isLoading = false;
@@ -217,7 +215,8 @@
     {
         isSubmitting = true;
 
-        var result = await CustomerApiService.UpdateProfileAsync(updateRequest);
+        var userId = loginInfo.Customer.Id;
+        var result = await CustomerService.UpdateCustomerAsync(userId, updateRequest);
 
         if (result.Success)
         {
