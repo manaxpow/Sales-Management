@@ -1,0 +1,114 @@
+@page "/admin/staffs/create"
+@using blazor_web.DTOs.User
+@using blazor_web.Models
+@* Inject Service User với đường dẫn đầy đủ để tránh xung đột *@
+@inject blazor_web.Services.User.IUserService UserService
+@inject NavigationManager NavManager
+
+@rendermode InteractiveServer
+
+<h3>Thêm mới Nhân viên</h3>
+
+<div class="row">
+    <div class="col-md-6">
+        @* Hiển thị lỗi từ API *@
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="oi oi-warning"></i> @errorMessage
+                <button type="button" class="btn-close" @onclick="() => errorMessage = null"></button>
+            </div>
+        }
+
+        @* Sử dụng Model Users trực tiếp vì Service của bạn nhận vào Entity Users *@
+        <EditForm Model="@user" OnValidSubmit="HandleSubmit">
+            <DataAnnotationsValidator />
+            
+            @* Tên đăng nhập *@
+            <div class="mb-3">
+                <label class="form-label">Tên đăng nhập <span class="text-danger">*</span></label>
+                <InputText class="form-control" @bind-Value="user.UserName" />
+                <ValidationMessage For="@(() => user.UserName)" class="text-danger" />
+            </div>
+
+            @* Mật khẩu *@
+            <div class="mb-3">
+                <label class="form-label">Mật khẩu <span class="text-danger">*</span></label>
+                @* type="password" để ẩn ký tự *@
+                <InputText type="password" class="form-control" @bind-Value="user.Password" />
+                <ValidationMessage For="@(() => user.Password)" class="text-danger" />
+            </div>
+
+            @* Họ và tên *@
+            <div class="mb-3">
+                <label class="form-label">Họ tên <span class="text-danger">*</span></label>
+                <InputText class="form-control" @bind-Value="user.FullName" />
+                <ValidationMessage For="@(() => user.FullName)" class="text-danger" />
+            </div>
+
+            @* Vai trò (Dropdown) *@
+            <div class="mb-3">
+                <label class="form-label">Vai trò <span class="text-danger">*</span></label>
+                <InputSelect class="form-select" @bind-Value="user.Role">
+                    <option value="Staff">Nhân viên (Staff)</option>
+                </InputSelect>
+                <ValidationMessage For="@(() => user.Role)" class="text-danger" />
+            </div>
+
+            <div class="mt-4">
+                <button type="submit" class="btn btn-success" disabled="@isSubmitting">
+                    @if (isSubmitting)
+                    {
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        <span> Đang xử lý...</span>
+                    }
+                    else
+                    {
+                        <span><i class="oi oi-plus"></i> Thêm mới</span>
+                    }
+                </button>
+                <a href="/admin/users" class="btn btn-secondary ms-2">Quay lại</a>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private CreateUserRequest user = new CreateUserRequest
+    {
+        Role = "Staff"
+    };
+    
+    private string? errorMessage;
+    private bool isSubmitting = false;
+
+    private async Task HandleSubmit()
+    {
+        try
+        {
+            isSubmitting = true;
+            errorMessage = null; 
+
+            // Gọi API tạo User
+            var response = await UserService.CreateUserAsync(user);
+
+            if (response.Success)
+            {
+                NavManager.NavigateTo("/admin/staffs");
+            }
+            else
+            {
+                errorMessage = response.Message ?? "Có lỗi xảy ra khi tạo nhân viên.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Lỗi hệ thống: {ex.Message}";
+            Console.WriteLine(ex.ToString());
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+}
