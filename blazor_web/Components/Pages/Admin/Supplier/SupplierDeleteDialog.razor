@@ -1,0 +1,167 @@
+(D:\dotnet_project\Sales-Management\blazor_web\Components\Pages\Admin\Supplier\SupplierDeleteDialog.razor)
+@* Đã bỏ @page, @layout, @rendermode để biến thành Component Modal *@
+
+@using blazor_web.DTOs.Supplier
+@using blazor_web.Services.Supplier
+@inject ISupplierService SupplierService
+@inject NavigationManager Navigation
+@using System.Web
+
+@if (ShowDialog)
+{
+    <div class="modal fade show d-block" style="background-color: rgba(0,0,0,0.5); z-index: 9999;">
+        <div class="modal-dialog modal-sm"> @* Dùng modal-sm để nhỏ hơn một chút *@
+            <div class="modal-content">
+                <div class="modal-header">
+                    @if (isLoading)
+                    {
+                        <h5 class="modal-title text-muted">Đang tải...</h5>
+                    }
+                    else if (SupplierData != null)
+                    {
+                        <h5 class="modal-title text-danger">Xác nhận xóa</h5>
+                    }
+                    else
+                    {
+                        <h5 class="modal-title text-warning">Thông báo</h5>
+                    }
+                    <button type="button" class="btn-close" @onclick="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    @if (isLoading)
+                    {
+                        <div class="text-center py-4">
+                            <svg class="animate-spin h-6 w-6 text-blue-600 mx-auto" xmlns="http://www.w3.org/2000/svg"
+                                fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                                </circle>
+                                <path class="opacity-75" fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                </path>
+                            </svg>
+                            <p class="text-muted mt-2">Đang tải thông tin nhà cung cấp...</p>
+                        </div>
+                    }
+                    else if (SupplierData != null)
+                    {
+                        <p>Bạn có chắc muốn xóa nhà cung cấp @SupplierData.Name khỏi hệ thống?</p>
+                        <p class="text-danger small mt-2">Hành động này không thể hoàn tác.</p>
+
+                        @if (!string.IsNullOrEmpty(apiError))
+                        {
+                            <div class="alert alert-danger p-2 mt-3 small">
+                                Lỗi: @apiError
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-danger">Không tìm thấy nhà cung cấp với ID **@SupplierId**.</p>
+
+                        @if (!string.IsNullOrEmpty(apiError))
+                        {
+                            <div class="alert alert-warning p-2 mt-3 small">
+                                Chi tiết: @apiError
+                            </div>
+                        }
+                    }
+                </div>
+
+                <div class="modal-footer">
+                    @if (SupplierData != null)
+                    {
+                        <button type="button" class="btn btn-secondary" @onclick="Close" disabled="@isSubmitting">Hủy</button>
+                        <button type="button" class="btn btn-danger" @onclick="HandleConfirmDelete" disabled="@isSubmitting">
+                            @if (isSubmitting)
+                            {
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true">Đang xóa...</span>
+
+                            }
+                            else
+                            {
+                                <span>Xóa bỏ</span>
+                            }
+                        </button>
+                    }
+                    else
+                    {
+                        <button type="button" class="btn btn-primary" @onclick="Close">Đóng</button>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    public bool ShowDialog { get; set; }
+    private int SupplierId;
+    private SupplierResponse? SupplierData;
+
+    private bool isLoading = true;
+    private bool isSubmitting = false;
+    private string? apiError;
+
+    [Parameter] public EventCallback<string> OnDeleteSuccess { get; set; }
+
+    public async Task Show(int id)
+    {
+        SupplierId = id;
+        SupplierData = null;
+        apiError = null;
+        ShowDialog = true;
+        isLoading = true;
+        isSubmitting = false;
+        StateHasChanged();
+
+        await LoadSupplierData();
+        StateHasChanged();
+    }
+
+    public void Close()
+    {
+        ShowDialog = false;
+        StateHasChanged();
+    }
+
+    private async Task LoadSupplierData()
+    {
+        isLoading = true;
+        var response = await SupplierService.GetSupplierByIdAsync(SupplierId);
+
+        if (response.Success && response.Data != null)
+        {
+            SupplierData = response.Data;
+        }
+        else
+        {
+            SupplierData = null;
+            apiError = response.Message;
+        }
+        isLoading = false;
+    }
+
+    private async Task HandleConfirmDelete()
+    {
+        if (SupplierData == null) return;
+
+        isSubmitting = true;
+        apiError = null;
+
+        var deletedName = SupplierData.Name;
+
+        var response = await SupplierService.DeleteSupplierAsync(SupplierId);
+
+        if (response.Success)
+        {
+            Close();
+            await OnDeleteSuccess.InvokeAsync(deletedName);
+        }
+        else
+        {
+            apiError = response.Message ?? "Xóa thất bại do lỗi không xác định.";
+            isSubmitting = false;
+        }
+    }
+}
