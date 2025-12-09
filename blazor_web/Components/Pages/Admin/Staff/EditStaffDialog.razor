@@ -1,4 +1,4 @@
-@using blazor_web.DTOs.Customer
+@using blazor_web.DTOs.User
 @using blazor_web.Models 
 
 @if (ShowDialog)
@@ -9,7 +9,7 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Cập nhật khách hàng</h5>
+                    <h5 class="modal-title">Cập nhật nhân viên</h5>
                     @if (!isSaving)
                     {
                         <button type="button" class="btn-close" @onclick="Close"></button>
@@ -25,35 +25,36 @@
                         </div>
                     }
                     
-                    <EditForm Model="@editModel" OnValidSubmit="HandleValidSubmit">
+                    @* Thêm OnInvalidSubmit để debug nếu form lỗi *@
+                    <EditForm Model="@editModel" OnValidSubmit="HandleValidSubmit" OnInvalidSubmit="HandleInvalidSubmit">
                         <DataAnnotationsValidator />
                         
+                        @* 1. Tên đăng nhập (Readonly) *@
                         <div class="mb-3">
-                            <label class="form-label">Tên <span class="text-danger">*</span></label>
-                            <InputText class="form-control" @bind-Value="editModel.Name" />
-                            <ValidationMessage For="@(() => editModel.Name)" class="text-danger" />
+                            <label class="form-label">Tên đăng nhập</label>
+                            <InputText class="form-control" @bind-Value="editModel.UserName" disabled /> 
+                            <small class="text-muted">Không thể thay đổi tên đăng nhập</small>
                         </div>
 
+                        @* 2. Họ tên *@
                         <div class="mb-3">
-                            <label class="form-label">SĐT <span class="text-danger">*</span></label>
-                            <InputText class="form-control" @bind-Value="editModel.Phone" />
-                            <ValidationMessage For="@(() => editModel.Phone)" class="text-danger" />
+                            <label class="form-label">Họ tên <span class="text-danger">*</span></label>
+                            <InputText class="form-control" @bind-Value="editModel.FullName" />
+                            <ValidationMessage For="@(() => editModel.FullName)" class="text-danger" />
                         </div>
-
+                        
+                        @* 4. Vai trò *@
                         <div class="mb-3">
-                            <label class="form-label">Email <span class="text-danger">*</span></label>
-                            <InputText class="form-control" @bind-Value="editModel.Email" />
-                            <ValidationMessage For="@(() => editModel.Email)" class="text-danger" />
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Địa chỉ <span class="text-danger">*</span></label>
-                            <InputText class="form-control" @bind-Value="editModel.Address" />
-                            <ValidationMessage For="@(() => editModel.Address)" class="text-danger" />
+                            <label class="form-label">Vai trò</label>
+                            <InputSelect class="form-select" @bind-Value="editModel.Role">
+                                <option value="Staff">Nhân viên (Staff)</option>
+                            </InputSelect>
+                            <ValidationMessage For="@(() => editModel.Role)" class="text-danger" />
                         </div>
 
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" @onclick="Close" disabled="@isSaving">Hủy</button>
+                            
                             <button type="submit" class="btn btn-primary" disabled="@isSaving">
                                 @if (isSaving)
                                 {
@@ -75,25 +76,26 @@
 
 @code {
     public bool ShowDialog { get; private set; }
-    private UpdateCustomerRequest editModel = new();
-    private int _editingId;
+    
+    private Users editModel = new Users();
     private bool isSaving = false;
     private string? serverError;
 
-    // QUAN TRỌNG: Dùng Func để nhận lại ApiResponse từ cha
     [Parameter] 
-    public Func<CustomerResponse, Task<ApiResponse<CustomerResponse>>> OnSave { get; set; }
+    public Func<UserResponse, Task<ApiResponse<UserResponse>>> OnSave { get; set; }
 
-    public void Show(CustomerResponse customer)
+    public void Show(UserResponse user)
     {
-        _editingId = customer.Id;
-        editModel = new UpdateCustomerRequest
+        // Reset model
+        editModel = new Users
         {
-            Name = customer.Name,
-            Phone = customer.Phone,
-            Email = customer.Email,
-            Address = customer.Address
+            Id = user.Id,
+            UserName = user.UserName,
+            FullName = user.FullName,
+            Role = "Staff",
+            Password = "DUMMY_PASSWORD_UNCHANGED" 
         };
+        
         serverError = null;
         ShowDialog = true;
         isSaving = false;
@@ -109,23 +111,30 @@
         }
     }
 
-   private async Task HandleValidSubmit()
+    private void HandleInvalidSubmit()
+    {
+        Console.WriteLine("--- FORM INVALID ---");
+        if (string.IsNullOrEmpty(editModel.Password)) Console.WriteLine("Lỗi: Password đang trống");
+        if (string.IsNullOrEmpty(editModel.FullName)) Console.WriteLine("Lỗi: FullName đang trống");
+    }
+
+    private async Task HandleValidSubmit()
     {
         isSaving = true;
         serverError = null;
         StateHasChanged();
 
-        var updatedCustomer = new CustomerResponse
+        // Map dữ liệu từ Form sang DTO trả về cho cha
+        var updatedUserDto = new UserResponse
         {
-            Id = _editingId,
-            Name = editModel.Name,
-            Phone = editModel.Phone,
-            Email = editModel.Email,
-            Address = editModel.Address
+            Id = editModel.Id,
+            UserName = editModel.UserName,
+            FullName = editModel.FullName,
+            Role = editModel.Role
         };
 
-        // Gọi cha và đợi kết quả
-        var result = await OnSave(updatedCustomer);
+        // Gọi cha (UserList)
+        var result = await OnSave(updatedUserDto);
 
         if (result.Success)
         {
@@ -135,7 +144,7 @@
         {
             serverError = !string.IsNullOrEmpty(result.Message) 
                           ? result.Message 
-                          : "Lỗi không xác định từ Server (Message is null)";
+                          : "Lỗi không xác định từ Server.";
         }
 
         isSaving = false;

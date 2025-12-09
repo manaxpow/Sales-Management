@@ -1,6 +1,7 @@
 @page "/admin/customers/create"
-@inject CustomerService CustomerService
-@using blazor_web.Models;
+@using blazor_web.DTOs.Customer
+@using blazor_web.Services.Customer
+@inject ICustomerService CustomerService
 @inject NavigationManager NavManager
 
 @rendermode InteractiveServer
@@ -9,48 +10,95 @@
 
 <div class="row">
     <div class="col-md-6">
-        <EditForm Model="@customer" OnValidSubmit="HandleSubmit">
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                @errorMessage
+                <button type="button" class="btn-close" @onclick="() => errorMessage = null"></button>
+            </div>
+        }
+
+        <EditForm Model="@createRequest" OnValidSubmit="HandleSubmit">
             <DataAnnotationsValidator />
             
+            @* Tên *@
             <div class="mb-3">
                 <label class="form-label">Tên <span class="text-danger">*</span></label>
-                <InputText class="form-control" @bind-Value="customer.Name" />
-                
-                <ValidationMessage For="@(() => customer.Name)" class="text-danger" />
+                <InputText class="form-control" @bind-Value="createRequest.Name" />
+                <ValidationMessage For="@(() => createRequest.Name)" class="text-danger" />
             </div>
 
+            @* SĐT *@
             <div class="mb-3">
                 <label class="form-label">SĐT <span class="text-danger">*</span></label>
-                <InputText class="form-control" @bind-Value="customer.Phone" />
-                
-                <ValidationMessage For="@(() => customer.Phone)" class="text-danger" />
+                <InputText class="form-control" @bind-Value="createRequest.Phone" />
+                <ValidationMessage For="@(() => createRequest.Phone)" class="text-danger" />
             </div>
 
+            @* Email *@
             <div class="mb-3">
                 <label class="form-label">Email <span class="text-danger">*</span></label>
-                <InputText class="form-control" @bind-Value="customer.Email" />
-                
-                <ValidationMessage For="@(() => customer.Email)" class="text-danger" />
+                <InputText class="form-control" @bind-Value="createRequest.Email" />
+                <ValidationMessage For="@(() => createRequest.Email)" class="text-danger" />
             </div>
 
+            @* Địa chỉ *@
             <div class="mb-3">
-                <label class="form-label">Địa chỉ</label>
-                <InputText class="form-control" @bind-Value="customer.Address" />
-                <ValidationMessage For="@(() => customer.Address)" class="text-danger" />
+                <label class="form-label">Địa chỉ <span class="text-danger">*</span></label>
+                <InputText class="form-control" @bind-Value="createRequest.Address" />
+                <ValidationMessage For="@(() => createRequest.Address)" class="text-danger" />
             </div>
 
-            <button type="submit" class="btn btn-success">Thêm mới</button>
-            <a href="/admin/customers" class="btn btn-secondary">Quay lại</a>
+            <div class="mt-4">
+                <button type="submit" class="btn btn-success" disabled="@isSubmitting">
+                    @if (isSubmitting)
+                    {
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        <span> Đang xử lý...</span>
+                    }
+                    else
+                    {
+                        <span>Thêm mới</span>
+                    }
+                </button>
+                <a href="/admin/customers" class="btn btn-secondary ms-2">Quay lại</a>
+            </div>
         </EditForm>
     </div>
 </div>
 
 @code {
-    private Customer customer = new();
+    private CreateCustomerRequest createRequest = new();
+    
+    private string? errorMessage;
+    
+    private bool isSubmitting = false;
 
-    private void HandleSubmit()
+    private async Task HandleSubmit()
     {
-        CustomerService.Add(customer);
-        NavManager.NavigateTo("/admin/customers");
+        try
+        {
+            isSubmitting = true;
+            errorMessage = null; 
+
+            var response = await CustomerService.CreateCustomerAsync(createRequest);
+
+            if (response.Success)
+            {
+                NavManager.NavigateTo("/admin/customers");
+            }
+            else
+            {
+                errorMessage = response.Message ?? "Có lỗi xảy ra khi tạo khách hàng.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Lỗi hệ thống: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
     }
 }
