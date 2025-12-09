@@ -1,155 +1,247 @@
-using System.Net.Http.Json;
-using blazor_web.DTOs.Product;
 using blazor_web.Models;
-using System.Collections.Generic;
-using System; 
-using System.Web; 
+using blazor_web.Services.Storage;
+using System.Text.Json;
+using System.Web;
 
-namespace blazor_web.Services.Product
+
+
+public class ProductService : IProductService
 {
-    public class ProductService : IProductService
+
+    private readonly ILogger<PromotionService> _logger;
+    private readonly HttpClient _httpClient;
+    private readonly ILocalStorageService _localStorage;
+
+
+
+    public ProductService(HttpClient http, ILocalStorageService localStorage, ILogger<PromotionService> logger)
     {
-        private readonly HttpClient _httpClient;
-        private const string URL_API = "products"; 
-
-        public ProductService(HttpClient httpClient)
+        _httpClient = http;
+        _localStorage = localStorage;
+        _logger = logger;
+    }
+    public async Task<ApiResponse<ProductResponse>> CreateProduct(MultipartFormDataContent request)
+    {
+        try
         {
-            _httpClient = httpClient;
-        }
+            var response = await _httpClient.PostAsync("products", request);
 
-        // --- 1. Tạo sản phẩm ---
-        public async Task<ApiResponse<ProductResponse>> CreateProductAsync(CreateProductRequest request)
-        {
-            try
+            if (!response.IsSuccessStatusCode)
             {
-                var httpResponse = await _httpClient.PostAsJsonAsync(URL_API, request);
-                
-                if (httpResponse.IsSuccessStatusCode)
+                var content = await response.Content.ReadAsStringAsync();
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                using var doc = JsonDocument.Parse(content);
+                if (doc.RootElement.ValueKind == JsonValueKind.Array)
                 {
-                    var successContent = await httpResponse.Content.ReadFromJsonAsync<ApiResponse<ProductResponse>>();
-                    return successContent ?? new ApiResponse<ProductResponse> { Success = false, Message = "Tạo thành công nhưng dữ liệu trả về rỗng." };
+                    // API trả về mảng lỗi
+                    var errors = JsonSerializer.Deserialize<List<ValidationError>>(content, options)!;
+
+                    return new ApiResponse<ProductResponse>
+                    {
+                        Success = false,
+                        Message = errors.FirstOrDefault()?.message ?? "Validation failed",
+
+                    };
                 }
-                
-                var errorContent = await httpResponse.Content.ReadFromJsonAsync<ApiResponse<ProductResponse>>();
-                return errorContent ?? new ApiResponse<ProductResponse> { Success = false, Message = $"Tạo sản phẩm thất bại. (HTTP {httpResponse.StatusCode})" };
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error creating product: {ex.Message}");
-                return new ApiResponse<ProductResponse> { Success = false, Message = $"Lỗi mạng: {ex.Message}" };
-            }
-        }
-
-        // --- 2. Lấy danh sách sản phẩm có lọc/phân trang ---
-        public async Task<ApiResponse<GetProductResponse>> GetProductsAsync(ProductFilter filter)
-        {
-            try
-            {
-                var queryBuilder = HttpUtility.ParseQueryString(string.Empty);
-                
-                if (filter.SupplierId.HasValue) queryBuilder["SupplierId"] = filter.SupplierId.ToString();
-                if (filter.CategoryId.HasValue) queryBuilder["CategoryId"] = filter.CategoryId.ToString();
-                if (!string.IsNullOrEmpty(filter.ProductName)) queryBuilder["ProductName"] = filter.ProductName;
-                if (filter.Price.HasValue) queryBuilder["Price"] = filter.Price.ToString();
-                if (filter.Page.HasValue) queryBuilder["Page"] = filter.Page.ToString();
-                if (filter.Limit.HasValue) queryBuilder["Limit"] = filter.Limit.ToString();
-                if (filter.Status.HasValue) queryBuilder["Status"] = filter.Status.ToString();
-
-                queryBuilder["SortBy"] = filter.SortBy ?? "CreatedAt";
-                queryBuilder["SortOrder"] = filter.SortOrder ?? "asc";
-
-                var queryString = queryBuilder.ToString();
-                var fullUrl = string.IsNullOrEmpty(queryString) ? URL_API : $"{URL_API}?{queryString}";
-
-                var response = await _httpClient.GetFromJsonAsync<ApiResponse<GetProductResponse>>(fullUrl);
-                
-                return response ?? new ApiResponse<GetProductResponse> { Success = false, Message = "Phản hồi API rỗng hoặc không hợp lệ." };
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error fetching products: {ex.Message}");
-                return new ApiResponse<GetProductResponse> { Success = false, Message = $"Lỗi mạng: {ex.Message}" };
-            }
-        }
-
-        // --- 3. Cập nhật sản phẩm ---
-        public async Task<ApiResponse<ProductResponse>> UpdateProductAsync(UpdateProductRequest request)
-        {
-            try
-            {
-                var httpResponse = await _httpClient.PatchAsJsonAsync(URL_API, request);
-
-                if (httpResponse.IsSuccessStatusCode)
+                else if (doc.RootElement.ValueKind == JsonValueKind.Object)
                 {
-                    var successContent = await httpResponse.Content.ReadFromJsonAsync<ApiResponse<ProductResponse>>();
-                    return successContent ?? new ApiResponse<ProductResponse> { Success = false, Message = "Cập nhật thành công nhưng dữ liệu trả về rỗng." };
+                    // API trả về object
+                    var obj = JsonSerializer.Deserialize<ValidationError>(content, options);
+
+                    return new ApiResponse<ProductResponse>
+                    {
+                        Success = false,
+                        Message = obj?.message ?? "Unknown error",
+
+                    };
                 }
-
-                var errorContent = await httpResponse.Content.ReadFromJsonAsync<ApiResponse<ProductResponse>>();
-                return errorContent ?? new ApiResponse<ProductResponse> { Success = false, Message = $"Cập nhật sản phẩm thất bại. (HTTP {httpResponse.StatusCode})" };
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error updating product {request.ProductId}: {ex.Message}");
-                return new ApiResponse<ProductResponse> { Success = false, Message = $"Lỗi mạng: {ex.Message}" };
-            }
-        }
-
-        // --- 4. Xóa sản phẩm (Soft Delete) ---
-        public async Task<ApiResponse<ProductResponse>> DeleteProductAsync(DeleteProductRequest request)
-        {
-            try
-            {
-                var httpResponse = await _httpClient.PatchAsJsonAsync(URL_API, request);
-
-                if (httpResponse.IsSuccessStatusCode)
+                else
                 {
-                    var successContent = await httpResponse.Content.ReadFromJsonAsync<ApiResponse<ProductResponse>>();
-                    return successContent ?? new ApiResponse<ProductResponse> { Success = false, Message = "Xóa (soft delete) thành công." };
+                    // JSON không hợp lệ
+                    return new ApiResponse<ProductResponse>
+                    {
+                        Success = false,
+                        Message = "Invalid JSON returned from server"
+                    };
                 }
-
-                var errorContent = await httpResponse.Content.ReadFromJsonAsync<ApiResponse<ProductResponse>>();
-                return errorContent ?? new ApiResponse<ProductResponse> { Success = false, Message = $"Xóa sản phẩm thất bại. (HTTP {httpResponse.StatusCode})" };
             }
-            catch (Exception ex)
+            else
             {
-                Console.WriteLine($"Error deleting product {request.ProductId}: {ex.Message}");
-                return new ApiResponse<ProductResponse> { Success = false, Message = $"Lỗi mạng: {ex.Message}" };
+                var successfulApiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<ProductResponse>>(new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+                return new ApiResponse<ProductResponse>
+                {
+                    Success = true,
+                    Message = "Create promotion success",
+                    Data = successfulApiResponse!.Data
+                };
             }
         }
-
-        // --- 5. Lấy sản phẩm theo ID nhà cung cấp ---
-        public async Task<ApiResponse<List<ProductResponse>>> GetProductsBySupplierIdAsync(int supplierId)
+        catch (Exception ex)
         {
-            try
-            {
-                var fullUrl = $"{URL_API}/supplier/{supplierId}";
-                var response = await _httpClient.GetFromJsonAsync<ApiResponse<List<ProductResponse>>>(fullUrl);
-                
-                return response ?? new ApiResponse<List<ProductResponse>> { Success = false, Message = "Phản hồi API rỗng." };
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error fetching products by supplier {supplierId}: {ex.Message}");
-                return new ApiResponse<List<ProductResponse>> { Success = false, Message = $"Lỗi mạng: {ex.Message}" };
-            }
+            _logger.LogError(ex, "Error creating product");
+            throw;
         }
 
-        // --- 6. Lấy sản phẩm theo Product ID ---
-        public async Task<ApiResponse<ProductResponse>> GetProductByIdAsync(int id)
+    }
+
+    public Task<ApiResponse<ProductResponse>> DeleteProduct(DeleteProductRequest request)
+    {
+        try
         {
-            try
+            var form = new MultipartFormDataContent
             {
-                var fullUrl = $"{URL_API}/{id}";
-                var response = await _httpClient.GetFromJsonAsync<ApiResponse<ProductResponse>>(fullUrl);
-                
-                return response ?? new ApiResponse<ProductResponse> { Success = false, Message = "Phản hồi API rỗng." };
-            }
-            catch (Exception ex)
+
+                { new StringContent(request.ProductId.ToString()), "ProductId" },
+                { new StringContent("3"), "Status" }
+            };
+            var response = _httpClient.PatchAsync("products", form).Result;
+
+            if (response.IsSuccessStatusCode)
             {
-                Console.WriteLine($"Error fetching product by ID {id}: {ex.Message}");
-                return new ApiResponse<ProductResponse> { Success = false, Message = $"Lỗi mạng: {ex.Message}" };
+                return Task.FromResult(new ApiResponse<ProductResponse>
+                {
+                    Success = true,
+                    Message = "Delete product success",
+                });
             }
+            else
+            {
+                return Task.FromResult(new ApiResponse<ProductResponse>
+                {
+                    Success = false,
+                    Message = "Delete product failed",
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting product");
+            throw;
         }
     }
+
+    public async Task<ApiResponse<GetProductResponse>> GetAllProduct(ProductFilter request)
+    {
+        try
+        {
+            string query = QueryBuilder.BuildQuery(request);
+            string url = string.IsNullOrEmpty(query) ? "products" : $"products?{query}";
+            var response = await _httpClient.GetFromJsonAsync<ApiResponse<GetProductResponse>>(url);
+            if (response != null)
+            {
+                // map data
+                return response;
+            }
+            else
+            {
+
+                return new ApiResponse<GetProductResponse>
+                {
+                    Success = false,
+                    Message = "No data",
+                };
+            }
+
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching products");
+            throw;
+        }
+
+
+    }
+
+    public Task<ApiResponse<ProductResponse>> GetProductById(GetProductByIdRes id)
+    {
+        throw new NotImplementedException();
+    }
+
+
+    public async Task<ApiResponse<List<ProductResponse>>> GetProductsBySupplierIdAsync(int supplierId)
+    {
+        try
+        {
+            var fullUrl = $"products/supplier/{supplierId}";
+            var response = await _httpClient.GetFromJsonAsync<ApiResponse<List<ProductResponse>>>(fullUrl);
+
+            return response ?? new ApiResponse<List<ProductResponse>> { Success = false, Message = "Phản hồi API rỗng." };
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error fetching products by supplier {supplierId}: {ex.Message}");
+            return new ApiResponse<List<ProductResponse>> { Success = false, Message = $"Lỗi mạng: {ex.Message}" };
+        }
+    }
+
+    public async Task<ApiResponse<ProductResponse>> UpdateProduct(MultipartFormDataContent request)
+    {
+        try
+        {
+            var response = await _httpClient.PatchAsync("products", request);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                using var doc = JsonDocument.Parse(content);
+                if (doc.RootElement.ValueKind == JsonValueKind.Array)
+                {
+                    // API trả về mảng lỗi
+                    var errors = JsonSerializer.Deserialize<List<ValidationError>>(content, options)!;
+
+                    return new ApiResponse<ProductResponse>
+                    {
+                        Success = false,
+                        Message = errors.FirstOrDefault()?.message ?? "Validation failed",
+
+                    };
+                }
+                else if (doc.RootElement.ValueKind == JsonValueKind.Object)
+                {
+                    // API trả về object
+                    var obj = JsonSerializer.Deserialize<ValidationError>(content, options);
+
+                    return new ApiResponse<ProductResponse>
+                    {
+                        Success = false,
+                        Message = obj?.message ?? "Unknown error",
+
+                    };
+                }
+                else
+                {
+                    // JSON không hợp lệ
+                    return new ApiResponse<ProductResponse>
+                    {
+                        Success = false,
+                        Message = "Invalid JSON returned from server"
+                    };
+                }
+            }
+            else
+            {
+                var successfulApiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<ProductResponse>>(new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+                return new ApiResponse<ProductResponse>
+                {
+                    Success = true,
+                    Message = "Update promotion success",
+                    Data = successfulApiResponse!.Data
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating product");
+            throw;
+        }
+
+    }
+
 }

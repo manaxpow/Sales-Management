@@ -23,6 +23,9 @@ public record CreateProductRequest
     [FromForm]
     public int? Status { get; set; } = 1;
 
+    [FromForm]
+    public IFormFile? ImageProduct { get; set; } 
+
 
 
 }

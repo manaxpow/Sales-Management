@@ -15,6 +15,7 @@ builder.Services.AddCorsPolicy(builder.Configuration);
 
 var app = builder.Build();
 app.UseCorsPolicy();
+app.UseStaticFiles();
 
 app.RegisterMiddlewares();
 app.UseExceptionHandler(errorApp =>
