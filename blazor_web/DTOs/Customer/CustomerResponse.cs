@@ -10,4 +10,13 @@ namespace blazor_web.DTOs.Customer
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
     }
+
+    public class GetCustomerResponse
+    {
+        public List<CustomerResponse> Customers { get; set; } = new List<CustomerResponse>();
+        public int Total { get; set; }
+        public int TotalPage { get; set; }
+        public int CurrentPage { get; set; }
+
+    }
 }

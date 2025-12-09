@@ -1,8 +1,10 @@
 ﻿using FluentValidation;
 using System.Text.RegularExpressions;
 
-public class UserValidator : AbstractValidator<Users> {
-    public UserValidator() {
+public class UserValidator : AbstractValidator<Users>
+{
+    public UserValidator()
+    {
         RuleFor(x => x.UserName)
             .NotEmpty().WithMessage("UserName is required")
             .MinimumLength(4).WithMessage("UserName must be at least 4 characters long")

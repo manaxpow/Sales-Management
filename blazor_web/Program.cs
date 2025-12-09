@@ -3,11 +3,13 @@ using blazor_web.Services.Storage;
 using blazor_web.Services.Category;
 using blazor_web.Services.Cart;
 using blazor_web.Services.Orders;
-using blazor_web.Services.Inventory;
+using blazor_web.Services.Customer;
 using Blazored.Toast;
 using blazor_web.Components;
 using blazor_web.Services.Supplier;
 using blazor_web.Services.Product;
+using blazor_web.Services.User;
+using blazor_web.Services.Inventory;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,7 +17,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-builder.Services.AddScoped<CustomerService>();
 builder.Services.AddScoped<CategoryService>();
 var configuration = builder.Configuration;
 var apiBaseUrl = configuration["Api:Url"]
@@ -47,6 +48,8 @@ builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IInventoryService, InventoryService>();
 builder.Services.AddScoped<ISupplierService, SupplierService>();
 builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<ICustomerService, CustomerService>();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddBlazoredToast();
 
 
