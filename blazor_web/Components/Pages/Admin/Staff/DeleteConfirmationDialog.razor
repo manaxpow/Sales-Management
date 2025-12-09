@@ -45,7 +45,7 @@
     
     private int _customerId;
     private string _customerName = "";
-    private bool isDeleting = false;
+    private bool isDeleting = false; 
 
     [Parameter] 
     public EventCallback<int> OnConfirm { get; set; }
@@ -55,7 +55,7 @@
         _customerId = id;
         _customerName = name;
         ShowDialog = true;
-        isDeleting = false;
+        isDeleting = false; 
         StateHasChanged();
     }
 
@@ -71,7 +71,8 @@
     private async Task ConfirmDelete()
     {
         isDeleting = true;
-        StateHasChanged();
+        StateHasChanged(); 
+
         await OnConfirm.InvokeAsync(_customerId);
 
         isDeleting = false;

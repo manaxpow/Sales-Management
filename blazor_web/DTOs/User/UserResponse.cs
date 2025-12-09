@@ -9,4 +9,12 @@ namespace blazor_web.DTOs.User
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
     }
+
+    public class GetUserResponse
+    {
+        public int Limit { get; set; }
+        public int Page { get; set; }
+        public int Total { get; set; }
+        public IEnumerable<UserResponse> Users { get; set; }
+    }
 }
