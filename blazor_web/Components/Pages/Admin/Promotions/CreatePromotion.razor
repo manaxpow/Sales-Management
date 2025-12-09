@@ -1,0 +1,208 @@
+@page "/admin/promotions/create"
+
+@inject IPromotionService promotionService
+@using System.ComponentModel.DataAnnotations
+
+@using blazor_web.Models;
+@inject NavigationManager NavManager
+
+@rendermode InteractiveServer
+<div class="d-flex justify-content-center">
+    <div class="card shadow-lg create-form w-full">
+        <div class="card-body p-4">
+            <a href="/admin/promotions" class="text-dark mb-3 d-inline-flex align-items-center">
+                <i class="bi bi-arrow-left me-2"></i> Back
+            </a>
+            <h2 class="fw-bold">Create New Promotion</h2>
+            <p class="text-muted mb-4">Fill in the information below to create a new Promotion</p>
+            @if (!string.IsNullOrEmpty(ErrorMessage))
+            {
+                <div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md">
+                    <div class="flex">
+                        <svg class="h-5 w-5 text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                clip-rule="evenodd" />
+                        </svg>
+                        <span class="text-sm">@ErrorMessage</span>
+                    </div>
+                </div>
+            }
+
+            <!-- Success Messages -->
+            @if (!string.IsNullOrEmpty(SuccessMessage))
+            {
+                <div class="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-md">
+                    <div class="flex">
+                        <svg class="h-5 w-5 text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                clip-rule="evenodd" />
+                        </svg>
+                        <span class="text-sm">@SuccessMessage</span>
+                    </div>
+                </div>
+            }
+
+            <EditForm class=" bg-white shadow-xl rounded-lg p-8" Model="@modal" FormName="createPromotionForm"
+                OnValidSubmit="HandleValidSubmit">
+                <DataAnnotationsValidator />
+                <!-- Code -->
+                <div class="mb-3">
+                    <label class="form-label">Code promotion *</label>
+                    <InputText @bind-Value="modal.PromotionCode" type="text" class="form-control"
+                        placeholder="Enter code" />
+                    <ValidationMessage For="@(() => modal.PromotionCode)" class="text-red-500 text-xs mt-1" />
+                </div>
+
+                <!-- Description -->
+                <div class="mb-3">
+                    <label class="form-label">Description (Optional)</label>
+                    <InputText @bind-Value="modal.Description" type="text" class="form-control"
+                        placeholder="Enter description" />
+                    <ValidationMessage For="@(() => modal.Description)" class="text-red-500 text-xs mt-1" />
+                </div>
+
+                <!-- Discount type -->
+                <div class="mb-3">
+                    <label class="form-label">Discount type *</label>
+                    <InputSelect @bind-Value="modal.DiscountType" class="form-select">
+                        @foreach (var t in Enum.GetValues<DiscountTypeEnum>())
+                        {
+                            <option value="@t">@t</option>
+                        }
+                    </InputSelect>
+
+                    <ValidationMessage For="@(() => modal.DiscountType)" class="text-red-500 text-xs mt-1" />
+                </div>
+
+                <!-- Discount value -->
+                <div class="mb-3">
+                    <label class="form-label">Discount value *</label>
+                    <InputNumber @bind-Value="modal.DiscountValue" class="form-control" />
+
+                    <ValidationMessage class="text-red-500 text-xs mt-1" For="@(() => modal.DiscountValue)" />
+                </div>
+
+                <!-- Usage limit -->
+                <div class="mb-3">
+                    <label class="form-label">Usage limit *</label>
+                    <InputNumber @bind-Value="modal.UsageLimit" class="form-control" />
+
+                    <ValidationMessage class="text-red-500 text-xs mt-1" For="@(() => modal.UsageLimit)" />
+                </div>
+
+                <!-- Min order -->
+                <div class="mb-3">
+                    <label class="form-label">Min order amount *</label>
+                    <InputNumber @bind-Value="modal.MinOrderAmount" class="form-control" />
+
+                    <ValidationMessage class="text-red-500 text-xs mt-1" For="@(() => modal.MinOrderAmount)" />
+                </div>
+
+                <!-- Start & End date -->
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Start date *</label>
+                        <InputDate @bind-Value="modal.StartDate" class="form-control" />
+
+                        <ValidationMessage class="text-red-500 text-xs mt-1" For="@(() => modal.StartDate)" />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">End date *</label>
+                        <InputDate @bind-Value="modal.EndDate" class="form-control" />
+
+                        <ValidationMessage class="text-red-500 text-xs mt-1" For="@(() => modal.EndDate)" />
+                    </div>
+                </div>
+
+                <!-- Buttons -->
+                <button type="submit" class="btn btn-primary w-100 mt-3">CREATE PROMOTION</button>
+                <button type="button" class="btn btn-light border w-100 mt-3" @onclick="GoBack">
+                    CANCEL
+                </button>
+
+            </EditForm>
+
+
+        </div>
+    </div>
+</div>
+
+@code {
+    CreatePromotionModal modal = new();
+    private string? ErrorMessage { get; set; }
+    private string? SuccessMessage { get; set; }
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            // Clear previous messages
+            ErrorMessage = null;
+            SuccessMessage = null;
+            StateHasChanged();
+            if (modal.DiscountType == DiscountTypeEnum.Percent && (modal.DiscountValue < 0 || modal.DiscountValue > 100))
+            {
+                ErrorMessage = "For percentage discount type, the discount value must be between 1 and 100.";
+                StateHasChanged();
+                return;
+            }
+            var req = new CreatePromotionReq
+            {
+                PromotionCode = modal.PromotionCode,
+                Description = modal.Description,
+                DiscountType = (int)modal.DiscountType,
+                DiscountValue = modal.DiscountValue,
+                MinOrderAmount = modal.MinOrderAmount,
+                UsageLimit = modal.UsageLimit,
+                StartDate = modal.StartDate.ToString("yyyy/MM/dd"),
+                EndDate = modal.EndDate.ToString("yyyy/MM/dd")
+            };
+
+            Console.WriteLine($"Modal Data: {System.Text.Json.JsonSerializer.Serialize(req)}");
+            var result = await promotionService.CreatePromotion(req);
+            Console.WriteLine($"API call completed. Success: {result.Success}, Message: {result.Message}");
+
+
+            if (result.Success && result.Data != null)
+            {
+                // Store login information in localStorage
+                modal = new CreatePromotionModal(); // Reset form
+                SuccessMessage = "Promotion created successfully!";
+
+            }
+            else
+            {
+                // Show error message without redirecting (preserves form data)
+                SuccessMessage = null;
+
+
+                ErrorMessage = !string.IsNullOrEmpty(result.Message)
+                ? result.Message
+                : "Created failed. Please try again.";
+            }
+
+        }
+        catch (HttpRequestException ex)
+        {
+            ErrorMessage = $"Network error: {ex.Message}. Please check if API server is running.";
+            Console.WriteLine($"HttpRequestException: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"An unexpected error occurred: {ex.Message}";
+            Console.WriteLine($"Exception: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+        }
+
+        // Refresh the component to show messages
+        StateHasChanged();
+    }
+    private void GoBack()
+    {
+        NavManager.NavigateTo("/admin/promotions");
+    }
+
+
+}

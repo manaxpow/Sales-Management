@@ -27,9 +27,15 @@ public static class CategoryRoute
         // POST: /api/categories
         route.MapPost("/", async ([FromBody] CreateCategoryRequest request, ICategoryService service) =>
         {
-            var created = await service.CreateAsync(request);
-            // Đổi lại cho đúng đường dẫn thật: /categories/... (KHÔNG có /api)
-            return Results.Created($"/categories/{created.CategoryId}", created);
+            try
+            {
+                var created = await service.CreateAsync(request);
+                return Results.Created($"/categories/{created.CategoryId}", created);
+            }
+            catch (Exception ex)
+            {
+                return Results.BadRequest(new { message = ex.Message });
+            }
         });
 
         // PUT: /api/categories/{id}

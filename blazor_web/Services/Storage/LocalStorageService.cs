@@ -1,5 +1,5 @@
 using System.Text.Json;
-using blazor_web.Dtos.Auth;
+using blazor_web.DTOs.Auth;
 using Microsoft.JSInterop;
 
 namespace blazor_web.Services.Storage

@@ -10,6 +10,7 @@ public static class PromotionRoute
         {
             try
             {
+                Console.WriteLine("Req:" + createPromotionRequest.ToString());
                 ValidationResult result = await validator.ValidateAsync(createPromotionRequest);
                 if (!result.IsValid)
                 {

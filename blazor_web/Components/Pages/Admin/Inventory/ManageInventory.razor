@@ -1,0 +1,190 @@
+@page "/admin/inventory"
+@using blazor_web.Models
+@using blazor_web.Services.Inventory
+@using blazor_web.DTOs.Inventory
+@using blazor_web.Components.Pages.Admin.Inventory
+
+@using Microsoft.AspNetCore.Components.Web
+
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+@inject IInventoryService InventoryService
+@inject IJSRuntime JS
+
+<PageTitle>Quản lý tồn kho</PageTitle>
+
+<div class="container-fluid p-0">
+    @* Thông báo *@
+    @if (!string.IsNullOrEmpty(Message))
+    {
+        <div class="alert @(IsSuccess ? "alert-success" : "alert-danger") alert-dismissible fade show shadow-sm mb-3">
+            @if(IsSuccess) { <i class="bi bi-check-circle-fill me-2"></i> } else { <i class="bi bi-exclamation-triangle-fill me-2"></i> }
+            @Message
+            <button type="button" class="btn-close" @onclick="() => Message = null"></button>
+        </div>
+    }
+
+    @* Filter *@
+    <InventoryFilter OnFilterChanged="HandleFilterChanged" @ref="filterComponent" />
+
+    @* Loading hoặc Bảng *@
+    @if (isLoading)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-2 text-muted">Đang tải dữ liệu...</p>
+        </div>
+    }
+    else
+    {
+        <InventoryTable Inventory="inventoryItems"
+                        Page="currentPage"
+                        PageSize="pageSize"
+                        TotalCount="totalCount"
+                        OnPageChanged="HandlePageChanged"
+                        OnPageSizeChanged="HandlePageSizeChanged"
+                        OnUpdate="OpenUpdateDialog" />
+    }
+</div>
+
+@* Dialog Cập nhật tồn kho *@
+<UpdateInventoryDialog Open="showUpdateDialog"
+                       Product="updatingProduct"
+                       OnClose="() => showUpdateDialog = false"
+                       OnSave="HandleUpdateQuantity" />
+
+@code {
+    // Data
+    private List<ProductInventory> inventoryItems = new();
+    private int totalCount = 0;
+    private int currentPage = 1;
+    private int pageSize = 10;
+    private string currentSearch = string.Empty;
+    private string currentStatus = string.Empty;
+
+    // State
+    private bool isLoading = true;
+    private bool showUpdateDialog = false;
+    private ProductInventory? updatingProduct;
+
+    // Notification
+    private string? Message;
+    private bool IsSuccess;
+
+    // Component references
+    private InventoryFilter? filterComponent;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadInventory();
+    }
+
+    private async Task LoadInventory()
+    {
+        isLoading = true;
+        try
+        {
+            var request = new GetInventoryRequest
+            {
+                Page = currentPage,
+                PageSize = pageSize,
+                Search = currentSearch,
+                Status = currentStatus
+            };
+
+            var result = await InventoryService.GetInventoryAsync(request);
+            if (result.Success && result.Data != null)
+            {
+                inventoryItems = result.Data.Products;
+                totalCount = result.Data.TotalCount;
+            }
+            else
+            {
+                ShowMessage(result.Message ?? "Lỗi tải dữ liệu tồn kho", false);
+                inventoryItems = new List<ProductInventory>();
+                totalCount = 0;
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowMessage($"Lỗi hệ thống: {ex.Message}", false);
+            inventoryItems = new List<ProductInventory>();
+            totalCount = 0;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleFilterChanged(GetInventoryRequest request)
+    {
+        currentPage = request.Page;
+        pageSize = request.PageSize;
+        currentSearch = request.Search ?? string.Empty;
+        currentStatus = request.Status ?? string.Empty;
+
+        await LoadInventory();
+    }
+
+    private async Task HandlePageChanged(int newPage)
+    {
+        currentPage = newPage;
+        await LoadInventory();
+    }
+
+    private async Task HandlePageSizeChanged(int newPageSize)
+    {
+        pageSize = newPageSize;
+        currentPage = 1; // Reset to first page when changing page size
+        await LoadInventory();
+    }
+
+    private void OpenUpdateDialog(ProductInventory product)
+    {
+        updatingProduct = product;
+        showUpdateDialog = true;
+    }
+
+    private async Task HandleUpdateQuantity((int Id, int Quantity) data)
+    {
+        if (updatingProduct == null) return;
+
+        try
+        {
+            var request = new UpdateQuantityRequest { Quantity = data.Quantity };
+            var result = await InventoryService.UpdateQuantityAsync(data.Id, request);
+
+            if (result.Success && result.Data != null)
+            {
+                @* re-render *@
+                await LoadInventory();
+
+                ShowMessage("Cập nhật số lượng tồn kho thành công!", true);
+                showUpdateDialog = false;
+            }
+            else
+            {
+                ShowMessage(result.Message ?? "Lỗi cập nhật số lượng tồn kho", false);
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowMessage($"Lỗi hệ thống: {ex.Message}", false);
+        }
+    }
+
+    private void ShowMessage(string msg, bool success)
+    {
+        Message = msg;
+        IsSuccess = success;
+        StateHasChanged();
+        
+        // Auto hide after 3 seconds
+        _ = Task.Delay(3000).ContinueWith(_ => 
+        {
+            Message = null;
+            InvokeAsync(StateHasChanged);
+        });
+    }
+}

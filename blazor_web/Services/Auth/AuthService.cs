@@ -1,7 +1,6 @@
 using System.Text.Json;
-using blazor_web.Dtos.Auth;
+using blazor_web.DTOs.Auth;
 using blazor_web.Models;
-using blazor_web.Dtos.Auth;
 
 namespace blazor_web.Services.Auth
 {
@@ -39,8 +38,6 @@ namespace blazor_web.Services.Auth
                     Console.WriteLine($"Adding password: [length {request.Password.Length}]");
                     formData.Add(new StringContent(request.Password), "Password");
                 }
-
-
                 Console.WriteLine($"Making POST request to: auth/login (as form-data)");
 
                 var response = await _httpClient.PostAsync("auth/login", formData);
