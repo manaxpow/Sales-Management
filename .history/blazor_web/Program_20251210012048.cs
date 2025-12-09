@@ -6,11 +6,14 @@ using blazor_web.Services.Orders;
 using blazor_web.Services.Customer;
 using Blazored.Toast;
 using blazor_web.Components;
+<<<<<<< HEAD
 using blazor_web.Services.Supplier;
 using blazor_web.Services.Product;
 using blazor_web.Services.User;
 using blazor_web.Services.Inventory;
+=======
 using blazor_web.Services.Customer;
+>>>>>>> 56ae09a (#109 save handle profile)
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -47,11 +50,14 @@ builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IInventoryService, InventoryService>();
+<<<<<<< HEAD
 builder.Services.AddScoped<ISupplierService, SupplierService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IUserService, UserService>();
+=======
 builder.Services.AddScoped<ICustomerApiService, CustomerApiService>();
+>>>>>>> 56ae09a (#109 save handle profile)
 builder.Services.AddBlazoredToast();
 
 

@@ -10,7 +10,6 @@ using blazor_web.Services.Supplier;
 using blazor_web.Services.Product;
 using blazor_web.Services.User;
 using blazor_web.Services.Inventory;
-using blazor_web.Services.Customer;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -51,7 +50,6 @@ builder.Services.AddScoped<ISupplierService, SupplierService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<ICustomerApiService, CustomerApiService>();
 builder.Services.AddBlazoredToast();
 
 
