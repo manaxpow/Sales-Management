@@ -7,9 +7,9 @@ using blazor_web.Services.Customer;
 using Blazored.Toast;
 using blazor_web.Components;
 using blazor_web.Services.Supplier;
+using blazor_web.Services.Product;
 using blazor_web.Services.User;
 using blazor_web.Services.Inventory;
-using blazor_web.Services.Customer;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,7 +41,6 @@ builder.Services.AddScoped(sp =>
 });
 
 builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IPromotionService, PromotionService>();
 builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
 builder.Services.AddScoped<ICartService, CartService>();
@@ -51,7 +50,6 @@ builder.Services.AddScoped<ISupplierService, SupplierService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<ICustomerApiService, CustomerApiService>();
 builder.Services.AddBlazoredToast();
 
 

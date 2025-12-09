@@ -34,19 +34,25 @@ public class AuthService(AppDbContext context, ILogger<AuthService> logger) : IA
         };
         var accessToken = _jwtHelper.SignJWT(claims);
 
-        var CustomerRes = new CustomerResponse();
-        if (user.Role == "customer")
+        CustomerResponse CustomerRes = new CustomerResponse();
+        if (user.Role != null && user.Role.Equals("customer", StringComparison.OrdinalIgnoreCase))
         {
-            CustomerRes = new CustomerResponse
+            var customer = await context.Customers
+                .FirstOrDefaultAsync(c => c.UserId == user.Id);
+
+            if (customer != null)
             {
-                Id = user.Id,
-                Name = user.FullName,
-                Email = user.UserName,
-                Phone = user.UserName,
-                Address = user.UserName,
-                CreatedAt = user.CreatedAt,
-                UpdatedAt = user.UpdatedAt
-            };
+                CustomerRes = new CustomerResponse
+                {
+                    Id = customer.CustomerId,
+                    Name = customer.Name ?? user.FullName,      
+                    Email = customer.Email ?? user.UserName,
+                    Phone = customer.Phone,
+                    Address = customer.Address,
+                    CreatedAt = customer.CreatedAt,
+                    UpdatedAt = customer.UpdatedAt
+                };
+            }
         }
 
         var UserRes = new UserResponse
@@ -91,31 +97,48 @@ public class AuthService(AppDbContext context, ILogger<AuthService> logger) : IA
         {
             return registerRes.ErrorResponse("Phone already exists", 400);
         }
-        
-        var user = new Users
-        {
-            UserName = registerRequest.UserName,
-            Password = AuthHelpers.HashPassword(null, registerRequest.Password),
-            FullName = registerRequest.FullName,
-            Role = "customer",
-            CreatedAt = DateTime.Now,
-            UpdatedAt = DateTime.Now
-        };
 
-        var customer = new Customers
-        {
-            UserId = user.Id,
-            Name = registerRequest.FullName,
-            Email = registerRequest.Email,
-            Phone = registerRequest.Phone,
-            Address = registerRequest.Address,
-            CreatedAt = DateTime.Now,
-            UpdatedAt = DateTime.Now
-        };
-        context.Users.Add(user);
-        context.Customers.Add(customer);
-        await context.SaveChangesAsync();
+        using var transaction = await context.Database.BeginTransactionAsync();
 
-        return registerRes.SuccessResponse(1, "Register success");
+        try
+        {
+            var user = new Users
+            {
+                UserName = registerRequest.UserName,
+                Password = AuthHelpers.HashPassword(null, registerRequest.Password),
+                FullName = registerRequest.FullName,
+                Role = "customer",
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now
+            };
+
+            context.Users.Add(user);
+
+            await context.SaveChangesAsync();
+
+            var customer = new Customers
+            {
+                UserId = user.Id,
+                Name = registerRequest.FullName,
+                Email = registerRequest.Email,
+                Phone = registerRequest.Phone,
+                Address = registerRequest.Address,
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now
+            };
+
+            context.Customers.Add(customer);
+
+            await context.SaveChangesAsync();
+
+            await transaction.CommitAsync();
+
+            return registerRes.SuccessResponse(user.Id, "Register success");
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            return registerRes.ErrorResponse("Registration failed: " + ex.Message, 500);
+        }
     }
 }
