@@ -12,5 +12,6 @@ namespace blazor_web.Services.Customer
         Task<ApiResponse<CustomerResponse>> UpdateCustomerAsync(int id, UpdateCustomerRequest request);
 
         Task<ApiResponse<string>> DeleteCustomerAsync(int id);
+        Task<ApiResponse<CustomerResponse>> GetById(int id);
     }
 }
