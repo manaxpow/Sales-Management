@@ -262,7 +262,7 @@ public class OrderService : IOrderService
             }
 
             // === 6. GÁN GIÁ TRỊ CUỐI CHO ORDER ===
-            order.TotalAmount = subtotalBeforeDiscount - discountAmount;
+            order.TotalAmount = subtotalBeforeDiscount;
             order.DiscountAmount = discountAmount;
 
             _db.OrderItems.AddRange(orderItems);
