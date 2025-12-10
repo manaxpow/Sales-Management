@@ -1,139 +1,65 @@
-    @*
+@*
         Hot Products Component - Display featured products using ProductCard
     *@
 
-    @using blazor_web.Components.UI.Card
-
-    <div class="py-12">
-        <!-- Section Header -->
-        <div class="text-center mb-12">
-            <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
-                🔥 Hot Products
-            </h2>
-            <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-                Discover our most popular products that customers love. Limited stock available!
-            </p>
-        </div>
-
-        <!-- Products Grid -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-            @foreach (var product in HotProducts)
-            {
-                <ProductCard Product="@product" 
-                            OnAddToCartClick="HandleAddToCart" />
-            }
-        </div>
-
-        <!-- View All Products Button -->
-        <div class="text-center mt-12">
-            <a href="/products" 
-            class="no-underline inline-block bg-gray-800 hover:bg-gray-900 text-white font-semibold py-3 px-8 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg">
-                View All Products
-            </a>
-        </div>
+@using System.Threading.Tasks
+@using blazor_web.Components.UI.Card
+@inject IProductService productService
+<div class="py-12">
+    <!-- Section Header -->
+    <div class="text-center mb-12">
+        <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
+            🔥 Hot Products
+        </h2>
+        <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+            Discover our most popular products that customers love. Limited stock available!
+        </p>
     </div>
 
-    @code {
-        public List<blazor_web.Models.Product> HotProducts { get; set; } = new();
-
-        protected override void OnInitialized()
+    <!-- Products Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+        @foreach (var product in HotProducts)
         {
-            // Initialize hot products data matching database structure
-            HotProducts = new List<blazor_web.Models.Product>
-            {
-                new blazor_web.Models.Product
-                {
-                    ProductId = 1,
-                    CategoryId = 1,
-                    SupplierId = 1,
-                    ProductName = "Wireless Bluetooth Headphones Pro",
-                    Barcode = "WBH001",
-                    Price = 149.99m,
-                    Unit = "pcs",
-                    CreatedAt = DateTime.Now.AddDays(-30)
-                },
-                new blazor_web.Models.Product
-                {
-                    ProductId = 2,
-                    CategoryId = 2,
-                    SupplierId = 1,
-                    ProductName = "Premium Leather Jacket",
-                    Barcode = "PLJ002",
-                    Price = 249.99m,
-                    Unit = "pcs",
-                    CreatedAt = DateTime.Now.AddDays(-25)
-                },
-                new blazor_web.Models.Product
-                {
-                    ProductId = 3,
-                    CategoryId = 1,
-                    SupplierId = 2,
-                    ProductName = "Smart Watch Ultra",
-                    Barcode = "SWU003",
-                    Price = 299.99m,
-                    Unit = "pcs",
-                    CreatedAt = DateTime.Now.AddDays(-20)
-                },
-                new blazor_web.Models.Product
-                {
-                    ProductId = 4,
-                    CategoryId = 3,
-                    SupplierId = 2,
-                    ProductName = "Professional Camera Kit",
-                    Barcode = "PCK004",
-                    Price = 699.99m,
-                    Unit = "pcs",
-                    CreatedAt = DateTime.Now.AddDays(-15)
-                },
-                new blazor_web.Models.Product
-                {
-                    ProductId = 5,
-                    CategoryId = 4,
-                    SupplierId = 3,
-                    ProductName = "Yoga Mat Premium",
-                    Barcode = "YMP005",
-                    Price = 29.99m,
-                    Unit = "pcs",
-                    CreatedAt = DateTime.Now.AddDays(-10)
-                },
-                new blazor_web.Models.Product
-                {
-                    ProductId = 6,
-                    CategoryId = 5,
-                    SupplierId = 3,
-                    ProductName = "Coffee Maker Deluxe",
-                    Barcode = "CMD006",
-                    Price = 119.99m,
-                    Unit = "pcs",
-                    CreatedAt = DateTime.Now.AddDays(-5)
-                },
-                new blazor_web.Models.Product
-                {
-                    ProductId = 7,
-                    CategoryId = 4,
-                    SupplierId = 2,
-                    ProductName = "Running Shoes Pro",
-                    Barcode = "RSP007",
-                    Price = 139.99m,
-                    Unit = "pcs",
-                    CreatedAt = DateTime.Now.AddDays(-3)
-                },
-                new blazor_web.Models.Product
-                {
-                    ProductId = 8,
-                    CategoryId = 6,
-                    SupplierId = 1,
-                    ProductName = "Laptop Stand Adjustable",
-                    Barcode = "LSA008",
-                    Price = 59.99m,
-                    Unit = "pcs",
-                    CreatedAt = DateTime.Now.AddDays(-1)
-                }
-            };
+            <ProductCard Product="@product" OnAddToCartClick="@(() => HandleAddToCart(ProductMapper.ToModel(product)))" />
         }
+    </div>
 
-        private void HandleAddToCart(blazor_web.Models.Product product)
+    <!-- View All Products Button -->
+    <div class="text-center mt-12">
+        <a href="/products"
+            class="no-underline inline-block bg-gray-800 hover:bg-gray-900 text-white font-semibold py-3 px-8 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg">
+            View All Products
+        </a>
+    </div>
+</div>
+
+@code {
+    public List<ProductResponse> HotProducts { get; set; } = new();
+
+    public GetProductResponse ProductData { get; set; } = new();
+    private bool _loaded = false;
+    protected override async Task OnInitializedAsync()
+    {
+        if (!_loaded)
         {
-            Console.WriteLine($"Add to cart product: {product.ProductName}");
+            _loaded = true;
+            await LoadData();
         }
+        // For demo purposes, we will just take the first 8 products as hot products
     }
+    private void HandleAddToCart(blazor_web.Models.Product product)
+    {
+        Console.WriteLine($"Add to cart product: {product.ProductName}");
+    }
+    private async Task LoadData()
+    {
+        var response = await productService.GetAllProduct(new ProductFilter
+        {
+            Page = 1,
+            Limit = 8
+        });
+        Console.WriteLine($"[HotProduct] LoadData: Retrieved {response.Data?.Products?.Count ?? 0} products");
+
+        HotProducts = response.Data?.Products ?? new List<ProductResponse>();
+    }
+}

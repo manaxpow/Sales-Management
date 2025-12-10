@@ -18,8 +18,8 @@ public class GetProductValidator : AbstractValidator<GetProductRequest>
             .Must(sortOrder => sortOrder == null || sortOrder.ToLower() == "asc" || sortOrder.ToLower() == "desc")
             .WithMessage("Sort order must be either 'asc' or 'desc'");
         RuleFor(x => x.SortBy)
-            .Must(sortBy => sortBy == null || sortBy == "CreatedAt" || sortBy == "PromotionCode" || sortBy == "DiscountType")
-            .WithMessage("Sort by must be one of the following: 'CreatedAt', 'PromotionCode', 'DiscountType'");
+            .Must(sortBy => sortBy == null || sortBy.ToLower() == "createdat" || sortBy.ToLower() == "name" || sortBy.ToLower() == "price")
+            .WithMessage("Sort by must be one of the following: 'CreatedAt', 'Name', 'price'");
     }
 
 
@@ -41,6 +41,7 @@ public class CreateProductValidator : AbstractValidator<CreateProductRequest>
         RuleFor(x => x.Price)
         .GreaterThan(0).WithMessage("Price value is invalid");
         RuleFor(x => x.Status).InclusiveBetween(1, 2).WithMessage("Product status value is invalid");
+        RuleFor(x => x.ImageProduct).SetValidator(new FileValidator());
     }
 }
 
@@ -60,10 +61,22 @@ public class UpdateProductValidator : AbstractValidator<UpdateProductRequest>
         .GreaterThan(0).WithMessage("Supplier id value is invalid");
         RuleFor(x => x.Price)
         .GreaterThan(0).WithMessage("Price value is invalid");
-
+        RuleFor(x => x.ImageProduct).SetValidator(new FileValidator());
 
     }
 }
-
-
-
+// validate form file image
+public class FileValidator : AbstractValidator<IFormFile?>
+{
+    public FileValidator()
+    {
+        // options for file 
+        // RuleFor(x => x)
+        //     .NotNull()
+        //     .WithMessage("File is required.");
+        // RuleFor(x => x!.Length).LessThanOrEqualTo(10000)
+        //     .WithMessage("File size is larger than allowed").When(x => x != null); ;
+        RuleFor(x => x!.ContentType).Must(x => x.Equals("image/jpeg") || x.Equals("image/jpg") || x.Equals("image/png") || x.Equals("image/webp"))
+            .WithMessage("Unsupported file type. Only image types are allowed.").When(x => x != null); ;
+    }
+}
