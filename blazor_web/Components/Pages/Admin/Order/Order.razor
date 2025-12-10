@@ -1,0 +1,805 @@
+@page "/admin/orders"
+@using System.Globalization
+@using System.Threading.Tasks
+@using blazor_web.DTOs.Orders
+@using blazor_web.Services.Customer
+@using blazor_web.Services.Orders
+@using blazor_web.Services.Product
+@inject HttpClient Http
+@inject IJSRuntime JS
+@inject NavigationManager Nav
+@inject IOrderService orderService
+@inject ICustomerService customerService
+@inject IProductService productService
+@rendermode InteractiveServer
+
+
+<PageTitle>Quản lý đơn hàng</PageTitle>
+
+<div class="container-fluid py-4 px-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="mb-1">
+                <i class="bi bi-box-seam text-primary fs-3"></i> Quản lý đơn hàng
+            </h3>
+            <small class="text-muted">Tổng: @filteredOrders.Count đơn hàng</small>
+        </div>
+        <button class="btn btn-outline-secondary" @onclick="LoadOrders" disabled="@loading">
+            @if (loading)
+            {
+                <span class="spinner-border spinner-border-sm me-1"></span>
+            }
+            else
+            {
+                <i class="bi bi-arrow-clockwise"></i>
+            }
+            Làm mới
+        </button>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-3 shadow-sm">
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control" placeholder="Tìm đơn hàng, khách, mã HD..."
+                               @bind="searchTerm" @bind:event="oninput" />
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" @bind="statusFilter">
+                        <option value="all">Tất cả</option>
+                        <option value="pending">Chờ xử lý</option>
+                        <option value="completed">Hoàn thành</option>
+                        <option value="canceled">Đã hủy</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <input type="date" class="form-control" @bind="startDate" @bind:format="yyyy-MM-dd"/>
+                </div>
+                <div class="col-md-2">
+                    <input type="date" class="form-control" @bind="endDate" />
+                </div>
+                <div class="col-md-2">
+                   <button class="btn btn-outline-secondary w-100" 
+                        @onclick="ClearFilter"
+                        disabled="@(string.IsNullOrWhiteSpace(searchTerm) && 
+                                    statusFilter == "all" && 
+                                    !startDate.HasValue && 
+                                    !endDate.HasValue)">
+                        <i class="bi bi-x-lg"></i> Xóa lọc
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="card shadow-sm">
+        @if (loading)
+        {
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary"></div>
+                <p class="mt-3">Đang tải đơn hàng...</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive" style="max-height: 70vh;">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="table-light sticky-top">
+                        <tr>
+                            <th><i class="bi bi-hash text-primary"></i> Mã HD</th>
+                            <th><i class="bi bi-person text-purple"></i> Khách</th>
+                            <th><i class="bi bi-telephone text-success"></i> SĐT</th>
+                            <th><i class="bi bi-calendar text-info"></i> Ngày tạo</th>
+                            <th class="text-end"><i class="bi bi-cash text-danger"></i> Thành tiền</th>
+                            <th class="text-center"><i class="bi bi-filter"></i> Trạng thái</th>
+                            <th class="text-center" width="150">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (PaginatedOrders.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center py-5 text-muted">
+                                    Không có đơn hàng nào
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var order in PaginatedOrders)
+                            {
+                                <tr class="cursor-pointer" @onclick="() => ViewDetail(order)">
+                                    <td>
+                                        <span class="badge bg-primary bg-opacity-10 text-primary fw-medium">
+                                            #@order.Id
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center"
+                                                 style="width: 32px; height: 32px;">
+                                                <span class="text-primary fw-bold small">
+                                                    @(string.IsNullOrEmpty(order.CustomerName) ? "K" : order.CustomerName[0].ToString().ToUpper())
+                                                </span>
+                                            </div>
+                                            <span class="fw-medium">@order.CustomerName</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <a href="tel:@order.PhoneNumber" class="text-primary text-decoration-none" @onclick:stopPropagation>
+                                            @order.PhoneNumber
+                                        </a>
+                                    </td>
+                                    <td class="text-muted small">
+                                        @FormatDate(order.CreatedDate)
+                                    </td>
+                                    <td class="text-end fw-bold text-danger">
+                                        @((order.TotalPaymentAmount - order.DiscountAmount).ToString("N0", viCulture))₫
+                                    </td>
+                                    <td class="text-center">
+                                        @GetStatusBadge(order.Status)
+                                    </td>
+                                    <td class="text-center" @onclick:stopPropagation>
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-info" @onclick="() => ViewDetail(order)" title="Xem chi tiết">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                            <button class="btn btn-outline-primary" @onclick="() => EditOrder(order)" title="Cập nhật trạng thái">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button class="btn btn-outline-danger" @onclick="() => DeleteOrder(order)" title="Xóa đơn hàng">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            @if (filteredOrders.Count > pageSize)
+            {
+                <div class="card-footer bg-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            Hiển thị @((currentPage-1)*pageSize + 1)–@(Math.Min(currentPage*pageSize, filteredOrders.Count)) 
+                            / @filteredOrders.Count
+                        </small>
+                        <nav>
+                            <ul class="pagination pagination-sm mb-0">
+                                <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                                    <button class="page-link" @onclick="() => currentPage = Math.Max(1, currentPage-1)">«</button>
+                                </li>
+                                @for (int i = Math.Max(1, currentPage - 2); i <= Math.Min(TotalPages, currentPage + 2); i++)
+                                {
+                                    var pageNum = i;
+                                    <li class="page-item @(i == currentPage ? "active" : "")">
+                                        <button class="page-link" @onclick="() => currentPage = pageNum">@i</button>
+                                    </li>
+                                }
+                                <li class="page-item @(currentPage == TotalPages ? "disabled" : "")">
+                                    <button class="page-link" @onclick="() => currentPage = Math.Min(TotalPages, currentPage+1)">»</button>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+<!-- Detail Dialog -->
+@if (detailDialogOpen && selectedOrder != null)
+{
+    <div class="modal fade show d-block bg-dark bg-opacity-50" tabindex="-1" @onclick="CloseDetailDialog">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable" @onclick:stopPropagation>
+            <div class="modal-content">
+                <div class="modal-header bg-primary bg-opacity-10">
+                    <h5 class="modal-title">
+                        <i class="bi bi-box-seam text-primary"></i>
+                        Chi tiết đơn hàng #@selectedOrder.Id
+                    </h5>
+                    <button type="button" class="btn-close" @onclick="CloseDetailDialog"></button>
+                </div>
+                <div class="modal-body">
+                    @if (loadingDetail)
+                    {
+                        <div class="text-center py-5">
+                            <div class="spinner-border text-primary"></div>
+                            <p class="mt-3">Đang tải chi tiết...</p>
+                        </div>
+                    }
+                    else if (orderDetail != null)
+                    {
+                        <!-- Thông tin chung -->
+                        <div class="card bg-light mb-3">
+                            <div class="card-body">
+                                <h6 class="card-title fw-bold mb-3">Thông tin đơn hàng</h6>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <small class="text-muted">Khách hàng:</small>
+                                        <div class="fw-medium">@orderDetail.Order.CustomerName</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <small class="text-muted">SĐT:</small>
+                                        <div>
+                                            <a href="tel:@orderDetail.Order.PhoneNumber" class="text-primary">
+                                                @orderDetail.Order.PhoneNumber
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <small class="text-muted">Ngày đặt:</small>
+                                        <div>@DateTime.Parse(orderDetail.Order.OrderDate).ToString("dd/MM/yyyy HH:mm", viCulture)</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <small class="text-muted">Trạng thái:</small>
+                                        <div>
+                                            @switch (orderDetail.Order.Status)
+                                            {
+                                                case 0:
+                                                    <span class="badge bg-warning text-dark">
+                                                        <i class="bi bi-clock"></i> Chờ xử lý
+                                                    </span>
+                                                    break;
+                                                case 1:
+                                                    <span class="badge bg-success">
+                                                        <i class="bi bi-check-circle"></i> Hoàn thành
+                                                    </span>
+                                                    break;
+                                                case 2:
+                                                    <span class="badge bg-danger">
+                                                        <i class="bi bi-x-circle"></i> Đã hủy
+                                                    </span>
+                                                    break;
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Danh sách sản phẩm -->
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h6 class="card-title fw-bold mb-3">Sản phẩm (@orderDetail.Items.Count)</h6>
+                                <div class="table-responsive">
+                                    <table class="table table-sm mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>Sản phẩm</th>
+                                                <th class="text-center">SL</th>
+                                                <th class="text-end">Giá</th>
+                                                <th class="text-end">Thành tiền</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var item in orderDetail.Items)
+                                            {
+                                                <tr>
+                                                    <td>
+                                                        <span class="badge bg-primary bg-opacity-10 text-primary">
+                                                            @item.ProductName
+                                                        </span>
+                                                    </td>
+                                                    <td class="text-center">@item.Quantity</td>
+                                                    <td class="text-end">@item.Price.ToString("N0", viCulture)₫</td>
+                                                    <td class="text-end fw-medium">@item.SubTotal.ToString("N0", viCulture)₫</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tổng tiền -->
+                        <div class="card bg-primary bg-opacity-10">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Tổng tiền hàng:</span>
+                                    <span>@orderDetail.Order.TotalAmount.ToString("N0", viCulture)₫</span>
+                                </div>
+                                @if (orderDetail.Order.DiscountAmount > 0)
+                                {
+                                    <div class="d-flex justify-content-between mb-2 text-success">
+                                        <span>Giảm giá:</span>
+                                        <span>-@orderDetail.Order.DiscountAmount.ToString("N0", viCulture)₫</span>
+                                    </div>
+                                }
+                                <hr />
+                                <div class="d-flex justify-content-between">
+                                    <strong class="text-primary">Tiền phải trả:</strong>
+                                    <strong class="text-danger fs-5">
+                                        @((orderDetail.Order.TotalAmount - orderDetail.Order.DiscountAmount).ToString("N0", viCulture))₫
+                                    </strong>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="CloseDetailDialog">
+                        <i class="bi bi-x"></i> Đóng
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Edit Status Dialog -->
+@if (editDialogOpen && selectedOrder != null)
+{
+    <div class="modal fade show d-block bg-dark bg-opacity-50" tabindex="-1" @onclick="CloseEditDialog">
+        <div class="modal-dialog modal-dialog-centered" @onclick:stopPropagation>
+            <div class="modal-content">
+                <div class="modal-header bg-primary bg-opacity-10">
+                    <h5 class="modal-title">
+                        <i class="bi bi-pencil text-primary"></i>
+                        Cập nhật trạng thái đơn hàng
+                    </h5>
+                    <button type="button" class="btn-close" @onclick="CloseEditDialog"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="card bg-light mb-3">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Mã hóa đơn:</span>
+                                <span class="badge bg-primary">#@selectedOrder.Id</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Khách hàng:</span>
+                                <strong>@selectedOrder.CustomerName</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Số điện thoại:</span>
+                                <a href="tel:@selectedOrder.PhoneNumber" class="text-primary">
+                                    @selectedOrder.PhoneNumber
+                                </a>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Tổng tiền hàng:</span>
+                                <span>@selectedOrder.TotalPaymentAmount.ToString("N0", viCulture)₫</span>
+                            </div>
+                            @if (selectedOrder.DiscountAmount > 0)
+                            {
+                                <div class="d-flex justify-content-between mb-2 text-success">
+                                    <span>Giảm giá:</span>
+                                    <span>-@selectedOrder.DiscountAmount.ToString("N0", viCulture)₫</span>
+                                </div>
+                            }
+                            <hr />
+                            <div class="d-flex justify-content-between">
+                                <strong class="text-primary">Tiền phải trả:</strong>
+                                <strong class="text-danger">
+                                    @((selectedOrder.TotalPaymentAmount - selectedOrder.DiscountAmount).ToString("N0", viCulture))₫
+                                </strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Trạng thái mới</label>
+                        <select class="form-select" @bind="newStatus" disabled="@(selectedOrder?.Status == "completed")">>
+                            <option value="pending">Chờ xử lý</option>
+                            <option value="completed">Hoàn thành</option>
+                            <option value="canceled">Đã hủy</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="CloseEditDialog">
+                        <i class="bi bi-x"></i> Hủy bỏ
+                    </button>
+                    <button class="btn btn-primary" @onclick="UpdateStatus" disabled="@(selectedOrder?.Status == "completed")">>
+                        <i class="bi bi-check"></i> Cập nhật
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Delete Dialog -->
+@if (deleteDialogOpen && selectedOrder != null)
+{
+    <div class="modal fade show d-block bg-dark bg-opacity-50" tabindex="-1" @onclick="CloseDeleteDialog">
+        <div class="modal-dialog modal-dialog-centered" @onclick:stopPropagation>
+            <div class="modal-content">
+                <div class="modal-header bg-danger bg-opacity-10">
+                    <h5 class="modal-title text-danger">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        Xác nhận xóa đơn hàng
+                    </h5>
+                    <button type="button" class="btn-close" @onclick="CloseDeleteDialog"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Bạn có <strong>chắc chắn</strong> muốn xóa đơn hàng này?</p>
+
+                    <div class="card bg-danger bg-opacity-10 border-danger">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Mã HD:</span>
+                                <strong class="text-danger">#@selectedOrder.Id</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Khách:</span>
+                                <strong>@selectedOrder.CustomerName</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Tổng tiền:</span>
+                                <strong>@selectedOrder.TotalPaymentAmount.ToString("N0", viCulture)₫</strong>
+                            </div>
+                            @if (selectedOrder.DiscountAmount > 0)
+                            {
+                                <div class="d-flex justify-content-between mb-2 text-success">
+                                    <span>Giảm giá:</span>
+                                    <strong>-@selectedOrder.DiscountAmount.ToString("N0", viCulture)₫</strong>
+                                </div>
+                            }
+                            <hr />
+                            <div class="d-flex justify-content-between">
+                                <strong class="text-primary">Tiền phải trả:</strong>
+                                <strong class="text-danger">
+                                    @((selectedOrder.TotalPaymentAmount - selectedOrder.DiscountAmount).ToString("N0", viCulture))₫
+                                </strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <p class="text-danger fw-medium mt-3 mb-0">
+                        Hành động này <strong>không thể hoàn tác</strong>.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="CloseDeleteDialog">
+                        <i class="bi bi-x"></i> Hủy
+                    </button>
+                    <button class="btn btn-danger" @onclick="ConfirmDelete">
+                        <i class="bi bi-trash"></i> Xóa vĩnh viễn
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Snackbar -->
+@if (snackbarOpen)
+{
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1055;">
+        <div class="alert alert-@snackbarType alert-dismissible shadow-lg fade show">
+            @snackbarMessage
+            <button type="button" class="btn-close" @onclick="() => snackbarOpen = false"></button>
+        </div>
+    </div>
+}
+
+@code {
+    private CultureInfo viCulture = new("vi-VN");
+
+    // Data
+    private List<OrderT> orders = new();
+    private bool loading = false;
+
+    // Filters
+    private string searchTerm = "";
+    private string statusFilter = "all";
+    private DateTime? startDate;
+    private DateTime? endDate;
+
+    // Pagination
+    private int currentPage = 1;
+    private const int pageSize = 10;
+
+    // Dialogs
+    private bool detailDialogOpen = false;
+    private bool editDialogOpen = false;
+    private bool deleteDialogOpen = false;
+    private OrderT? selectedOrder = null;
+    private OrderDetailResponse? orderDetail = null;
+    private bool loadingDetail = false;
+    private string newStatus = "pending";
+
+    // Snackbar
+    private bool snackbarOpen = false;
+    private string snackbarMessage = "";
+    private string snackbarType = "success";
+
+    // Computed
+    private List<OrderT> filteredOrders => FilterOrders();
+    private List<OrderT> PaginatedOrders => filteredOrders
+        .Skip((currentPage - 1) * pageSize)
+        .Take(pageSize)
+        .ToList();
+    private int TotalPages => (int)Math.Ceiling(filteredOrders.Count / (double)pageSize);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadOrders();
+    }
+
+    private async Task LoadOrders()
+    {
+        loading = true;
+        StateHasChanged();
+
+        try
+        {
+            var response = await orderService.GetAllAsync();
+            var orderList = new List<OrderT>();
+
+            foreach (var o in response.Data)
+            {
+                var rs = await customerService.GetById(o.Customerid);
+                var customer = rs.Data;
+                orderList.Add(new OrderT
+                {
+                    Id = o.Id,
+                    CustomerName = customer?.Name ?? "Khách lẻ",
+                    PhoneNumber = customer?.Phone ?? "",
+                    customerId = o.Customerid,
+                    userId = o.Userid,
+                    TotalPaymentAmount = o.TotalAmount,
+                    DiscountAmount = o.DiscountAmount,
+                    CreatedDate = o.OrderDate.ToString("o"),
+                    Status = o.Status switch { 0 => "pending", 1 => "completed", 2 => "canceled", _ => "pending" }
+                });
+            }
+
+            orders = orderList;
+        }
+        catch (Exception ex)
+        {
+            Toast($"Lỗi tải dữ liệu: {ex.Message}", "danger");
+        }
+        finally
+        {
+            loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private List<OrderT> FilterOrders()
+    {
+        var list = orders.AsEnumerable();
+
+        // 1. Lọc trạng thái
+        if (statusFilter != "all")
+        {
+            list = list.Where(o => o.Status == statusFilter);
+        }
+
+        // 2. Lọc theo ngày – AN TOÀN, KHÔNG CẦN PARSE
+        if (startDate.HasValue)
+        {
+            var start = startDate.Value.Date; // Chỉ lấy ngày, bỏ giờ
+            list = list.Where(o => 
+                DateTime.TryParse(o.CreatedDate, out var dt) && dt.Date >= start
+            );
+        }
+
+        if (endDate.HasValue)
+        {
+            var end = endDate.Value.Date.AddDays(1).AddSeconds(-1); // Đến 23:59:59
+            list = list.Where(o => 
+                DateTime.TryParse(o.CreatedDate, out var dt) && dt <= end
+            );
+        }
+
+        // 3. Tìm kiếm
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var term = searchTerm.ToLowerInvariant();
+            list = list.Where(o =>
+                o.Id.ToString().Contains(term) ||
+                (o.CustomerName?.ToLower().Contains(term) ?? false) ||
+                (o.PhoneNumber?.Contains(term) ?? false)
+            );
+        }
+
+        // 4. Sắp xếp mới nhất trước
+        return list
+            .OrderByDescending(o => 
+                DateTime.TryParse(o.CreatedDate, out var dt) ? dt : DateTime.MinValue)
+            .ToList();
+    }
+
+    private async Task ViewDetail(OrderT order)
+    {
+        selectedOrder = order;
+        loadingDetail = true;
+        detailDialogOpen = true;
+        StateHasChanged();
+
+        try
+        {
+            orderDetail = await GenerateMockDetail(order);
+        }
+        catch (Exception ex)
+        {
+            Toast($"Lỗi tải chi tiết: {ex.Message}", "danger");
+        }
+        finally
+        {
+            loadingDetail = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task<OrderDetailResponse> GenerateMockDetail(OrderT order) {
+        List<OrderItemDto> list = new(); 
+        var rs = await orderService.GetOrderItemsAsync(order.Id);
+        foreach(var item in rs.Data){
+            var response = await productService.GetProductByIdAsync(item.Productid);
+            var product = response.Data;
+            list.Add(new OrderItemDto{
+                ProductName = product.ProductName,
+                Quantity = item.Quantity,
+                Price = item.Price,
+            });
+        }
+
+        return   new OrderDetailResponse()
+        {   
+            
+
+            Order = new OrderDetailDto
+            {
+                Id = order.Id,
+                CustomerName = order.CustomerName,
+                PhoneNumber = order.PhoneNumber,
+                OrderDate = order.CreatedDate,
+                TotalAmount = order.TotalPaymentAmount,
+                DiscountAmount = order.DiscountAmount,
+                Status = order.Status == "pending" ? 0 : order.Status == "completed" ? 1 : 2
+            },
+            Items = list
+        };
+    }
+
+    private void EditOrder(OrderT order)
+    {
+        selectedOrder = order;
+        newStatus = order.Status;
+        editDialogOpen = true;
+    }
+
+    private async Task UpdateStatus()
+    {
+        if (selectedOrder != null)
+        {
+            selectedOrder.Status = newStatus;
+            var request = new OrderRequest(){
+                Customerid = selectedOrder.customerId,
+                Userid = selectedOrder.userId,
+                OrderDate = DateTime.Parse(selectedOrder.CreatedDate),
+                DiscountAmount = selectedOrder.DiscountAmount,
+                TotalAmount = selectedOrder.TotalPaymentAmount,
+                Status = selectedOrder.Status  == "pending" ? 0 : selectedOrder.Status == "completed" ? 1 : 2
+            };
+
+            var rs = await orderService.UpdateOrderAsync(selectedOrder.Id, request);
+            if(rs.Success){
+                Toast($"Đã cập nhật trạng thái đơn hàng #{selectedOrder.Id}", "success");
+            }else{
+                Toast($"Cập nhật trạng thái đơn hàng thất bại#{selectedOrder.Id}", "error");
+            }
+        }
+        editDialogOpen = false;
+    }
+
+    private void DeleteOrder(OrderT order)
+    {
+        selectedOrder = order;
+        deleteDialogOpen = true;
+    }
+
+    private async Task ConfirmDelete()
+    {
+        if (selectedOrder != null)
+        {
+            var rs = await orderService.DeleteOrderAsync(selectedOrder.Id);
+             if(rs.Success){
+                Toast($"Đã xóa đơn hàng #{selectedOrder.Id}", "success");
+            }else{
+                Toast($"Xóa đơn hàng thất bại#{selectedOrder.Id}", "error");
+            }
+        }
+        deleteDialogOpen = false;
+        StateHasChanged();
+    }
+
+    private void CloseDetailDialog() => detailDialogOpen = false;
+    private void CloseEditDialog() => editDialogOpen = false;
+    private void CloseDeleteDialog() => deleteDialogOpen = false;
+
+    private void ClearFilter()
+    {
+        searchTerm = "";
+        statusFilter = "all";
+        startDate = null;
+        endDate = null;
+        currentPage = 1;
+    }
+
+    private string FormatDate(string isoDate)
+    {
+        if (DateTime.TryParse(isoDate, out var dt))
+            return dt.ToString("dd/MM/yyyy HH:mm", viCulture);
+        return "-";
+    }
+
+    private RenderFragment GetStatusBadge(string status) => status switch
+    {
+        "pending" => @<span class="badge bg-warning text-dark"><i class="bi bi-clock"></i> Chờ xử lý</span>,
+        "completed" => @<span class="badge bg-success"><i class="bi bi-check-circle"></i> Hoàn thành</span>,
+        "canceled" => @<span class="badge bg-danger"><i class="bi bi-x-circle"></i> Đã hủy</span>,
+        _ => @<span class="badge bg-secondary">Không xác định</span>
+    };
+
+    private void Toast(string message, string type = "success")
+    {
+        snackbarMessage = message;
+        snackbarType = type;
+        snackbarOpen = true;
+        StateHasChanged();
+
+        _ = Task.Delay(4000).ContinueWith(_ =>
+        {
+            snackbarOpen = false;
+            InvokeAsync(StateHasChanged);
+        });
+    }
+
+        public class OrderT
+    {
+        public int Id { get; set; }
+        public int customerId {get; set;}
+        public int userId {get;set;}
+        public string? CustomerName { get; set; }
+        public string? PhoneNumber { get; set; }
+        public string CreatedDate { get; set; } = DateTime.Now.ToString("o");
+        public decimal TotalPaymentAmount { get; set; }
+        public decimal DiscountAmount { get; set; }
+        public string Status { get; set; } = "pending"; // pending, completed, canceled
+    }
+
+    public class OrderDetailResponse
+    {
+        public OrderDetailDto Order { get; set; } = null!;
+        public List<OrderItemDto> Items { get; set; } = new();
+    }
+
+    public class OrderDetailDto
+    {
+        public int Id { get; set; }
+        public string? CustomerName { get; set; }
+        public string? PhoneNumber { get; set; }
+        public string OrderDate { get; set; } = "";
+        public decimal TotalAmount { get; set; }
+        public decimal DiscountAmount { get; set; }
+        public int Status { get; set; }
+    }
+
+    public class OrderItemDto
+    {
+        public string ProductName { get; set; } = "";
+        public int Quantity { get; set; }
+        public decimal Price { get; set; }
+        public decimal SubTotal => Price * Quantity;
+    }
+}
+
+

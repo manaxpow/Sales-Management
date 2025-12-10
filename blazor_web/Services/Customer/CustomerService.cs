@@ -173,5 +173,21 @@ namespace blazor_web.Services.Customer
                 };
             }
         }
+
+        public async Task<ApiResponse<CustomerResponse>> GetById(int id)
+        {
+            try
+            {
+                var fullUrl = $"customers/{id}";
+                var response = await _httpClient.GetFromJsonAsync<ApiResponse<CustomerResponse>>(fullUrl);
+
+                return response ?? new ApiResponse<CustomerResponse> { Success = false, Message = "Phản hồi API rỗng." };
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error fetching customer by ID {id}: {ex.Message}");
+                return new ApiResponse<CustomerResponse> { Success = false, Message = $"Lỗi mạng: {ex.Message}" };
+            }
+        }
     }
 }

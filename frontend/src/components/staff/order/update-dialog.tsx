@@ -138,6 +138,7 @@ const UpdateStatusDialog = ({ open, order, onClose, onConfirm }: Props) => {
               onChange={(e) => setNewStatus(e.target.value as never)}
               label="Trạng thái mới"
               variant="outlined"
+              disabled={order.status == "completed"}
             >
               <MenuItem value="pending">
                 <Box className="flex items-center gap-2">
@@ -175,6 +176,7 @@ const UpdateStatusDialog = ({ open, order, onClose, onConfirm }: Props) => {
             onClose();
           }}
           className="bg-gradient-to-r from-blue-600 to-indigo-600"
+          disabled={order.status == "completed"}
         >
           Cập nhật
         </Button>

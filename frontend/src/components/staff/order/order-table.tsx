@@ -251,7 +251,7 @@ const OrderTable = ({
       {/* === PHÂN TRANG === */}
       {!loading && orders.length > 0 && (
         <TablePagination
-          rowsPerPageOptions={[5, 10, 25]}
+          rowsPerPageOptions={[25, 50, 100]}
           component="div"
           count={orders.length}
           rowsPerPage={rowsPerPage}

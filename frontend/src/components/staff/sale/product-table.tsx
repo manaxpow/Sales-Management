@@ -226,7 +226,7 @@ export const ProductTable = ({
 
       {products.length > 0 && (
         <TablePagination
-          rowsPerPageOptions={[5, 10, 25]}
+          rowsPerPageOptions={[25, 50, 100]}
           component="div"
           count={products.length}
           rowsPerPage={rowsPerPage}
