@@ -8,7 +8,6 @@ namespace blazor_web.DTOs.Auth
     {
         public required UserResponse User { get; set; }
         public CustomerResponse? Customer { get; set; }
-
         public required string AccessToken { get; set; }
     }
 

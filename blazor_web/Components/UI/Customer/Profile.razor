@@ -1,0 +1,57 @@
+﻿@page "/profile"
+
+<div class="max-w-3xl mx-auto mt-10">
+    <h2 class="text-3xl font-bold mb-6 text-gray-800">Customer Profile</h2>
+
+    <div class="bg-white shadow-lg rounded-xl p-6 space-y-6">
+
+        <!-- Customer Info -->
+        <div class="space-y-4">
+            <label class="block text-gray-700 font-medium">Customer Name</label>
+            <input type="text" class="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                   @bind="CustomerName" placeholder="Enter customer name" />
+
+            <label class="block text-gray-700 font-medium">Phone</label>
+            <input type="text" class="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                   @bind="Phone" placeholder="Enter phone" />
+
+            <label class="block text-gray-700 font-medium">Email</label>
+            <input type="text" class="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                   @bind="Email" placeholder="Enter email" />
+
+            <label class="block text-gray-700 font-medium">Address</label>
+            <textarea class="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                      @bind="Address" placeholder="Enter address"></textarea>
+        </div>
+
+        <!-- Save button aligned right -->
+        <div class="mt-4 text-right">
+            <button class="bg-blue-600 text-white px-6 py-2 rounded-md font-medium hover:bg-blue-700 transition-colors"
+                    @onclick="SaveProfile">
+                Save
+            </button>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Message)) {
+            <div class="text-green-600 font-medium">@Message</div>
+        }
+
+    </div>
+</div>
+
+@code {
+    // Customer fields
+    private string CustomerName { get; set; } = "";
+    private string Phone { get; set; } = "";
+    private string Email { get; set; } = "";
+    private string Address { get; set; } = "";
+    private string Message { get; set; } = "";
+
+    // Giả sử bạn đã có CustomerId lưu sẵn (sẽ dùng khi gọi API)
+    private int CustomerId { get; set; } = 0;
+
+    private async Task SaveProfile() {
+        // TODO: Gọi API CustomerService.UpdateCustomer(CustomerId, updateRequest) sau này
+        Message = "Save clicked! (API call not implemented yet)";
+    }
+}

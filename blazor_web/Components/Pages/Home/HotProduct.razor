@@ -5,6 +5,17 @@
 @using blazor_web.Components.UI.Card
 @using blazor_web.Services.Cart
 @inject IProductService productService
+@using System.Net.Http.Json
+@using blazor_web.Models
+@using blazor_web.DTOs.Product.Response
+@using Microsoft.AspNetCore.Components
+@using blazor_web.Components.UI.Card
+
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject blazor_web.Services.Cart.ICartService CartService
+@inject Blazored.Toast.Services.IToastService Toast
+
 <div class="py-12">
     <!-- Section Header -->
     <div class="text-center mb-12">
@@ -39,14 +50,52 @@
     private SnackBoard snackBoard = new SnackBoard();
     public List<ProductResponse> HotProducts { get; set; } = new();
 
-    public GetProductResponse ProductData { get; set; } = new();
-    private bool _loaded = false;
-    protected override async Task OnInitializedAsync()
-    {
-        if (!_loaded)
-        {
-            _loaded = true;
-            await LoadData();
+    // số lượng Hot products muốn hiển thị
+    [Parameter]
+    public int Limit { get; set; } = 8;
+
+    protected override async Task OnInitializedAsync() {
+        await LoadHotProductsAsync();
+    }
+
+    private async Task LoadHotProductsAsync() {
+        _isLoading = true;
+        _errorMessage = null;
+
+        try {
+            // Gọi API GET /products
+            // Backend trả kiểu: ApiResponse<GetProductResponse>
+            var apiResp = await Http.GetFromJsonAsync<ApiResponse<GetProductResponse>>($"products");
+
+            if (apiResp == null) {
+                _errorMessage = "Không nhận được dữ liệu từ server.";
+                return;
+            }
+
+            if (!apiResp.Success || apiResp.Data == null || apiResp.Data.Products == null) {
+                _errorMessage = apiResp.Message ?? "Lấy sản phẩm thất bại.";
+                return;
+            }
+
+            // Lấy list product từ response
+            var products = apiResp.Data.Products;
+
+            // Lọc / sắp xếp logic 'hot' nếu backend không cung cấp trường 'isHot'
+            // Ở đây mình lấy top N theo CreatedAt gần nhất (giả sử mới = hot)
+            var top = products
+                .OrderByDescending(p => p.Quantity ?? 0)   // ưu tiên sản phẩm còn nhiều hàng (tùy bạn)
+                .ThenByDescending(p => p.ProductId)        // fallback order
+                .Take(Limit)
+                .ToList();
+
+            // Map ProductResponse -> blazor_web.Models.Product (ProductCard dùng Models.Product)
+            HotProducts = top.Select(MapToModelProduct).ToList();
+        } catch (Exception ex) {
+            Console.WriteLine($"[HotProducts] Load error: {ex}");
+            _errorMessage = "Có lỗi khi tải sản phẩm. Thử lại sau.";
+        } finally {
+            _isLoading = false;
+            StateHasChanged();
         }
         // For demo purposes, we will just take the first 8 products as hot products
     }
@@ -67,7 +116,33 @@
             Limit = 8
         });
         Console.WriteLine($"[HotProduct] LoadData: Retrieved {response.Data?.Products?.Count ?? 0} products");
-
-        HotProducts = response.Data?.Products ?? new List<ProductResponse>();
     }
+    private Product MapToModelProduct(ProductResponse r) {
+        return new Product {
+            ProductId = r.ProductId,
+            ProductName = r.ProductName ?? string.Empty,
+            Barcode = r.Barcode ?? string.Empty,
+            CategoryId = r.CategoryId,
+            SupplierId = r.SupplierId,
+            Price = r.Price,
+            Unit = r.Unit ?? "pcs",
+            CreatedAt = DateTime.Now
+        };
+    }
+
+    private async Task HandleAddToCart(Product product) {
+        try {
+            var success = await CartService.AddItemAsync(product, 1);
+
+            if (success) {
+                Toast.ShowSuccess($"Đã thêm \"{product.ProductName}\" vào giỏ hàng!");
+            } else {
+                Toast.ShowWarning("Không thể thêm vào giỏ hàng. Vui lòng thử lại.");
+            }
+        } catch (Exception ex) {
+            Console.WriteLine(ex);
+            Toast.ShowError("Lỗi khi thêm sản phẩm vào giỏ hàng!");
+        }
+    }
+
 }
