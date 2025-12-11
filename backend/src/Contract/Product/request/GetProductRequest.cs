@@ -33,6 +33,7 @@ public record GetProductRequest
     [FromQuery]
 
     public string? SortOrder { get; init; } = "desc";
+    
 
 
 }

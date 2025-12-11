@@ -150,8 +150,7 @@ namespace blazor_web.Services.Orders
                 var response = await _http.SendAsync(request);
 
                 var raw = await response.Content.ReadAsStringAsync();
-                Console.WriteLine(">>> [OrderService] GET /orders RESPONSE:");
-                Console.WriteLine(raw);
+             
 
                 if (!response.IsSuccessStatusCode)
                 {
