@@ -4,7 +4,6 @@
 @using blazor_web.DTOs.Orders
 @using blazor_web.Services.Customer
 @using blazor_web.Services.Orders
-@using blazor_web.Services.Product
 @inject HttpClient Http
 @inject IJSRuntime JS
 @inject NavigationManager Nav
@@ -46,7 +45,7 @@
                     <div class="input-group">
                         <span class="input-group-text"><i class="bi bi-search"></i></span>
                         <input type="text" class="form-control" placeholder="Tìm đơn hàng, khách, mã HD..."
-                               @bind="searchTerm" @bind:event="oninput" />
+                            @bind="searchTerm" @bind:event="oninput" />
                     </div>
                 </div>
                 <div class="col-md-2">
@@ -58,18 +57,16 @@
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <input type="date" class="form-control" @bind="startDate" @bind:format="yyyy-MM-dd"/>
+                    <input type="date" class="form-control" @bind="startDate" @bind:format="yyyy-MM-dd" />
                 </div>
                 <div class="col-md-2">
                     <input type="date" class="form-control" @bind="endDate" />
                 </div>
                 <div class="col-md-2">
-                   <button class="btn btn-outline-secondary w-100" 
-                        @onclick="ClearFilter"
-                        disabled="@(string.IsNullOrWhiteSpace(searchTerm) && 
-                                    statusFilter == "all" && 
-                                    !startDate.HasValue && 
-                                    !endDate.HasValue)">
+                    <button class="btn btn-outline-secondary w-100" @onclick="ClearFilter" disabled="@(string.IsNullOrWhiteSpace(searchTerm) && 
+                                                                                                                               statusFilter == "all" && 
+                                                                                                                               !startDate.HasValue && 
+                                                                                                                               !endDate.HasValue)">
                         <i class="bi bi-x-lg"></i> Xóa lọc
                     </button>
                 </div>
@@ -123,16 +120,18 @@
                                     <td>
                                         <div class="d-flex align-items-center gap-2">
                                             <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center"
-                                                 style="width: 32px; height: 32px;">
+                                                style="width: 32px; height: 32px;">
                                                 <span class="text-primary fw-bold small">
-                                                    @(string.IsNullOrEmpty(order.CustomerName) ? "K" : order.CustomerName[0].ToString().ToUpper())
+                                                    @(string.IsNullOrEmpty(order.CustomerName) ? "K" :
+                                                                                            order.CustomerName[0].ToString().ToUpper())
                                                 </span>
                                             </div>
                                             <span class="fw-medium">@order.CustomerName</span>
                                         </div>
                                     </td>
                                     <td>
-                                        <a href="tel:@order.PhoneNumber" class="text-primary text-decoration-none" @onclick:stopPropagation>
+                                        <a href="tel:@order.PhoneNumber" class="text-primary text-decoration-none"
+                                            @onclick:stopPropagation>
                                             @order.PhoneNumber
                                         </a>
                                     </td>
@@ -147,13 +146,16 @@
                                     </td>
                                     <td class="text-center" @onclick:stopPropagation>
                                         <div class="btn-group btn-group-sm">
-                                            <button class="btn btn-outline-info" @onclick="() => ViewDetail(order)" title="Xem chi tiết">
+                                            <button class="btn btn-outline-info" @onclick="() => ViewDetail(order)"
+                                                title="Xem chi tiết">
                                                 <i class="bi bi-eye"></i>
                                             </button>
-                                            <button class="btn btn-outline-primary" @onclick="() => EditOrder(order)" title="Cập nhật trạng thái">
+                                            <button class="btn btn-outline-primary" @onclick="() => EditOrder(order)"
+                                                title="Cập nhật trạng thái">
                                                 <i class="bi bi-pencil"></i>
                                             </button>
-                                            <button class="btn btn-outline-danger" @onclick="() => DeleteOrder(order)" title="Xóa đơn hàng">
+                                            <button class="btn btn-outline-danger" @onclick="() => DeleteOrder(order)"
+                                                title="Xóa đơn hàng">
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         </div>
@@ -171,13 +173,14 @@
                 <div class="card-footer bg-white">
                     <div class="d-flex justify-content-between align-items-center">
                         <small class="text-muted">
-                            Hiển thị @((currentPage-1)*pageSize + 1)–@(Math.Min(currentPage*pageSize, filteredOrders.Count)) 
+                            Hiển thị @((currentPage - 1) * pageSize + 1)–@(Math.Min(currentPage * pageSize, filteredOrders.Count))
                             / @filteredOrders.Count
                         </small>
                         <nav>
                             <ul class="pagination pagination-sm mb-0">
                                 <li class="page-item @(currentPage == 1 ? "disabled" : "")">
-                                    <button class="page-link" @onclick="() => currentPage = Math.Max(1, currentPage-1)">«</button>
+                                    <button class="page-link"
+                                        @onclick="() => currentPage = Math.Max(1, currentPage - 1)">«</button>
                                 </li>
                                 @for (int i = Math.Max(1, currentPage - 2); i <= Math.Min(TotalPages, currentPage + 2); i++)
                                 {
@@ -187,7 +190,8 @@
                                     </li>
                                 }
                                 <li class="page-item @(currentPage == TotalPages ? "disabled" : "")">
-                                    <button class="page-link" @onclick="() => currentPage = Math.Min(TotalPages, currentPage+1)">»</button>
+                                    <button class="page-link"
+                                        @onclick="() => currentPage = Math.Min(TotalPages, currentPage + 1)">»</button>
                                 </li>
                             </ul>
                         </nav>
@@ -240,12 +244,13 @@
                                     </div>
                                     <div class="col-md-6">
                                         <small class="text-muted">Ngày đặt:</small>
-                                        <div>@DateTime.Parse(orderDetail.Order.OrderDate).ToString("dd/MM/yyyy HH:mm", viCulture)</div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <small class="text-muted">Trạng thái:</small>
-                                        <div>
-                                            @switch (orderDetail.Order.Status)
+                                        <div>@DateTime.Parse(orderDetail.Order.OrderDate).ToString("dd/MM/yyyy HH:mm",
+                                                                                viCulture)</div>
+                            </div>
+                            <div class="col-md-6">
+                                <small class="text-muted">Trạng thái:</small>
+                                <div>
+                                    @switch (orderDetail.Order.Status)
                                             {
                                                 case 0:
                                                     <span class="badge bg-warning text-dark">
@@ -321,7 +326,8 @@
                                 <div class="d-flex justify-content-between">
                                     <strong class="text-primary">Tiền phải trả:</strong>
                                     <strong class="text-danger fs-5">
-                                        @((orderDetail.Order.TotalAmount - orderDetail.Order.DiscountAmount).ToString("N0", viCulture))₫
+                                        @((orderDetail.Order.TotalAmount - orderDetail.Order.DiscountAmount).ToString("N0",
+                                                                        viCulture))₫
                                     </strong>
                                 </div>
                             </div>
@@ -383,7 +389,8 @@
                             <div class="d-flex justify-content-between">
                                 <strong class="text-primary">Tiền phải trả:</strong>
                                 <strong class="text-danger">
-                                    @((selectedOrder.TotalPaymentAmount - selectedOrder.DiscountAmount).ToString("N0", viCulture))₫
+                                    @((selectedOrder.TotalPaymentAmount - selectedOrder.DiscountAmount).ToString("N0",
+                                                                    viCulture))₫
                                 </strong>
                             </div>
                         </div>
@@ -402,7 +409,8 @@
                     <button class="btn btn-secondary" @onclick="CloseEditDialog">
                         <i class="bi bi-x"></i> Hủy bỏ
                     </button>
-                    <button class="btn btn-primary" @onclick="UpdateStatus" disabled="@(selectedOrder?.Status == "completed")">>
+                    <button class="btn btn-primary" @onclick="UpdateStatus"
+                        disabled="@(selectedOrder?.Status == "completed")">>
                         <i class="bi bi-check"></i> Cập nhật
                     </button>
                 </div>
@@ -452,7 +460,8 @@
                             <div class="d-flex justify-content-between">
                                 <strong class="text-primary">Tiền phải trả:</strong>
                                 <strong class="text-danger">
-                                    @((selectedOrder.TotalPaymentAmount - selectedOrder.DiscountAmount).ToString("N0", viCulture))₫
+                                    @((selectedOrder.TotalPaymentAmount - selectedOrder.DiscountAmount).ToString("N0",
+                                                                    viCulture))₫
                                 </strong>
                             </div>
                         </div>
@@ -520,9 +529,9 @@
     // Computed
     private List<OrderT> filteredOrders => FilterOrders();
     private List<OrderT> PaginatedOrders => filteredOrders
-        .Skip((currentPage - 1) * pageSize)
-        .Take(pageSize)
-        .ToList();
+    .Skip((currentPage - 1) * pageSize)
+    .Take(pageSize)
+    .ToList();
     private int TotalPages => (int)Math.Ceiling(filteredOrders.Count / (double)pageSize);
 
     protected override async Task OnInitializedAsync()
@@ -585,16 +594,16 @@
         if (startDate.HasValue)
         {
             var start = startDate.Value.Date; // Chỉ lấy ngày, bỏ giờ
-            list = list.Where(o => 
-                DateTime.TryParse(o.CreatedDate, out var dt) && dt.Date >= start
+            list = list.Where(o =>
+            DateTime.TryParse(o.CreatedDate, out var dt) && dt.Date >= start
             );
         }
 
         if (endDate.HasValue)
         {
             var end = endDate.Value.Date.AddDays(1).AddSeconds(-1); // Đến 23:59:59
-            list = list.Where(o => 
-                DateTime.TryParse(o.CreatedDate, out var dt) && dt <= end
+            list = list.Where(o =>
+            DateTime.TryParse(o.CreatedDate, out var dt) && dt <= end
             );
         }
 
@@ -603,17 +612,17 @@
         {
             var term = searchTerm.ToLowerInvariant();
             list = list.Where(o =>
-                o.Id.ToString().Contains(term) ||
-                (o.CustomerName?.ToLower().Contains(term) ?? false) ||
-                (o.PhoneNumber?.Contains(term) ?? false)
+            o.Id.ToString().Contains(term) ||
+            (o.CustomerName?.ToLower().Contains(term) ?? false) ||
+            (o.PhoneNumber?.Contains(term) ?? false)
             );
         }
 
         // 4. Sắp xếp mới nhất trước
         return list
-            .OrderByDescending(o => 
-                DateTime.TryParse(o.CreatedDate, out var dt) ? dt : DateTime.MinValue)
-            .ToList();
+        .OrderByDescending(o =>
+        DateTime.TryParse(o.CreatedDate, out var dt) ? dt : DateTime.MinValue)
+        .ToList();
     }
 
     private async Task ViewDetail(OrderT order)
@@ -638,22 +647,25 @@
         }
     }
 
-    private async Task<OrderDetailResponse> GenerateMockDetail(OrderT order) {
-        List<OrderItemDto> list = new(); 
+    private async Task<OrderDetailResponse> GenerateMockDetail(OrderT order)
+    {
+        List<OrderItemDto> list = new();
         var rs = await orderService.GetOrderItemsAsync(order.Id);
-        foreach(var item in rs.Data){
-            var response = await productService.GetProductByIdAsync(item.Productid);
+        foreach (var item in rs.Data)
+        {
+            var response = await productService.GetProductById(item.Productid);
             var product = response.Data;
-            list.Add(new OrderItemDto{
+            list.Add(new OrderItemDto
+            {
                 ProductName = product.ProductName,
                 Quantity = item.Quantity,
                 Price = item.Price,
             });
         }
 
-        return   new OrderDetailResponse()
-        {   
-            
+        return new OrderDetailResponse()
+        {
+
 
             Order = new OrderDetailDto
             {
@@ -681,19 +693,23 @@
         if (selectedOrder != null)
         {
             selectedOrder.Status = newStatus;
-            var request = new OrderRequest(){
+            var request = new OrderRequest()
+            {
                 Customerid = selectedOrder.customerId,
                 Userid = selectedOrder.userId,
                 OrderDate = DateTime.Parse(selectedOrder.CreatedDate),
                 DiscountAmount = selectedOrder.DiscountAmount,
                 TotalAmount = selectedOrder.TotalPaymentAmount,
-                Status = selectedOrder.Status  == "pending" ? 0 : selectedOrder.Status == "completed" ? 1 : 2
+                Status = selectedOrder.Status == "pending" ? 0 : selectedOrder.Status == "completed" ? 1 : 2
             };
 
             var rs = await orderService.UpdateOrderAsync(selectedOrder.Id, request);
-            if(rs.Success){
+            if (rs.Success)
+            {
                 Toast($"Đã cập nhật trạng thái đơn hàng #{selectedOrder.Id}", "success");
-            }else{
+            }
+            else
+            {
                 Toast($"Cập nhật trạng thái đơn hàng thất bại#{selectedOrder.Id}", "error");
             }
         }
@@ -711,9 +727,12 @@
         if (selectedOrder != null)
         {
             var rs = await orderService.DeleteOrderAsync(selectedOrder.Id);
-             if(rs.Success){
+            if (rs.Success)
+            {
                 Toast($"Đã xóa đơn hàng #{selectedOrder.Id}", "success");
-            }else{
+            }
+            else
+            {
                 Toast($"Xóa đơn hàng thất bại#{selectedOrder.Id}", "error");
             }
         }
@@ -743,13 +762,13 @@
 
     private RenderFragment GetStatusBadge(string status) => status switch
     {
-        "pending" => @<span class="badge bg-warning text-dark"><i class="bi bi-clock"></i> Chờ xử lý</span>,
-        "completed" => @<span class="badge bg-success"><i class="bi bi-check-circle"></i> Hoàn thành</span>,
-        "canceled" => @<span class="badge bg-danger"><i class="bi bi-x-circle"></i> Đã hủy</span>,
-        _ => @<span class="badge bg-secondary">Không xác định</span>
-    };
+    "pending" => @<span class="badge bg-warning text-dark"><i class="bi bi-clock"></i> Chờ xử lý</span>,
+"completed" => @<span class="badge bg-success"><i class="bi bi-check-circle"></i> Hoàn thành</span>,
+"canceled" => @<span class="badge bg-danger"><i class="bi bi-x-circle"></i> Đã hủy</span>,
+_ => @<span class="badge bg-secondary">Không xác định</span>
+};
 
-    private void Toast(string message, string type = "success")
+private void Toast(string message, string type = "success")
     {
         snackbarMessage = message;
         snackbarType = type;
@@ -763,11 +782,11 @@
         });
     }
 
-        public class OrderT
+    public class OrderT
     {
         public int Id { get; set; }
-        public int customerId {get; set;}
-        public int userId {get;set;}
+        public int customerId { get; set; }
+        public int userId { get; set; }
         public string? CustomerName { get; set; }
         public string? PhoneNumber { get; set; }
         public string CreatedDate { get; set; } = DateTime.Now.ToString("o");
@@ -801,5 +820,3 @@
         public decimal SubTotal => Price * Quantity;
     }
 }
-
-
