@@ -22,8 +22,6 @@ public record UpdateProductRequest
 
     [FromForm]
     public string? Unit { get; set; } = "Cái";
-    [FromForm]
-    public IFormFile? ImageProduct { get; set; }
 
 
 

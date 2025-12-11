@@ -3,7 +3,7 @@
 
 ### dotenv ###
 .env
-.vscode
+
 ### DotnetCore ###
 # .NET Core build folders
 bin/

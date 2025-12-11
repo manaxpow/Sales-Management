@@ -17,9 +17,6 @@ public class ProductResponse
     public decimal Price { get; set; }
     public string Unit { get; set; } = string.Empty;
     public int? Quantity { get; set; }
-    public string ImageProduct {get;set;} = string.Empty;
-    public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
 
 }
 
