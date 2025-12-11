@@ -10,7 +10,6 @@ public interface IProductService
     Task<ApiResponse<ProductResponse>> GetProductById(int id);
     Task<ApiResponse<ProductResponse>> CreateProduct(MultipartFormDataContent request);
     Task<ApiResponse<ProductResponse>> UpdateProduct(MultipartFormDataContent request);
-
     Task<ApiResponse<ProductResponse>> DeleteProduct(DeleteProductRequest request);
     Task<ApiResponse<List<ProductResponse>>> GetProductsBySupplierIdAsync(int supplierId);
 

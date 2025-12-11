@@ -2,7 +2,6 @@
 @layout AdminLayout
 @rendermode InteractiveServer
 
-@using blazor_web.DTOs.Product
 @using blazor_web.DTOs.Supplier
 @using blazor_web.Services.Supplier
 @using Microsoft.AspNetCore.Components.Web.Virtualization
@@ -238,9 +237,9 @@ else
     public int SupplierId { get; set; }
 
     private SupplierResponse? supplier;
-    private List<blazor_web.DTOs.Product.ProductResponse> products = new();
-    private List<blazor_web.DTOs.Product.ProductResponse> filteredProducts = new();
-    private List<blazor_web.DTOs.Product.ProductResponse> currentProducts = new();
+    private List<ProductResponse> products = new();
+    private List<ProductResponse> filteredProducts = new();
+    private List<ProductResponse> currentProducts = new();
     private bool isLoading = true;
     private string? error;
 
@@ -317,7 +316,7 @@ else
             else
             {
                 Console.WriteLine($"Error loading products: {productResponse.Message}");
-                products = new List<blazor_web.DTOs.Product.ProductResponse>();
+                products = new List<ProductResponse>();
             }
 
             ApplyFilterAndPagination();

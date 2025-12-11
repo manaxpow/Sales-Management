@@ -87,10 +87,8 @@
         @if (products.Count > 0)
         {
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                @foreach (var product in products)
-                {
-                    <blazor_web.Components.UI.Card.ProductCard Product="@product"
-                        OnAddToCartClick="@((ProductResponse p) => HandleAddToCart(p))" />
+                @foreach (var product in paginatedProducts) {
+                    <ProductCard Product="@product" OnAddToCartClick="HandleAddToCart" />
                 }
             </div>
         }
@@ -128,13 +126,66 @@
     private SnackBoard snackBoard = new SnackBoard();
 
 
-    protected override async Task OnInitializedAsync()
-    {
-        ApiResponse<List<CategoryResponse>>? cateRes = await categoryService.GetAll();
-        var supplierResponses = await supplierService.GetSuppliersAsync();
-        if (cateRes != null)
+    // products
+    private List<ProductResponse> paginatedProducts = new();
+    private bool _isLoading = true;
+    private string? _errorMessage;
+
+    protected override async Task OnInitializedAsync() {
+        await LoadProductsAsync();
+    }
+
+    // Build query string from current state
+    private string BuildQueryString() {
+        var qs = new List<string>
         {
-            categories = cateRes.Data;
+            $"page={currentPage}",
+            $"pageSize={itemsPerPage}"
+        };
+
+        if (!string.IsNullOrWhiteSpace(searchTerm)) qs.Add($"search={Uri.EscapeDataString(searchTerm)}");
+        if (categoryId.HasValue) qs.Add($"categoryId={categoryId.Value}");
+        if (supplierId.HasValue) qs.Add($"supplierId={supplierId.Value}");
+        if (maxPrice.HasValue) qs.Add($"maxPrice={maxPrice.Value}");
+        if (!string.IsNullOrWhiteSpace(sortBy)) qs.Add($"sort={Uri.EscapeDataString(sortBy)}");
+
+        return string.Join("&", qs);
+    }
+
+    private async Task LoadProductsAsync() {
+        _isLoading = true;
+        _errorMessage = null;
+        paginatedProducts.Clear();
+
+        try {
+            var qs = BuildQueryString();
+            // API returns ApiResponse<GetProductResponse>
+            var apiResp = await Http.GetFromJsonAsync<ApiResponse<GetProductResponse>>($"products?{qs}");
+
+            if (apiResp == null) {
+                _errorMessage = "No response from server.";
+                return;
+            }
+
+            if (!apiResp.Success || apiResp.Data == null) {
+                _errorMessage = apiResp.Message ?? "Failed to load products";
+                return;
+            }
+
+            var data = apiResp.Data;
+
+            totalProducts = data.TotalProduct;
+            totalPages = data.TotalPage > 0 ? data.TotalPage : (int)Math.Ceiling((double)totalProducts / itemsPerPage);
+            currentPage = data.CurrentPage > 0 ? data.CurrentPage : currentPage;
+
+            // Map ProductResponse -> Models.Product
+            paginatedProducts = data.Products;
+        } catch (Exception ex) {
+            Console.WriteLine($"[Products] LoadProductsAsync error: {ex}");
+            _errorMessage = "Error loading products. Please try again later.";
+        } finally {
+            _isLoading = false;
+            StateHasChanged();
         }
         if (supplierResponses != null)
         {
@@ -162,23 +213,12 @@
         await LoadData();
     }
 
-    private async Task OnLimitChange(ChangeEventArgs e)
-    {
-        if (int.TryParse(e.Value?.ToString(), out int newLimit))
-        {
-            limit = newLimit;
-        }
-        else limit = 8;
-        Console.WriteLine($"[Products] OnLimitChange: {limit}");
-        CurrentPage = 1;
-        await LoadData();
-    }
-    private async Task HandlePageChanged(int newPage)
-    {
-
-        CurrentPage = newPage;
-        await JS.InvokeVoidAsync("scrollTo", new object[] { 0, 0 });
-        await LoadData();
+    // Filter / paging callbacks
+    private async Task HandleFilterChanged(ProductFilter args) {
+        categoryId = args?.CategoryId;
+        supplierId = args?.SupplierId;
+        currentPage = 1;
+        await LoadProductsAsync();
     }
 
     private async Task HandleItemsPerPageChanged(int newLimit)
@@ -200,29 +240,34 @@
         return price.ToString("N0") + " ₫";
     }
 
-
-
-    private async Task HandleAddToCart(ProductResponse data)
-    {
-        var product = ProductMapper.ToModel(data);
-        Console.WriteLine($"[Products] HandleAddToCart: {product.ProductId} - {product.ProductName}");
-        await CartService.AddItemAsync(product, 1);
-        snackBoard.Show($"{product.ProductName} has been added to your cart!", "success", "top-right");
+    // Add to cart
+    private blazor_web.Models.Product ConvertToModel(ProductResponse r) {
+        return new blazor_web.Models.Product {
+            ProductId = r.ProductId,
+            ProductName = r.ProductName ?? "",
+            CategoryId = r.CategoryId,
+            SupplierId = r.SupplierId,
+            Barcode = r.Barcode ?? "",
+            Price = r.Price,
+            Unit = r.Unit ?? "pcs",
+            CreatedAt = r.CreatedAt,
+        };
     }
 
-    private async Task OnSortChange(ChangeEventArgs e)
-    {
-        var sortValue = e.Value?.ToString();
-        if (!string.IsNullOrEmpty(sortValue))
-        {
-            var parts = sortValue.Split('-');
-            if (parts.Length == 2)
-            {
-                productFilter.SortBy = parts[0];
-                productFilter.SortOrder = parts[1];
-                CurrentPage = 1;
-                await LoadData();
-            }
-        }
+    private async Task HandleAddToCart(ProductResponse product) {
+        var model = ConvertToModel(product);
+        var success = await CartService.AddItemAsync(model, 1);
+
+        addToCartMessage = success
+            ? $"Đã thêm \"{product.ProductName}\" vào giỏ hàng."
+            : $"Không thể thêm \"{product.ProductName}\". Thử lại sau.";
+
+        showAddToCartMessage = true;
+
+        _ = Task.Run(async () => {
+            await Task.Delay(3000);
+            showAddToCartMessage = false;
+            await InvokeAsync(StateHasChanged);
+        });
     }
 }

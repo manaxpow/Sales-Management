@@ -1,23 +1,20 @@
-@inject ICartService CartService
+@*
+    Hot Products Component - Display featured products using ProductCard
+*@
 
 @using System.Threading.Tasks
 @using blazor_web.Components.UI
 @using blazor_web.Components.UI.Card
-@using blazor_web.Services.Cart
-@inject IProductService productService
-@using System.Net.Http.Json
 @using blazor_web.Models
-@using blazor_web.DTOs.Product.Response
 @using Microsoft.AspNetCore.Components
-@using blazor_web.Components.UI.Card
+@using System.Net.Http.Json
 
 @inject HttpClient Http
-@inject NavigationManager Navigation
 @inject blazor_web.Services.Cart.ICartService CartService
 @inject Blazored.Toast.Services.IToastService Toast
+@inject NavigationManager Navigation
 
 <div class="py-12">
-    <!-- Section Header -->
     <div class="text-center mb-12">
         <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
             🔥 Hot Products
@@ -27,30 +24,35 @@
         </p>
     </div>
 
-    <!-- Products Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-        @foreach (var product in HotProducts)
-        {
-            <ProductCard Product="@product" OnAddToCartClick="@((ProductResponse p) => HandleAddToCart(p))" />
-        }
-    </div>
+    @if (_isLoading) {
+        <div class="text-center py-8">
+            <div class="inline-block animate-pulse text-gray-500">Loading hot products...</div>
+        </div>
+    } else if (!string.IsNullOrEmpty(_errorMessage)) {
+        <div class="text-center py-8 text-red-600">
+            @_errorMessage
+        </div>
+    } else {
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+            @foreach (var p in HotProducts) {
+                <ProductCard Product="@p" OnAddToCartClick="HandleAddToCart" />
+            }
+        </div>
 
-    <!-- View All Products Button -->
-    <div class="text-center mt-12">
-        <a href="/products"
-            class="no-underline inline-block bg-gray-800 hover:bg-gray-900 text-white font-semibold py-3 px-8 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg">
-            View All Products
-        </a>
-    </div>
-
-    <SnackBoard @ref="snackBoard" />
+        <div class="text-center mt-12">
+            <a href="/products"
+               class="no-underline inline-block bg-gray-800 hover:bg-gray-900 text-white font-semibold py-3 px-8 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg">
+                View All Products
+            </a>
+        </div>
+    }
 </div>
 
 @code {
-    private SnackBoard snackBoard = new SnackBoard();
-    public List<ProductResponse> HotProducts { get; set; } = new();
+    private List<ProductResponse> HotProducts { get; set; } = new();
+    private bool _isLoading = true;
+    private string? _errorMessage;
 
-    // số lượng Hot products muốn hiển thị
     [Parameter]
     public int Limit { get; set; } = 8;
 
@@ -63,33 +65,18 @@
         _errorMessage = null;
 
         try {
-            // Gọi API GET /products
-            // Backend trả kiểu: ApiResponse<GetProductResponse>
-            var apiResp = await Http.GetFromJsonAsync<ApiResponse<GetProductResponse>>($"products");
+            var apiResp = await Http.GetFromJsonAsync<ApiResponse<GetProductResponse>>("products");
 
-            if (apiResp == null) {
-                _errorMessage = "Không nhận được dữ liệu từ server.";
+            if (apiResp?.Success != true || apiResp.Data?.Products == null) {
+                _errorMessage = apiResp?.Message ?? "Lỗi tải dữ liệu.";
                 return;
             }
 
-            if (!apiResp.Success || apiResp.Data == null || apiResp.Data.Products == null) {
-                _errorMessage = apiResp.Message ?? "Lấy sản phẩm thất bại.";
-                return;
-            }
-
-            // Lấy list product từ response
-            var products = apiResp.Data.Products;
-
-            // Lọc / sắp xếp logic 'hot' nếu backend không cung cấp trường 'isHot'
-            // Ở đây mình lấy top N theo CreatedAt gần nhất (giả sử mới = hot)
-            var top = products
-                .OrderByDescending(p => p.Quantity ?? 0)   // ưu tiên sản phẩm còn nhiều hàng (tùy bạn)
-                .ThenByDescending(p => p.ProductId)        // fallback order
+            HotProducts = apiResp.Data.Products
+                .OrderByDescending(p => p.Quantity)
+                .ThenByDescending(p => p.ProductId)
                 .Take(Limit)
                 .ToList();
-
-            // Map ProductResponse -> blazor_web.Models.Product (ProductCard dùng Models.Product)
-            HotProducts = top.Select(MapToModelProduct).ToList();
         } catch (Exception ex) {
             Console.WriteLine($"[HotProducts] Load error: {ex}");
             _errorMessage = "Có lỗi khi tải sản phẩm. Thử lại sau.";
@@ -97,7 +84,6 @@
             _isLoading = false;
             StateHasChanged();
         }
-        // For demo purposes, we will just take the first 8 products as hot products
     }
     private async Task HandleAddToCart(ProductResponse data)
     {
@@ -132,17 +118,27 @@
 
     private async Task HandleAddToCart(Product product) {
         try {
+            // Convert ProductResponse → Product model for Cart
+            var product = new Product {
+                ProductId = r.ProductId,
+                ProductName = r.ProductName,
+                Barcode = r.Barcode,
+                CategoryId = r.CategoryId,
+                SupplierId = r.SupplierId,
+                Price = r.Price,
+                Unit = r.Unit,
+                CreatedAt = DateTime.Now
+            };
+
             var success = await CartService.AddItemAsync(product, 1);
 
-            if (success) {
-                Toast.ShowSuccess($"Đã thêm \"{product.ProductName}\" vào giỏ hàng!");
-            } else {
-                Toast.ShowWarning("Không thể thêm vào giỏ hàng. Vui lòng thử lại.");
-            }
+            if (success)
+                Toast.ShowSuccess($"Đã thêm “{r.ProductName}” vào giỏ hàng!");
+            else
+                Toast.ShowWarning("Không thể thêm vào giỏ hàng.");
         } catch (Exception ex) {
             Console.WriteLine(ex);
-            Toast.ShowError("Lỗi khi thêm sản phẩm vào giỏ hàng!");
+            Toast.ShowError("Lỗi khi thêm vào giỏ!");
         }
     }
-
 }
