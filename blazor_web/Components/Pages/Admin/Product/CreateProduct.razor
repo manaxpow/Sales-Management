@@ -1,0 +1,218 @@
+@page "/admin/products/create"
+@using blazor_web.DTOs.Supplier
+@using blazor_web.Services.Category
+@inject NavigationManager Nav
+@inject IProductService productService
+@inject ISupplierService supplierService
+@inject CategoryService categoryService
+@using blazor_web.Models
+@using System.ComponentModel.DataAnnotations
+@using blazor_web.Services.Supplier
+@rendermode InteractiveServer
+
+<div class="d-flex justify-content-center">
+    <div class="card shadow-lg create-form w-full">
+        <div class="card-body p-4">
+
+            <a href="/admin/products" class="text-dark mb-3 d-inline-flex align-items-center">
+                <i class="bi bi-arrow-left me-2"></i> Back
+            </a>
+
+            <h2 class="fw-bold">Create New Product</h2>
+            <p class="text-muted mb-4">Fill the information below to add a new product</p>
+
+            @if (!string.IsNullOrEmpty(ErrorMessage))
+            {
+                <div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md mb-3">
+                    @ErrorMessage
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(SuccessMessage))
+            {
+                <div class="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-md mb-3">
+                    @SuccessMessage
+                </div>
+            }
+            <EditForm class=" bg-white shadow-xl rounded-lg p-8" Model="@model" FormName="createPromotionForm"
+                OnValidSubmit="HandleValidSubmit" OnInvalidSubmit="HandleInvalidSubmit">
+                <DataAnnotationsValidator />
+                <!-- Product Name -->
+                <div class="mb-3">
+                    <label class="form-label">Product Name *</label>
+                    <InputText @bind-Value="model.ProductName" class="form-control" placeholder="Enter product name" />
+                    <ValidationMessage For="@(() => model.ProductName)" class="text-red-500 text-xs mt-1" />
+                </div>
+
+                <!-- Price -->
+                <div class="mb-3">
+                    <label class="form-label">Price *</label>
+                    <InputNumber @bind-Value="model.Price" oninput="formatPrice(this)" class="form-control" />
+                    <ValidationMessage For="@(() => model.Price)" class="text-red-500 text-xs mt-1" />
+                </div>
+
+                <!-- Unit -->
+                <div class="mb-3">
+                    <label class="form-label">Unit *</label>
+                    <InputSelect @bind-Value="model.Unit" class="form-select">
+                        @foreach (var u in Enum.GetValues<Units>())
+                        {
+                            <option value="@u">@u</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="@(() => model.Unit)" class="text-red-500 text-xs mt-1" />
+                </div>
+
+                <!-- Category -->
+                <div class="mb-3">
+                    <label class="form-label">Category *</label>
+                    <InputSelect @bind-Value="model.CategoryId" class="form-select">
+                        <option value="0">-- Select category --</option>
+                        @foreach (var c in categories)
+                        {
+                            <option value="@c.Id">@c.Name</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="@(() => model.CategoryId)" class="text-red-500 text-xs mt-1" />
+                </div>
+
+                <!-- Supplier -->
+                <div class="mb-3">
+                    <label class="form-label">Supplier*</label>
+                    <InputSelect @bind-Value="model.SupplierId" class="form-select">
+                        <option value="">-- Select supplier--</option>
+                        @foreach (var s in suppliers)
+                        {
+                            <option value="@s.Id">@s.Name</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="@(() => model.SupplierId)" class="text-red-500 text-xs mt-1" />
+                </div>
+
+                <!-- Image -->
+                <div class="mb-3">
+                    <label class="form-label">Product Image</label>
+                    <InputFile class="form-control" OnChange="OnFileSelected" accept="image/*" />
+                    @if (previewImage != null)
+                    {
+                        <img src="@previewImage" class="img-fluid rounded mt-3" style="max-height:200px" />
+                    }
+                </div>
+
+                <!-- Buttons -->
+                <button type="submit" class="btn btn-primary w-100 mt-3">CREATE PRODUCT</button>
+                <button type="button" class="btn btn-light border w-100 mt-3" @onclick="GoBack">CANCEL</button>
+
+            </EditForm>
+
+        </div>
+    </div>
+</div>
+
+@code {
+    private CreateProductRequest model = new();
+    private string? ErrorMessage;
+    private string? SuccessMessage;
+
+    private List<CategoryResponse> categories = new();
+    private List<SupplierResponse> suppliers = new();
+
+    private IBrowserFile? uploadedFile;
+    private string? previewImage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await categoryService.GetAll();
+        categories = response.Data ?? new List<CategoryResponse>();
+        var supplierResponse = await supplierService.GetSuppliersAsync();
+        suppliers = supplierResponse.Data ?? new List<SupplierResponse>();
+    }
+
+    private async Task OnFileSelected(InputFileChangeEventArgs e)
+    {
+        uploadedFile = e.File;
+
+
+        var resizedFile = await uploadedFile.RequestImageFileAsync(
+        uploadedFile.ContentType,
+        300,
+        300
+        );
+
+        using var ms = new MemoryStream();
+        await resizedFile.OpenReadStream().CopyToAsync(ms);
+
+        previewImage = $"data:{uploadedFile.ContentType};base64,{Convert.ToBase64String(ms.ToArray())}";
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        ErrorMessage = SuccessMessage = null;
+        try
+        {
+            using var content = new MultipartFormDataContent();
+
+            content.Add(new StringContent(model.ProductName), "ProductName");
+            content.Add(new StringContent(model.CategoryId.ToString()), "CategoryId");
+            content.Add(new StringContent(model.SupplierId.ToString()), "SupplierId");
+            content.Add(new StringContent(model.Price.ToString()), "Price");
+            content.Add(new StringContent(model.Unit), "Unit");
+
+            if (uploadedFile != null)
+            {
+                var fileContent = new StreamContent(uploadedFile.OpenReadStream(5_000_000));
+                content.Add(fileContent, "ImageProduct", uploadedFile.Name);
+                fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(uploadedFile.ContentType);
+
+            }
+
+            var result = await productService.CreateProduct(content);
+
+            if (result.Success)
+            {
+                SuccessMessage = "Product created successfully!";
+                model = new CreateProductRequest();
+                previewImage = null;
+            }
+            else
+            {
+                ErrorMessage = result.Message ?? "Failed to create product.";
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = "Error: " + ex.Message;
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task HandleInvalidSubmit()
+    {
+        ErrorMessage = "Please correct the errors in the form.";
+        SuccessMessage = null;
+
+        var messages = new List<string>();
+
+        var context = new ValidationContext(model);
+        var results = new List<ValidationResult>();
+
+        Validator.TryValidateObject(model, context, results, true);
+
+        foreach (var r in results)
+        {
+            messages.Add(r.ErrorMessage!);
+        }
+
+        Console.WriteLine("INVALID FIELDS:");
+        foreach (var m in messages)
+        {
+            Console.WriteLine(" - " + m);
+        }
+        await Task.CompletedTask;
+    }
+    private void GoBack()
+    {
+        Nav.NavigateTo("/admin/products");
+    }
+}

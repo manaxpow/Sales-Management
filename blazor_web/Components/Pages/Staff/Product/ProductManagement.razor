@@ -1,0 +1,235 @@
+@page "/staff/products"
+@inject IProductService productService
+@inject CategoryService CategoryService
+@inject ISupplierService supplierService
+@inject IJSRuntime JS
+@using System.Numerics
+@using blazor_web.Components.Pages.Admin.Category
+@using blazor_web.Components.UI
+@using blazor_web.DTOs.Supplier
+@using blazor_web.Models;
+@using blazor_web.Services.Category
+@using blazor_web.Services.Supplier
+@rendermode InteractiveServer
+<div class="d-flex justify-content-between items-center mb-3">
+    <h3>Quản lý sản phẩm</h3>
+</div>
+<!-- FILTER -->
+<div class="mb-3">
+    <div class="bg-white border rounded-md p-6">
+        <div class="d-flex gap-2 mb-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M6 12h12M9.75 17.25h4.5" />
+            </svg>
+            <p class="font-bold text-xl">Lọc</p>
+        </div>
+        <div class="d-flex justify-content-between">
+            <div class="d-flex gap-3">
+                <input type="text" class="form-control" placeholder="Tìm theo tên sản phẩm"
+                    @bind="@productFilter.ProductName" @onkeydown="HandleEnter" @bind:event="oninput" />
+                <select @bind="@productFilter.Status" class="border rounded-lg px-3 py-2">
+                    <option value="">Trạng thái</option>
+                    <option value="1">Active</option>
+                    <option value="2">Inactive</option>
+                </select>
+                <select class="border rounded-lg px-3 py-2" @bind="@productFilter.CategoryId">
+                    <option value="">Danh mục</option>
+                    @if (dataRes != null && categories != null)
+                    {
+                        foreach (var item in categories)
+                        {
+                            <option value="@item.Id">
+                                @item.Name
+                            </option>
+                        }
+                    }
+                </select>
+                <select class="border rounded-lg px-3 py-2" @bind="@productFilter.SupplierId">
+                    <option value="">Nhà cung cấp</option>
+                    @if (dataRes != null && suppliers != null)
+                    {
+                        foreach (var item in suppliers)
+                        {
+                            <option value="@item.Id">
+                                @item.Name
+                            </option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="d-flex gap-3">
+                <button class="btn btn-primary" @onclick="Search">
+                    Tìm kiếm
+                </button>
+                <button class="btn btn-primary" @onclick="Clear">
+                    Clear
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- TABLE -->
+<table class="mb-4 table table-striped">
+    <thead class="text-center ">
+        <tr>
+            <th style="width: 60px">#</th>
+            <th class="text-start" style="width: auto;">
+                Tên sản phẩm
+            </th>
+            <th style="width: 150px">Danh mục</th>
+            <th style="width: 120px">Trạng thái</th>
+            <th style="width: 120px">Giá bán</th>
+            <th style="width: 120px">Đơn vị tính </th>
+            <th style="width: 300px" class="text-end">
+                Thao tác
+            </th>
+        </tr>
+    </thead>
+    @if (products.Count == 0)
+    {
+        <tbody class="h-48 ">
+            <tr class="align-middle">
+                <td colspan="7" class="text-center">
+                    No data available
+                </td>
+            </tr>
+        </tbody>
+    }
+    <tbody class="text-center">
+        @for
+                (int i = 0; i
+                <
+                products.Count; i++)
+        {
+            var item = products[i];
+            if (dataRes == null)
+            {
+                break;
+            }
+            var stt = (dataRes.CurrentPage - 1) * limit + i + 1;
+            <tr>
+                <td>
+                    @stt
+                </td>
+                <td class="text-start">
+                    @item.ProductName
+                </td>
+                <td>
+                    @item.CategoryName
+                </td>
+                <td>
+                    @if ((int)item.Status == 1)
+                    {
+                        <span class="px-2 py-1 rounded-full bg-green-100 text-bg-success text-sm font-semibold">Active</span>
+                    }
+                    else
+                    {
+                        <span
+                            class="px-2 py-1 border rounded-full bg-red text-white text-bg-danger text-sm font-semibold">Inactive</span>
+                    }
+                </td>
+                <td>
+                    @PriceHelper.FormatPrice(@item.Price)
+                </td>
+                <td>
+                    @item.Unit
+                </td>
+                <td class="d-flex justify-content-end w-48 gap-2">
+                    <button class="btn btn-primary btn-sm" @onclick="() => detailDialog!.Show(item)">
+                        Chi Tiết
+                    </button>
+
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@* Pagination *@
+@if (dataRes?.TotalPage >= 1)
+{
+    <!-- Pagination Component -->
+    <Pagination CurrentPage="@dataRes.CurrentPage" TotalPages="@dataRes.TotalPage" TotalItems="@dataRes.TotalProduct"
+        ItemsPerPage="limit" OnPageChanged="HandlePageChanged" OnItemsPerPageChanged="HandleItemsPerPageChanged" />
+}
+<DetailProduct @ref="detailDialog" />
+
+@code
+{
+    private List<CategoryResponse> categories = new();
+    private List<SupplierResponse> suppliers = new();
+
+    private List<ProductResponse> products = new();
+
+    private GetProductResponse dataRes = new();
+
+    private DetailProduct? detailDialog;
+
+   
+    public ProductFilter productFilter = new ProductFilter
+    {
+        Page = 1,
+        Limit = 10,
+    };
+
+    private int limit = 10;
+
+    private async Task HandlePageChanged(int newPage)
+    {
+
+        productFilter.Page = newPage;
+        await JS.InvokeVoidAsync("scrollTo", new object[] { 0, 0 });
+        await LoadData();
+    }
+
+    private async Task HandleItemsPerPageChanged(int newLimit)
+    {
+        limit = newLimit;
+        productFilter.Limit = limit;
+        dataRes.CurrentPage = 1;
+        await JS.InvokeVoidAsync("scrollTo", new object[] { 0, 0 });
+        await LoadData();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        ApiResponse<List<CategoryResponse>>? cateRes = await CategoryService.GetAll();
+        var supRes = await supplierService.GetSuppliersAsync();
+        if (cateRes != null)
+        {
+            categories = cateRes.Data;
+        }
+        if (supRes != null)
+        {
+            suppliers = supRes.Data;
+        }
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        var response = await productService.GetAllProduct(productFilter);
+
+        products = response.Data.Products ?? new();
+        dataRes = response.Data;
+        StateHasChanged();
+    }
+
+    private async Task Search()
+    {
+        productFilter.Page = 1;
+        await LoadData();
+    }
+
+    private async Task Clear()
+    {
+        productFilter.Page = 1;
+        productFilter.Limit = 10;
+        productFilter.ProductName = "";
+        productFilter.Status = null;
+        productFilter.CategoryId = null;
+        await LoadData();
+    }
+
+    private async Task HandleEnter(KeyboardEventArgs e) { if (e.Key == "Enter") { await Search(); } }
+}

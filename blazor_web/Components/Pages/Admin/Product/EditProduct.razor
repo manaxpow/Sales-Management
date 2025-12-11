@@ -1,0 +1,222 @@
+@using blazor_web.Models
+@using blazor_web.Services.Category
+@inject IProductService productService
+
+@if (ShowDialog)
+{
+    <div class="modal fade show d-block" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content shadow-lg">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Product</h5>
+                    <button type="button" class="btn-close" @onclick="Close"></button>
+                </div>
+
+                <!-- ERROR -->
+                @if (!string.IsNullOrEmpty(ErrorMessage))
+                {
+                    <div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3">
+                        <span>@ErrorMessage</span>
+                    </div>
+                }
+
+                <!-- SUCCESS -->
+                @if (!string.IsNullOrEmpty(SuccessMessage))
+                {
+                    <div class="bg-green-50 border border-green-200 text-green-600 px-4 py-3">
+                        <span>@SuccessMessage</span>
+                    </div>
+                }
+
+                <EditForm Model="@EditModel" OnValidSubmit="HandleSave">
+                    <DataAnnotationsValidator />
+
+                    <div class="modal-body">
+
+                        <!-- PRODUCT NAME -->
+                        <div class="mb-3">
+                            <label>Product Name</label>
+                            <InputText class="form-control" @bind-Value="EditModel.ProductName" />
+                            <ValidationMessage For="@(() => EditModel.ProductName)" class="text-danger small" />
+                        </div>
+
+                        <!-- CATEGORY -->
+                        <div class="mb-3">
+                            <label>Category</label>
+                            <InputSelect class="form-select" @bind-Value="EditModel.CategoryId">
+                                <option value="0">-- Select Category --</option>
+                                @foreach (var c in Categories)
+                                {
+                                    <option value="@c.Id">@c.Name</option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(() => EditModel.CategoryId)" class="text-danger small" />
+                        </div>
+
+                        <!-- SUPPLIER -->
+                        <div class="mb-3">
+                            <label>Supplier</label>
+                            <InputSelect class="form-select" @bind-Value="EditModel.SupplierId">
+                                <option value="0">-- Select Supplier --</option>
+                                @foreach (var s in Suppliers)
+                                {
+                                    <option value="@s.Id">@s.Name</option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(() => EditModel.SupplierId)" class="text-danger small" />
+                        </div>
+
+                        <!-- PRICE -->
+                        <div class="mb-3">
+                            <label>Price</label>
+                            <InputNumber class="form-control" @bind-Value="EditModel.Price" />
+                            <ValidationMessage For="@(() => EditModel.Price)" class="text-danger small" />
+                        </div>
+
+                        <!-- UNIT -->
+                        <div class="mb-3">
+                            <label>Unit</label>
+                            <InputSelect @bind-Value="EditModel.Unit" class="form-select">
+                                @foreach (var u in Enum.GetValues<Units>())
+                                {
+                                    <option value="@u">@u</option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(() => EditModel.Unit)" class="text-danger small" />
+                        </div>
+
+                        <!-- STATUS -->
+                        <div class="mb-3">
+                            <label>Status</label>
+                            <InputSelect class="form-select" @bind-Value="EditModel.Status">
+                                <option value="1">Active</option>
+                                <option value="2">Inactive</option>
+                            </InputSelect>
+                        </div>
+                        @* imgae *@
+                        <!-- IMAGE UPLOAD + PREVIEW -->
+                        <div class="mb-3">
+                            <label class="form-label">Product image</label>
+
+                            <InputFile class="form-control" accept="image/*" Onchange="OnImageSelected" />
+
+                            @if (!string.IsNullOrEmpty(PreviewImage))
+                            {
+                                <div class="mt-3">
+                                    <img src="@PreviewImage" class="img-thumbnail" style="max-height: 180px;" />
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" @onclick="Close">Cancel</button>
+                        <button class="btn btn-primary" type="submit">Save Changes</button>
+                    </div>
+                </EditForm>
+
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+
+    public bool ShowDialog { get; set; }
+
+    private string? ErrorMessage;
+    private string? SuccessMessage;
+
+    private UpdateProductRequest EditModel = new();
+
+    private IBrowserFile? NewImageFile { get; set; }
+    private string? PreviewImage { get; set; }
+    [Parameter] public List<CategoryResponse> Categories { get; set; } = new();
+    [Parameter] public List<CategoryResponse> Suppliers { get; set; } = new();
+
+    // callback khi lưu
+    [Parameter] public EventCallback<ProductResponse> OnSave { get; set; }
+
+    // Show dialog và load dữ liệu
+    public void Show(ProductResponse p)
+    {
+        ErrorMessage = SuccessMessage = null;
+        Console.WriteLine($"Editing Product status: {p.Status}");
+
+        EditModel = new UpdateProductRequest
+        {
+            ProductId = p.ProductId,
+            CategoryId = p.CategoryId,
+            SupplierId = p.SupplierId,
+            ProductName = p.ProductName,
+            Barcode = p.Barcode,
+            Price = p.Price,
+            Unit = p.Unit,
+            Status = (int)p.Status,
+            ImageProduct = p.ImageProduct
+        };
+        PreviewImage = "http://localhost:8081/" + EditModel.ImageProduct;
+        ShowDialog = true;
+        StateHasChanged();
+    }
+
+    private async Task OnImageSelected(InputFileChangeEventArgs e)
+    {
+        NewImageFile = e.File;
+
+
+        var resizedFile = await NewImageFile.RequestImageFileAsync(
+        NewImageFile.ContentType,
+        300,
+        300
+        );
+
+        using var ms = new MemoryStream();
+        await resizedFile.OpenReadStream().CopyToAsync(ms);
+
+        PreviewImage = $"data:{NewImageFile.ContentType};base64,{Convert.ToBase64String(ms.ToArray())}";
+        StateHasChanged();
+    }
+    public void Close()
+    {
+        ShowDialog = false;
+        StateHasChanged();
+    }
+
+    private async Task HandleSave()
+    {
+        ErrorMessage = SuccessMessage = null;
+
+        Console.WriteLine(EditModel.Status);
+        using var content = new MultipartFormDataContent();
+
+        content.Add(new StringContent(EditModel.ProductName), "ProductName");
+        content.Add(new StringContent(EditModel.CategoryId.ToString()), "CategoryId");
+        content.Add(new StringContent(EditModel.SupplierId.ToString()), "SupplierId");
+        content.Add(new StringContent(EditModel.Price.ToString()), "Price");
+        content.Add(new StringContent(EditModel.Unit), "Unit");
+        content.Add(new StringContent(EditModel.Status.ToString()), "Status");
+        content.Add(new StringContent(EditModel.ProductId.ToString()), "ProductId");
+        if (NewImageFile != null)
+        {
+            var fileContent = new StreamContent(NewImageFile.OpenReadStream(5_000_000));
+            content.Add(fileContent, "ImageProduct", NewImageFile.Name);
+            fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(NewImageFile.ContentType);
+
+        }
+
+
+        var result = await productService.UpdateProduct(content);
+
+        if (result.Success)
+        {
+            SuccessMessage = "Product updated successfully!";
+            await OnSave.InvokeAsync(result.Data);
+        }
+        else
+        {
+            ErrorMessage = result.Message ?? "Update failed!";
+        }
+    }
+}

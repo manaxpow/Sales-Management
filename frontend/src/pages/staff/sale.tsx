@@ -78,7 +78,7 @@ const Sale = () => {
   const [promotionLoading, setPromotionLoading] = useState(false);
 
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage, setRowsPerPage] = useState(100);
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("Tất cả");
 
@@ -111,7 +111,7 @@ const Sale = () => {
     try {
       const filter: ProductFilter = {
         Page: 1,
-        Limit: 1000,
+        Limit: 10000,
         Status: 1,
         SortBy: "productId",
       };
@@ -152,7 +152,7 @@ const Sale = () => {
     try {
       const req: GetCustomerRequest = {
         page: 1,
-        limit: 100,
+        limit: 10000,
         search: search?.trim() || undefined,
       };
       const res = await customerService.getAll(req);
@@ -190,7 +190,7 @@ const Sale = () => {
     try {
       const res = await GetPromotionsService({
         page: 1,
-        limit: 100,
+        limit: 10000,
         filters: { status: 1, PromotionCode: "", page: 1, limit: 100 },
       });
       if (res.success && res.data) {
@@ -271,7 +271,7 @@ const Sale = () => {
       const payload: CreateOrderWithItemsRequest = {
         customerid: selectedCustomer.id,
         userid: 2,
-        status: 1,
+        status: 0,
         promotionCode: selectedPromotion?.promotionCode ?? null,
         items,
         paymentMethod,
@@ -459,10 +459,10 @@ const Sale = () => {
     return filtered;
   }, [products, searchTerm, categoryFilter]);
 
-  const paginatedProducts = filteredProducts.slice(
-    page * rowsPerPage,
-    page * rowsPerPage + rowsPerPage
-  );
+  // const paginatedProducts = filteredProducts.slice(
+  //   page * rowsPerPage,
+  //   page * rowsPerPage + rowsPerPage
+  // );
 
   return (
     <Box className="flex-grow p-6 bg-gray-50 min-h-screen">
@@ -497,7 +497,7 @@ const Sale = () => {
         <Box className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
           <Box className="col-span-2">
             <ProductTable
-              products={paginatedProducts}
+              products={filteredProducts}
               loading={loadingProducts}
               error={error}
               page={page}
