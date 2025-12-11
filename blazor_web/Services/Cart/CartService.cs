@@ -38,12 +38,8 @@ namespace blazor_web.Services.Cart
             await _localStorage.SetItemAsync(CART_KEY, json);
         }
 
-<<<<<<< HEAD
         public async Task AddItemAsync(blazor_web.Models.Product product, int quantity = 1)
         {
-=======
-        public async Task AddItemAsync(blazor_web.Models.Product product, int quantity = 1) {
->>>>>>> 36427fb (handle profile and fix auth be)
             var cart = await GetCartAsync();
             var existing = cart.FirstOrDefault(x => x.Product.ProductId == product.ProductId);
 

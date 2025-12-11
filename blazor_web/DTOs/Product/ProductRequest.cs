@@ -65,6 +65,7 @@ public class GetProductRequest
 public class GetProductByIdRes
 {
     public int ProductId { get; set; }
+}
 public record GetProductRequest
 {
     public string? ProductName { get; init; } = string.Empty;
