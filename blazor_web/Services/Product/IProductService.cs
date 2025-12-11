@@ -7,7 +7,7 @@ using System.Collections.Generic;
 public interface IProductService
 {
     Task<ApiResponse<GetProductResponse>> GetAllProduct(ProductFilter request);
-    Task<ApiResponse<ProductResponse>> GetProductById(GetProductByIdRes id);
+    Task<ApiResponse<ProductResponse>> GetProductById(int id);
     Task<ApiResponse<ProductResponse>> CreateProduct(MultipartFormDataContent request);
     Task<ApiResponse<ProductResponse>> UpdateProduct(MultipartFormDataContent request);
 

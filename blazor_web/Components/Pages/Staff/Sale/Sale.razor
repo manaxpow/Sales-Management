@@ -2,14 +2,12 @@
 @using System.Globalization
 @using System.Security.Cryptography
 @using blazor_web.DTOs.Customer
-@using blazor_web.DTOs.Product
 @using blazor_web.Dtos.Orders
 @using blazor_web.Services
 @using blazor_web.Services.Category
 @using Microsoft.AspNetCore.Components.Web
 @using blazor_web.Services.Customer
 @using blazor_web.Services.Orders
-@using blazor_web.Services.Product
 @using blazor_web.Services.Storage
 @inject NavigationManager NavManager
 @inject HttpClient Http
@@ -75,8 +73,8 @@
                         <div class="col-md-6">
                             <div class="input-group">
                                 <span class="input-group-text"><i class="bi bi-search"></i></span>
-                                <input type="text" class="form-control" placeholder="Tìm sản phẩm..."
-                                       @bind="searchTerm" @bind:event="oninput" />
+                                <input type="text" class="form-control" placeholder="Tìm sản phẩm..." @bind="searchTerm"
+                                    @bind:event="oninput" />
                             </div>
                         </div>
                         <div class="col-md-4">
@@ -89,7 +87,7 @@
                         </div>
                         <div class="col-md-2">
                             <button class="btn btn-outline-secondary w-100" @onclick="ClearFilter"
-                                    disabled="@(string.IsNullOrEmpty(searchTerm) && categoryFilter == "Tất cả")">
+                                disabled="@(string.IsNullOrEmpty(searchTerm) && categoryFilter == "Tất cả")">
                                 <i class="bi bi-x-lg"></i> Xóa lọc
                             </button>
                         </div>
@@ -143,7 +141,7 @@
                                     @foreach (var p in PaginatedProducts)
                                     {
                                         <tr class="cursor-pointer" @onclick="@(() => AddToCart(p))">
-                                            
+
                                             <td class="fw-medium">@p.ProductName</td>
                                             <td>
                                                 <span class="badge bg-primary bg-opacity-10 text-primary">@p.Barcode</span>
@@ -172,11 +170,9 @@
                                             </td>
                                             <td class="text-center">@p.Unit</td>
                                             <td class="text-center">
-                                                <button class="btn btn-sm btn-success" 
-                                                        @onclick="@(() => AddToCart(p))" 
-                                                        @onclick:stopPropagation
-                                                        disabled="@(p.Quantity <= 0)"
-                                                        title="@(p.Quantity <= 0 ? "Hết hàng" : "Thêm vào giỏ")">
+                                                <button class="btn btn-sm btn-success" @onclick="@(() => AddToCart(p))"
+                                                    @onclick:stopPropagation disabled="@(p.Quantity <= 0)"
+                                                    title="@(p.Quantity <= 0 ? "Hết hàng" : "Thêm vào giỏ")">
                                                     <i class="bi bi-plus-lg"></i>
                                                 </button>
                                             </td>
@@ -191,12 +187,14 @@
                     <div class="card-footer bg-white">
                         <div class="d-flex justify-content-between align-items-center">
                             <small class="text-muted">
-                                Hiển thị @((currentPage-1)*pageSize + 1)–@(Math.Min(currentPage*pageSize, filteredProducts.Count)) / @filteredProducts.Count
+                                Hiển thị @((currentPage - 1) * pageSize + 1)–@(Math.Min(currentPage*pageSize,
+                                                            filteredProducts.Count)) / @filteredProducts.Count
                             </small>
                             <nav>
                                 <ul class="pagination pagination-sm mb-0">
                                     <li class="page-item @(currentPage == 1 ? "disabled" : "")">
-                                        <button class="page-link" @onclick="() => currentPage = Math.Max(1, currentPage-1)">«</button>
+                                        <button class="page-link"
+                                            @onclick="() => currentPage = Math.Max(1, currentPage - 1)">«</button>
                                     </li>
                                     @for (int i = 1; i <= TotalPages; i++)
                                     {
@@ -206,7 +204,8 @@
                                         </li>
                                     }
                                     <li class="page-item @(currentPage == TotalPages ? "disabled" : "")">
-                                        <button class="page-link" @onclick="() => currentPage = Math.Min(TotalPages, currentPage+1)">»</button>
+                                        <button class="page-link"
+                                            @onclick="() => currentPage = Math.Min(TotalPages, currentPage + 1)">»</button>
                                     </li>
                                 </ul>
                             </nav>
@@ -231,18 +230,19 @@
                 <div class="card-body">
                     <div class="input-group mb-2">
                         <span class="input-group-text"><i class="bi bi-search"></i></span>
-                        <input type="text" class="form-control" placeholder="Tìm hoặc chọn khách..." @onblur="BlurDropDown"
-                               @bind="customerSearch" @bind:event="oninput" 
-                               @onfocus="() => showCustomerDropdown = true" />
+                        <input type="text" class="form-control" placeholder="Tìm hoặc chọn khách..."
+                            @onblur="BlurDropDown" @bind="customerSearch" @bind:event="oninput"
+                            @onfocus="() => showCustomerDropdown = true" />
                     </div>
 
                     @if (showCustomerDropdown && filteredCustomers.Any())
                     {
-                        <div class="list-group position-absolute w-100 shadow-sm" style="z-index: 1000; max-height: 200px; overflow-y: auto;">
+                        <div class="list-group position-absolute w-100 shadow-sm"
+                            style="z-index: 1000; max-height: 200px; overflow-y: auto;">
                             @foreach (var c in filteredCustomers)
                             {
-                                <button type="button" class="list-group-item list-group-item-action" 
-                                        @onclick="() => SelectCustomer(c)">
+                                <button type="button" class="list-group-item list-group-item-action"
+                                    @onclick="() => SelectCustomer(c)">
                                     <div class="d-flex justify-content-between">
                                         <span>@c.Name</span>
                                         <small class="text-muted">@c.Phone</small>
@@ -257,7 +257,7 @@
                         <div class="card mt-2 border">
                             <div class="card-body p-2">
                                 <div class="d-flex align-items-start gap-2 small">
-                                    <div class="flex-grow-1">
+                                    <div class="grow">
                                         <div class="mb-1">
                                             <i class="bi bi-person text-primary"></i>
                                             <strong>@selectedCustomer.Name</strong>
@@ -301,19 +301,20 @@
                 <div class="card-body">
                     <div class="input-group mb-2">
                         <span class="input-group-text"><i class="bi bi-search"></i></span>
-                        <input type="text" class="form-control" placeholder="Nhập mã khuyến mãi..." @onblur="BlurDropDown"
-                               @bind="promotionSearch" @bind:event="oninput"
-                               @onfocus="() => showPromotionDropdown = true" />
-                                
+                        <input type="text" class="form-control" placeholder="Nhập mã khuyến mãi..."
+                            @onblur="BlurDropDown" @bind="promotionSearch" @bind:event="oninput"
+                            @onfocus="() => showPromotionDropdown = true" />
+
                     </div>
 
                     @if (showPromotionDropdown && filteredPromotions.Any())
                     {
-                        <div class="list-group position-absolute w-100 shadow-sm" style="z-index: 1000; max-height: 200px; overflow-y: auto;">
+                        <div class="list-group position-absolute w-100 shadow-sm"
+                            style="z-index: 1000; max-height: 200px; overflow-y: auto;">
                             @foreach (var p in filteredPromotions)
                             {
                                 <button type="button" class="list-group-item list-group-item-action small"
-                                        @onclick="() => SelectPromotion(p)">
+                                    @onclick="() => SelectPromotion(p)">
                                     <strong>@p.Code</strong> - @p.Description
                                 </button>
                             }
@@ -355,11 +356,11 @@
             <div class="card shadow-sm">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h6 class="mb-0">
-                        <i class="bi bi-cart3"></i> Giỏ hàng 
+                        <i class="bi bi-cart3"></i> Giỏ hàng
                         <span class="badge bg-primary">@cartItems.Sum(x => x.Quantity)</span>
                     </h6>
-                    <button class="btn btn-sm btn-outline-danger" @onclick="() => cartItems.Clear()" 
-                            disabled="@(cartItems.Count==0)">
+                    <button class="btn btn-sm btn-outline-danger" @onclick="() => cartItems.Clear()"
+                        disabled="@(cartItems.Count == 0)">
                         <i class="bi bi-trash"></i>
                     </button>
                 </div>
@@ -392,7 +393,7 @@
                                             <td>
                                                 <div class="small fw-medium">@item.Name</div>
                                                 <div class="text-muted" style="font-size: 0.75rem;">
-                                                    @item.Price.ToString("N0")₫ × @item.Quantity @item.Unit = 
+                                                    @item.Price.ToString("N0")₫ × @item.Quantity @item.Unit =
                                                     <strong>@((item.Price * item.Quantity).ToString("N0"))₫</strong>
                                                 </div>
                                                 @if (available < 5 && available > 0)
@@ -410,17 +411,17 @@
                                             </td>
                                             <td width="120">
                                                 <div class="btn-group btn-group-sm">
-                                                    <button class="btn btn-outline-secondary" 
-                                                            @onclick="() => UpdateQty(item.Id, -1)"
-                                                            disabled="@(item.Quantity <= 1)">
+                                                    <button class="btn btn-outline-secondary"
+                                                        @onclick="() => UpdateQty(item.Id, -1)"
+                                                        disabled="@(item.Quantity <= 1)">
                                                         <i class="bi bi-dash"></i>
                                                     </button>
                                                     <button class="btn btn-outline-secondary disabled px-3">
                                                         @item.Quantity
                                                     </button>
-                                                    <button class="btn btn-outline-secondary" 
-                                                            @onclick="() => UpdateQty(item.Id, +1)"
-                                                            disabled="@(item.Quantity >= available)">
+                                                    <button class="btn btn-outline-secondary"
+                                                        @onclick="() => UpdateQty(item.Id, +1)"
+                                                        disabled="@(item.Quantity >= available)">
                                                         <i class="bi bi-plus"></i>
                                                     </button>
                                                 </div>
@@ -452,10 +453,10 @@
                 </div>
 
                 <div class="card-footer">
-                    <button class="btn btn-success btn-lg w-100" 
-                            disabled="@(cartItems.Count==0 || selectedCustomer == null)" 
-                            @onclick="() => paymentOpen = true">
-                        <i class="bi bi-credit-card"></i> 
+                    <button class="btn btn-success btn-lg w-100"
+                        disabled="@(cartItems.Count == 0 || selectedCustomer == null)"
+                        @onclick="() => paymentOpen = true">
+                        <i class="bi bi-credit-card"></i>
                         Thanh toán (@cartItems.Sum(x => x.Quantity) sp) - @finalTotal.ToString("N0") ₫
                     </button>
                     @if (selectedCustomer == null && cartItems.Count > 0)
@@ -524,17 +525,15 @@
                     <div class="mb-3">
                         <label class="form-label fw-bold">Hình thức thanh toán</label>
                         <div class="form-check">
-                            <input class="form-check-input" type="radio" name="paymentMethod" 
-                                   id="cash" value="1" @onchange="@(() => selectedPaymentMethod = 1)" 
-                                   checked="@(selectedPaymentMethod == 1)" />
+                            <input class="form-check-input" type="radio" name="paymentMethod" id="cash" value="1"
+                                @onchange="@(() => selectedPaymentMethod = 1)" checked="@(selectedPaymentMethod == 1)" />
                             <label class="form-check-label" for="cash">
                                 <i class="bi bi-cash text-success"></i> Tiền mặt
                             </label>
                         </div>
                         <div class="form-check">
-                            <input class="form-check-input" type="radio" name="paymentMethod" 
-                                   id="transfer" value="2" @onchange="@(() => selectedPaymentMethod = 2)"
-                                   checked="@(selectedPaymentMethod == 2)" />
+                            <input class="form-check-input" type="radio" name="paymentMethod" id="transfer" value="2"
+                                @onchange="@(() => selectedPaymentMethod = 2)" checked="@(selectedPaymentMethod == 2)" />
                             <label class="form-check-label" for="transfer">
                                 <i class="bi bi-credit-card text-primary"></i> Chuyển khoản
                             </label>
@@ -586,7 +585,7 @@
     // Filters
     private string searchTerm = "";
     private string categoryFilter = "Tất cả";
-    private List<string> categories = new(){"Tất cả"};
+    private List<string> categories = new() { "Tất cả" };
     private int currentPage = 1;
     private const int pageSize = 100;
 
@@ -623,34 +622,34 @@
 
     // Computed
     private List<ProductResponse> filteredProducts => allProducts
-        .Where(p => p.Status == 1)
-        .Where(p => string.IsNullOrWhiteSpace(searchTerm) ||
-                    p.ProductName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                    p.Barcode.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                    (p.CategoryName?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false))
-        .Where(p => categoryFilter == "Tất cả" || p.CategoryName == categoryFilter)
-        .ToList();
+    .Where(p => (int)p.Status == 1)
+    .Where(p => string.IsNullOrWhiteSpace(searchTerm) ||
+    p.ProductName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+    p.Barcode.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+    (p.CategoryName?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false))
+    .Where(p => categoryFilter == "Tất cả" || p.CategoryName == categoryFilter)
+    .ToList();
 
     private List<ProductResponse> PaginatedProducts => filteredProducts
-        .Skip((currentPage - 1) * pageSize)
-        .Take(pageSize)
-        .ToList();
+    .Skip((currentPage - 1) * pageSize)
+    .Take(pageSize)
+    .ToList();
 
     private int TotalPages => (int)Math.Ceiling(filteredProducts.Count / (double)pageSize);
 
     private List<CustomerResponse> filteredCustomers => customers
-        .Where(c => string.IsNullOrWhiteSpace(customerSearch) ||
-                    c.Name.Contains(customerSearch, StringComparison.OrdinalIgnoreCase) ||
-                    c.Phone.Contains(customerSearch, StringComparison.OrdinalIgnoreCase))
-        .Take(10)
-        .ToList();
+    .Where(c => string.IsNullOrWhiteSpace(customerSearch) ||
+    c.Name.Contains(customerSearch, StringComparison.OrdinalIgnoreCase) ||
+    c.Phone.Contains(customerSearch, StringComparison.OrdinalIgnoreCase))
+    .Take(10)
+    .ToList();
 
     private List<PromotionRes> filteredPromotions => promotions
-        .Where(p => string.IsNullOrWhiteSpace(promotionSearch) ||
-                    p.Code.Contains(promotionSearch, StringComparison.OrdinalIgnoreCase) ||
-                    p.Description.Contains(promotionSearch, StringComparison.OrdinalIgnoreCase))
-        .Take(10)
-        .ToList();
+    .Where(p => string.IsNullOrWhiteSpace(promotionSearch) ||
+    p.Code.Contains(promotionSearch, StringComparison.OrdinalIgnoreCase) ||
+    p.Description.Contains(promotionSearch, StringComparison.OrdinalIgnoreCase))
+    .Take(10)
+    .ToList();
 
     protected override async Task OnInitializedAsync()
     {
@@ -660,10 +659,10 @@
     private async Task LoadAllData()
     {
         await Task.WhenAll(
-            LoadCategories(),
-            LoadProducts(),
-            LoadCustomers(),
-            LoadPromotions()
+        LoadCategories(),
+        LoadProducts(),
+        LoadCustomers(),
+        LoadPromotions()
         );
     }
 
@@ -674,9 +673,9 @@
         StateHasChanged();
 
         try
-        {   
-            ProductFilter filter = new(){Limit = 10000};
-            var response = await productService.GetProductsAsync(filter);
+        {
+            ProductFilter filter = new() { Limit = 10000 };
+            var response = await productService.GetAllProduct(filter);
             allProducts = response.Data.Products;
 
         }
@@ -691,32 +690,33 @@
         }
     }
 
-    private async Task LoadCategories(){
+    private async Task LoadCategories()
+    {
         var response = await categoryService.GetAll();
-        var list =response.Data.Select(c => c.Name).ToList();
+        var list = response.Data.Select(c => c.Name).ToList();
         categories.AddRange(list);
-        
+
     }
 
     private async Task LoadCustomers()
-    {   
-        GetCustomerRequest request = new(){Limit=10000};
-        var response  = await customerService.GetCustomerAsync(request);
+    {
+        GetCustomerRequest request = new() { Limit = 10000 };
+        var response = await customerService.GetCustomerAsync(request);
         customers = response.Data.Customers;
         StateHasChanged();
     }
 
     private async Task LoadPromotions()
     {
-        GetAllPromotionReq request = new(){Limit= 10000, Status = 1,Page=1};
+        GetAllPromotionReq request = new() { Limit = 10000, Status = 1, Page = 1 };
         var response = await promotionService.GetAll(request);
         var now = DateTime.Now;
 
         promotions = response.Data.Promotions
-            .Where(p => p.StartDate <= now && p.EndDate >= now)
-            .ToList();
-                StateHasChanged();
-            }
+        .Where(p => p.StartDate <= now && p.EndDate >= now)
+        .ToList();
+        StateHasChanged();
+    }
 
     private void AddToCart(ProductResponse p)
     {
@@ -780,10 +780,11 @@
         StateHasChanged(); // BẮT BUỘC
     }
 
-    private void BlurDropDown(){
+    private void BlurDropDown()
+    {
         InvokeAsync(async () =>
         {
-            await Task.Delay(150); 
+            await Task.Delay(150);
             if (showPromotionDropdown || showCustomerDropdown)
             {
                 showPromotionDropdown = false;
@@ -805,20 +806,22 @@
     {
         if (selectedPromotion == null || cartTotal < (decimal)selectedPromotion.MinOrderAmount) return 0;
         return selectedPromotion.DiscountType == 1
-            ? cartTotal * (decimal)selectedPromotion.DiscountValue / 100
-            : (decimal)selectedPromotion.DiscountValue;
+        ? cartTotal * (decimal)selectedPromotion.DiscountValue / 100
+        : (decimal)selectedPromotion.DiscountValue;
     }
 
     private async Task HandlePayment()
-    {   
+    {
         var loginInfo = await localStorageService.GetLoginInfoAsync();
         int userid = loginInfo.User.Id;
-        CreateOrderWithItemsRequest payload = new(){
+        CreateOrderWithItemsRequest payload = new()
+        {
             Customerid = selectedCustomer.Id,
             PromotionCode = selectedPromotion?.Code,
             Status = 0,
             Userid = userid,
-            Items = cartItems.Select(p => new CreateOrderItemDto{
+            Items = cartItems.Select(p => new CreateOrderItemDto
+            {
                 Productid = p.Id,
                 Price = p.Price,
                 Quantity = p.Quantity
@@ -829,12 +832,15 @@
 
         var response = await orderService.CreateWithItemsAsync(payload);
 
-        if(response.Success){
+        if (response.Success)
+        {
             Toast("Thành công");
             paymentOpen = false;
             StateHasChanged();
-        }else{
-            Toast("Thất bại","error");
+        }
+        else
+        {
+            Toast("Thất bại", "error");
         }
 
     }
@@ -867,12 +873,22 @@
         StateHasChanged();
 
         _ = Task.Delay(4000).ContinueWith(_ =>
-            InvokeAsync(() => { snackbarOpen = false; StateHasChanged(); }));
+        InvokeAsync(() => { snackbarOpen = false; StateHasChanged(); }));
     }
 
-    private void CreateCustomer(){
+    private void CreateCustomer()
+    {
         NavManager.NavigateTo("/staff/sale/create-customer");
     }
-    
-    public class CartItem { public int Id { get; set; } public string Name { get; set; } = ""; public decimal Price { get; set; } public int Quantity { get; set; } = 1; public string Unit { get; set; } = "Cái"; }
+
+    public class CartItem
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = ""; public decimal Price
+        {
+            get;
+            set;
+        }
+        public int Quantity { get; set; } = 1; public string Unit { get; set; } = "Cái";
+    }
 }

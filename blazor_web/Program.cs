@@ -4,7 +4,6 @@ using blazor_web.Services.Category;
 using blazor_web.Services.Cart;
 using blazor_web.Services.Orders;
 using blazor_web.Services.Customer;
-using Blazored.Toast;
 using blazor_web.Components;
 using blazor_web.Services.Supplier;
 using blazor_web.Services.User;
@@ -50,7 +49,6 @@ builder.Services.AddScoped<ISupplierService, SupplierService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddBlazoredToast();
 
 
 var app = builder.Build();

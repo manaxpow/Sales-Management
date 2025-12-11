@@ -3,6 +3,7 @@
 @inject IProductService productService
 @inject CategoryService categoryService
 @inject IJSRuntime JS
+@using blazor_web.Components.UI
 @using blazor_web.DTOs.Supplier
 @using blazor_web.Models
 @using blazor_web.Services.Cart
@@ -110,6 +111,7 @@
     <blazor_web.Components.UI.Pagination CurrentPage="@CurrentPage" TotalPages="@dataRes.TotalPage"
         TotalItems="@dataRes.TotalProduct" ItemsPerPage="limit" OnPageChanged="HandlePageChanged"
         OnItemsPerPageChanged="HandleItemsPerPageChanged" />
+    <SnackBoard @ref="snackBoard" />
 </div>
 
 @code {
@@ -123,6 +125,8 @@
 
     private string addToCartMessage = "";
     private bool showAddToCartMessage = false;
+    private SnackBoard snackBoard = new SnackBoard();
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -203,9 +207,7 @@
         var product = ProductMapper.ToModel(data);
         Console.WriteLine($"[Products] HandleAddToCart: {product.ProductId} - {product.ProductName}");
         await CartService.AddItemAsync(product, 1);
-
-        addToCartMessage = $"Đã thêm \"{product.ProductName}\" vào giỏ hàng.";
-        showAddToCartMessage = true;
+        snackBoard.Show($"{product.ProductName} has been added to your cart!", "success", "top-right");
     }
 
     private async Task OnSortChange(ChangeEventArgs e)

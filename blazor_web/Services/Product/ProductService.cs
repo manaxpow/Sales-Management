@@ -155,9 +155,29 @@ public class ProductService : IProductService
 
     }
 
-    public Task<ApiResponse<ProductResponse>> GetProductById(GetProductByIdRes id)
+    public async Task<ApiResponse<ProductResponse>> GetProductById(int id)
     {
-        throw new NotImplementedException();
+        try
+        {
+            var response = await _httpClient.GetFromJsonAsync<ApiResponse<ProductResponse>>($"products/{id}");
+            if (response != null)
+            {
+                return response;
+            }
+            else
+            {
+                return new ApiResponse<ProductResponse>
+                {
+                    Success = false,
+                    Message = "No data",
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching product by id");
+            throw;
+        }
     }
 
 

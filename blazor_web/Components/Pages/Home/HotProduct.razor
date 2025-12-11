@@ -1,9 +1,9 @@
-@*
-        Hot Products Component - Display featured products using ProductCard
-    *@
+@inject ICartService CartService
 
 @using System.Threading.Tasks
+@using blazor_web.Components.UI
 @using blazor_web.Components.UI.Card
+@using blazor_web.Services.Cart
 @inject IProductService productService
 <div class="py-12">
     <!-- Section Header -->
@@ -20,7 +20,7 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
         @foreach (var product in HotProducts)
         {
-            <ProductCard Product="@product" OnAddToCartClick="@(() => HandleAddToCart(ProductMapper.ToModel(product)))" />
+            <ProductCard Product="@product" OnAddToCartClick="@((ProductResponse p) => HandleAddToCart(p))" />
         }
     </div>
 
@@ -31,9 +31,12 @@
             View All Products
         </a>
     </div>
+
+    <SnackBoard @ref="snackBoard" />
 </div>
 
 @code {
+    private SnackBoard snackBoard = new SnackBoard();
     public List<ProductResponse> HotProducts { get; set; } = new();
 
     public GetProductResponse ProductData { get; set; } = new();
@@ -47,10 +50,15 @@
         }
         // For demo purposes, we will just take the first 8 products as hot products
     }
-    private void HandleAddToCart(blazor_web.Models.Product product)
+    private async Task HandleAddToCart(ProductResponse data)
     {
-        Console.WriteLine($"Add to cart product: {product.ProductName}");
+        var product = ProductMapper.ToModel(data);
+        Console.WriteLine($"[Products] HandleAddToCart: {product.ProductId} - {product.ProductName}");
+        await CartService.AddItemAsync(product, 1);
+        snackBoard.Show($"{product.ProductName} has been added to your cart!", "success");
+
     }
+
     private async Task LoadData()
     {
         var response = await productService.GetAllProduct(new ProductFilter
