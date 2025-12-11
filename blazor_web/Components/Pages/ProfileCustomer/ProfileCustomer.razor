@@ -51,14 +51,14 @@
                 {
                     <EditForm Model="updateRequest" OnValidSubmit="UpdateProfile">
                         <DataAnnotationsValidator />
-
                         <ValidationSummary
                             class="text-red-600 text-xs bg-red-50 p-3 rounded-lg border border-red-100 mb-5" />
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
                             <div class="group">
-                                <label class="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1.5 ml-1">Họ
-                                    và tên <span class="text-red-500">*</span></label>
+                                <label class="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1.5 ml-1">
+                                    Họ và tên <span class="text-red-500">*</span>
+                                </label>
                                 <div class="relative">
                                     <div
                                         class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
@@ -69,27 +69,37 @@
                                         placeholder="Nhập họ tên" />
                                 </div>
                                 <ValidationMessage For="() => updateRequest.Name" class="text-red-500 text-xs mt-1 ml-1" />
+                                @if (nameError != null)
+                                {
+                                    <div class="text-red-500 text-xs mt-1 ml-1">@nameError</div>
+                                }
                             </div>
 
                             <div class="group">
-                                <label class="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1.5 ml-1">Số
-                                    điện thoại <span class="text-red-500">*</span></label>
+                                <label class="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1.5 ml-1">
+                                    Số điện thoại <span class="text-red-500">*</span>
+                                </label>
                                 <div class="relative">
                                     <div
                                         class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
                                         <i class="fas fa-phone text-sm"></i>
                                     </div>
-                                    <InputText @bind-Value="updateRequest.Phone"
+                                    <InputText @bind-Value="updateRequest.Phone" @oninput="OnPhoneInput"
                                         class="w-full pl-9 pr-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 placeholder-gray-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                                        placeholder="Nhập SĐT" />
+                                        placeholder="Ví dụ: 0901234567" />
                                 </div>
                                 <ValidationMessage For="() => updateRequest.Phone" class="text-red-500 text-xs mt-1 ml-1" />
+                                @if (phoneError != null)
+                                {
+                                    <div class="text-red-500 text-xs mt-1 ml-1">@phoneError</div>
+                                }
                             </div>
 
+                            <!-- Các trường khác giữ nguyên -->
                             <div class="group">
-                                <label
-                                    class="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1.5 ml-1">Email
-                                    <span class="text-red-500">*</span></label>
+                                <label class="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1.5 ml-1">
+                                    Email <span class="text-red-500">*</span>
+                                </label>
                                 <div class="relative">
                                     <div
                                         class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
@@ -116,13 +126,14 @@
                             </div>
                         </div>
 
+                        <!-- Nút lưu và hủy giữ nguyên -->
                         <div class="flex items-center justify-end space-x-3 mt-8 pt-5 border-t border-gray-100">
                             <button type="button" @onclick="GoHome"
                                 class="px-5 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors">
                                 Hủy
                             </button>
 
-                            <button type="submit" disabled="@isSubmitting"
+                            <button type="submit" disabled="@(isSubmitting || !IsValid())"
                                 class="flex items-center space-x-2 px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium shadow-md hover:bg-blue-700 hover:shadow-lg transition-all disabled:opacity-70 disabled:shadow-none">
                                 @if (isSubmitting)
                                 {
@@ -136,9 +147,7 @@
                                     </svg>
                                 }
                                 <span>Lưu thay đổi</span>
-
                             </button>
-
                         </div>
                     </EditForm>
                 }
@@ -167,6 +176,63 @@
     private bool isSubmitting = false;
     private bool showSuccess = false;
 
+    private string? nameError;
+    private string? phoneError;
+
+    private bool IsValid()
+    {
+        ValidateName();
+        ValidatePhone();
+        return string.IsNullOrEmpty(nameError) && string.IsNullOrEmpty(phoneError);
+    }
+
+     private void ValidateName()
+    {
+        if (string.IsNullOrWhiteSpace(updateRequest.Name))
+        {
+            nameError = "Họ và tên là bắt buộc.";
+        }
+        else if (System.Text.RegularExpressions.Regex.IsMatch(updateRequest.Name, @"\d"))
+        {
+            nameError = "Họ và tên không được chứa số.";
+        }
+        else if (!System.Text.RegularExpressions.Regex.IsMatch(updateRequest.Name, @"^[a-zA-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯĂẠẢẤẦẨẪẬẮẰẲẴẶẸẺẼỀỀỂỄỆỈỊỌỎỐỒỔỖỘỚỜỞỠỢỤỦỨỪỬỮỰỲỴÝỶỸ\s-]+$"))
+        {
+            nameError = "Họ và tên chỉ được chứa chữ cái và dấu tiếng Việt.";
+        }
+        else
+        {
+            nameError = null;
+        }
+    }
+
+    private void ValidatePhone()
+    {
+        if (string.IsNullOrWhiteSpace(updateRequest.Phone))
+        {
+            phoneError = "Số điện thoại là bắt buộc.";
+        }
+        else if (!System.Text.RegularExpressions.Regex.IsMatch(updateRequest.Phone, @"^0(3|5|7|8|9)[0-9]{8}$"))
+        {
+            phoneError = "Số điện thoại phải có 10 số và bắt đầu bằng 03, 05, 07, 08 hoặc 09.";
+        }
+        else
+        {
+            phoneError = null;
+        }
+    }
+    private void OnPhoneInput(ChangeEventArgs e)
+    {
+        if (e.Value is string value)
+        {
+            var numbersOnly = string.Concat(value.Where(char.IsDigit));
+            if (numbersOnly.Length > 10)
+                numbersOnly = numbersOnly[..10]; // Giới hạn 10 số
+            updateRequest.Phone = numbersOnly;
+            ValidatePhone(); // Validate ngay khi nhập
+            StateHasChanged();
+        }
+    }
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -213,6 +279,11 @@
 
     private async Task UpdateProfile()
     {
+        if (!IsValid())
+        {
+            return;
+        }
+
         isSubmitting = true;
 
         var userId = loginInfo.Customer.Id;
