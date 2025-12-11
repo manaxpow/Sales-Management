@@ -238,9 +238,9 @@ else
     public int SupplierId { get; set; }
 
     private SupplierResponse? supplier;
-    private List<ProductResponse> products = new();
-    private List<ProductResponse> filteredProducts = new();
-    private List<ProductResponse> currentProducts = new();
+    private List<blazor_web.DTOs.Product.ProductResponse> products = new();
+    private List<blazor_web.DTOs.Product.ProductResponse> filteredProducts = new();
+    private List<blazor_web.DTOs.Product.ProductResponse> currentProducts = new();
     private bool isLoading = true;
     private string? error;
 
@@ -317,7 +317,7 @@ else
             else
             {
                 Console.WriteLine($"Error loading products: {productResponse.Message}");
-                products = new List<ProductResponse>();
+                products = new List<blazor_web.DTOs.Product.ProductResponse>();
             }
 
             ApplyFilterAndPagination();

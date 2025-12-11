@@ -53,7 +53,7 @@ namespace blazor_web.Services.Cart {
             return null;
         }
 
-        public async Task<bool> AddItemAsync(Product product, int quantity = 1) {
+        public async Task<bool> AddItemAsync(blazor_web.Models.Product product, int quantity = 1) {
             try {
                 var cartId = await GetOrCreateActiveCartIdAsync();
                 if (cartId == null) {
