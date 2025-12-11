@@ -3,6 +3,7 @@
 @rendermode InteractiveServer
 
 @using blazor_web.DTOs.Product
+@using blazor_web.Services.Product
 @using blazor_web.DTOs.Supplier
 @using blazor_web.Services.Supplier
 @using Microsoft.AspNetCore.Components.Web.Virtualization
@@ -210,7 +211,7 @@ else
                                                     @FormatCurrency(product.Price)
                                                 </td>
                                                 <td class="py-3 px-4 text-center">
-                                                    @RenderProductStatus((int)product.Status)
+                                                    @RenderProductStatus(product.Status)
                                                 </td>
                                             </tr>
                                         }

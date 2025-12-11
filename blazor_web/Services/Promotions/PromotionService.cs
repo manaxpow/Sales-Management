@@ -16,7 +16,6 @@ public class PromotionService : IPromotionService
     {
         try
         {
-            Console.WriteLine($"[PromotionService] GetAll: Fetching promotions with request: {JsonSerializer.Serialize(request)}");
             string query = QueryBuilder.BuildQuery(request);
             string url = string.IsNullOrEmpty(query) ? "promotion" : $"promotion?{query}";
             var response = await _httpClient.GetFromJsonAsync<ApiResponse<GetAllPromotionResponse>>(url);
@@ -305,6 +304,11 @@ public class PromotionService : IPromotionService
         }
     }
 
+    public class FieldError
+    {
+        public string field { get; set; } = "";
+        public string message { get; set; } = "";
+    }
 }
 
 

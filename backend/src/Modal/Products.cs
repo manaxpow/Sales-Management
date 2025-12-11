@@ -22,12 +22,10 @@ public class Products
     public string Unit { get; set; } = "pcs";
     // 1 active 2 inactive 3 delete
     public int Status { get; set; } = 1;
-
-    public string? ImageProduct { get; set; } = "/images/defaultImg.png";
     // references key
     public Categories? Category { get; set; }
-    public Suppliers? Supplier { get; set; }
-    public Inventory? Inventory { get; set; }
+    public Suppliers? Supplier { get; set; } 
+    public Inventory? Inventory { get; set; } 
 
     public DateTime CreatedAt { get; set; }
 }

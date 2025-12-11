@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using System.Runtime.InteropServices;
 
 namespace blazor_web.Models
 {
@@ -19,6 +18,8 @@ namespace blazor_web.Models
         [StringLength(150, ErrorMessage = "Tên sản phẩm không được quá 150 ký tự.")]
         public string ProductName { get; set; } = string.Empty;
 
+        [Required(ErrorMessage = "Vui lòng nhập mã vạch.")]
+        [RegularExpression(@"^\d{8,13}$", ErrorMessage = "Mã vạch phải từ 8–13 chữ số.")]
         public string Barcode { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Vui lòng nhập giá bán.")]

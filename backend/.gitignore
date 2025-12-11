@@ -62,9 +62,7 @@ Database/
 /publish/
 /dist/
 /build/
-
-wwwroot/images/*
-!wwwroot/images/defaultImg.png
+/wwwroot/
 
 # ============================
 # OS-specific

@@ -24,12 +24,6 @@ public class ProductService(AppDbContext context, ILogger<ProductService> logger
         var category = await context.Categories.FindAsync(req.CategoryId); if (productExists) return response.ErrorResponse("Product name is duplicate");
         if (supplier == null) return response.ErrorResponse("Suppiler not found");
         if (category == null) return response.ErrorResponse("Category not found");
-        var imageUrl = string.Empty;
-        if (req.ImageProduct != null && req.ImageProduct.Length > 0)
-        {
-            // Tạo folder gốc
-            imageUrl = await FileHelper.SaveProductImage(req.ImageProduct, req.ProductName);
-        }
         var product = new Products
         {
             Barcode = barcode,
@@ -37,10 +31,9 @@ public class ProductService(AppDbContext context, ILogger<ProductService> logger
             Price = req.Price,
             ProductName = req.ProductName,
             SupplierId = req.SupplierId,
-            Unit = req.Unit ?? "Cái",
-            Status = req.Status ?? 2,
-            CreatedAt = DateTime.Now,
-            ImageProduct = string.IsNullOrEmpty(imageUrl) ? "/images/defaultImg.png" : imageUrl
+            Unit = req.Unit ?? "pcs",
+            Status = req.Status ?? 1,
+            CreatedAt = DateTime.Now
         };
         context.Products.Add(product);
         await context.SaveChangesAsync();
@@ -62,10 +55,7 @@ public class ProductService(AppDbContext context, ILogger<ProductService> logger
             SupplierId = product.SupplierId,
             SupplierName = supplier.Name,
             Unit = product.Unit,
-            Barcode = product.Barcode,
-            ImageProduct = product.ImageProduct,
-            Status = product.Status,
-
+            Barcode = product.Barcode
 
         };
         return response.SuccessResponse(dataRes, "create product success");
@@ -97,15 +87,12 @@ public class ProductService(AppDbContext context, ILogger<ProductService> logger
             query = query.Where(u => u.Status == req.Status);
         query = req.SortBy?.ToLower() switch
         {
-            "name" => req.SortOrder == "asc"
+            "productname" => req.SortOrder == "asc"
                 ? query.OrderBy(u => u.ProductName)
                 : query.OrderByDescending(u => u.ProductName),
             "createdat" => req.SortOrder == "asc"
                            ? query.OrderBy(u => u.CreatedAt)
                            : query.OrderByDescending(u => u.CreatedAt),
-            "price" => req.SortOrder == "asc"
-                           ? query.OrderBy(u => u.Price)
-                           : query.OrderByDescending(u => u.Price),
             _ => req.SortOrder == "asc"
                 ? query.OrderBy(u => u.CreatedAt)
                 : query.OrderByDescending(u => u.CreatedAt)
@@ -123,10 +110,8 @@ public class ProductService(AppDbContext context, ILogger<ProductService> logger
                SupplierId = u.SupplierId,
                Unit = u.Unit,
                SupplierName = u.Supplier != null ? u.Supplier.Name : null,
-               Quantity = u.Inventory != null ? u.Inventory.Quantity : 0,
-               ImageProduct = u.ImageProduct ?? "defaultImg.jpg",
-               CreatedAt = u.CreatedAt,
-               UpdatedAt = u.CreatedAt,
+               Quantity = u.Inventory != null ? u.Inventory.Quantity : 0
+
            }
            )
            .Skip((page - 1) * limit)
@@ -190,6 +175,7 @@ public class ProductService(AppDbContext context, ILogger<ProductService> logger
             .FirstOrDefaultAsync(u => u.ProductId == req.ProductId);
             if (product == null) return response.ErrorResponse("Product not found");
             var productExists = await context.Products.FirstOrDefaultAsync(e => e.ProductName == req.ProductName);
+            logger.LogInformation("check value" + req.SupplierId);
             if (req.CategoryId.HasValue)
             {
                 var category = await context.Categories.FindAsync(req.CategoryId);
@@ -199,15 +185,6 @@ public class ProductService(AppDbContext context, ILogger<ProductService> logger
             {
                 var supplier = await context.Suppliers.FindAsync(req.SupplierId);
                 if (supplier == null) return response.ErrorResponse("Suppiler not found");
-            }
-            if (req.ImageProduct != null && req.ImageProduct.Length > 0)
-            {
-                // Xóa ảnh cũ
-                FileHelper.DeleteImage(product.ImageProduct);
-
-                // Lưu ảnh mới
-                var newImagePath = await FileHelper.SaveProductImage(req.ImageProduct, product.ProductName);
-                product.ImageProduct = newImagePath;
             }
 
             if (productExists != null && productExists.ProductId != req.ProductId) return response.ErrorResponse("Product name is duplicate");
@@ -231,7 +208,6 @@ public class ProductService(AppDbContext context, ILogger<ProductService> logger
                 Status = product.Status,
                 CategoryName = product?.Category?.CategoryName,
                 SupplierName = product?.Supplier?.Name,
-                ImageProduct = product.ImageProduct,
             };
             return response.SuccessResponse(dataRes, "Update product success");
         }
@@ -249,11 +225,11 @@ public class ProductService(AppDbContext context, ILogger<ProductService> logger
             var supplierExists = await context.Suppliers.AnyAsync(s => s.Id == supplierId);
             if (!supplierExists)
             {
-                return listResponse.ErrorResponse("Supplier not found", 404);
+                return listResponse.ErrorResponse("Supplier not found", 404); 
             }
             var products = await context.Products
                 .Include(u => u.Category)
-                .Include(u => u.Supplier)
+                .Include(u => u.Supplier) 
                 .Include(u => u.Inventory)
                 .Where(u => u.SupplierId == supplierId && u.Status != 3)
                 .Select(u => new ProductResponse
@@ -277,10 +253,9 @@ public class ProductService(AppDbContext context, ILogger<ProductService> logger
         catch (Exception ex)
         {
             logger.LogError(ex, "Error getting products for supplier {SupplierId}", supplierId);
-            return listResponse.ErrorResponse("An unexpected error occurred", 400);
+            return listResponse.ErrorResponse("An unexpected error occurred", 400); 
         }
     }
-
 
 
 }

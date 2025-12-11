@@ -1,17 +1,11 @@
 @page "/products"
 
-@inject IProductService productService
-@inject CategoryService categoryService
-@inject IJSRuntime JS
-@using blazor_web.DTOs.Supplier
+@rendermode InteractiveServer
+
 @using blazor_web.Models
 @using blazor_web.Services.Cart
-@using blazor_web.Services.Category
-@using blazor_web.Services.Supplier
-@rendermode InteractiveServer
-@inject ICartService CartService
-@inject ISupplierService supplierService
 
+@inject ICartService CartService
 
 <PageTitle>Products</PageTitle>
 
@@ -34,10 +28,9 @@
             </div>
             <div class="flex items-center space-x-2">
                 <svg class="w-8 h-8 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                 </svg>
-                <span class="text-xl font-semibold">@dataRes.TotalProduct Products</span>
+                <span class="text-xl font-semibold">@totalProducts Products</span>
             </div>
         </div>
     </div>
@@ -45,36 +38,32 @@
 
 <div class="max-w-7xl mx-auto">
     <!-- Filter Component -->
-    <Filter OnFilterChanged="HandleFilterChanged" Categories="categories" Suppliers="suppliers"
-        TotalProducts="dataRes.TotalProduct" CurrentFilter="productFilter" />
+    <Filter OnFilterChanged="HandleFilterChanged" />
 
     <!-- Sort and View Options -->
     <div class="bg-white rounded-lg shadow-md p-4 mb-6">
         <div class="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
             <div class="flex items-center space-x-4">
                 <span class="text-sm font-medium text-gray-700">Sort by:</span>
-                <select @onchange="OnSortChange"
-                    class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
-                    <option value="name-asc">Name (A-Z)</option>
+                <select class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
+                    <option value="name">Name (A-Z)</option>
                     <option value="name-desc">Name (Z-A)</option>
-                    <option value="price-asc">Price (Low to High)</option>
-                    <option value="price-desc">Price (High to Low)</option>
-                    <option value="createdat-asc">Newest First</option>
-                    <option value="createdat-desc">Oldest First</option>
+                    <option value="price-low">Price (Low to High)</option>
+                    <option value="price-high">Price (High to Low)</option>
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
                 </select>
             </div>
-
+            
             <div class="flex items-center space-x-2">
                 <button class="p-2 text-gray-500 hover:text-blue-600 transition-colors duration-200" title="Grid View">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                     </svg>
                 </button>
                 <button class="p-2 text-gray-500 hover:text-blue-600 transition-colors duration-200" title="List View">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M4 6h16M4 12h16M4 18h16" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                     </svg>
                 </button>
             </div>
@@ -83,13 +72,12 @@
 
     <!-- Products Grid -->
     <div class="mb-8">
-        @if (products.Count > 0)
+        @if (paginatedProducts.Count > 0)
         {
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                @foreach (var product in products)
+                @foreach (var product in paginatedProducts)
                 {
-                    <blazor_web.Components.UI.Card.ProductCard Product="@product"
-                        OnAddToCartClick="@((ProductResponse p) => HandleAddToCart(p))" />
+                    <blazor_web.Components.UI.Card.ProductCard Product="@product" OnAddToCartClick="@( (blazor_web.Models.Product p) => HandleAddToCart(p) )" />
                 }
             </div>
         }
@@ -97,8 +85,7 @@
         {
             <div class="bg-white rounded-lg shadow-md p-12 text-center">
                 <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <h3 class="text-lg font-medium text-gray-900 mb-2">No products found</h3>
                 <p class="text-gray-500">Try adjusting your filters or search criteria</p>
@@ -107,100 +94,124 @@
     </div>
 
     <!-- Pagination Component -->
-    <blazor_web.Components.UI.Pagination CurrentPage="@CurrentPage" TotalPages="@dataRes.TotalPage"
-        TotalItems="@dataRes.TotalProduct" ItemsPerPage="limit" OnPageChanged="HandlePageChanged"
-        OnItemsPerPageChanged="HandleItemsPerPageChanged" />
+    <blazor_web.Components.UI.Pagination CurrentPage="currentPage"
+                TotalPages="totalPages"
+                TotalItems="totalProducts"
+                ItemsPerPage="itemsPerPage"
+                OnPageChanged="HandlePageChanged"
+                OnItemsPerPageChanged="HandleItemsPerPageChanged" />
 </div>
 
 @code {
-    private List<CategoryResponse> categories = new();
-    private List<SupplierResponse> suppliers = new();
-    private List<ProductResponse> products = new();
-    private ProductFilter productFilter = new();
-    private GetProductResponse dataRes = new();
-    public int CurrentPage = 1;
-    private int limit = 8;
+    // Pagination state
+    private int currentPage = 1;
+    private int itemsPerPage = 8;
+    private int totalPages = 1;
+    private int totalProducts = 0;
 
-    private string addToCartMessage = "";
-    private bool showAddToCartMessage = false;
+    // Filter state
+    private string searchTerm = "";
+    private int? categoryId = null;
+    private int? supplierId = null;
+    private decimal? maxPrice = null;
 
-    protected override async Task OnInitializedAsync()
+    private string? addToCartMessage;
+    private bool showAddToCartMessage;
+
+    // Fake product data
+    private List<blazor_web.Models.Product> allProducts = new();
+    private List<blazor_web.Models.Product> filteredProducts = new();
+    private List<blazor_web.Models.Product> paginatedProducts = new();
+
+    protected override void OnInitialized()
     {
-        ApiResponse<List<CategoryResponse>>? cateRes = await categoryService.GetAll();
-        var supplierResponses = await supplierService.GetSuppliersAsync();
-        if (cateRes != null)
-        {
-            categories = cateRes.Data;
-        }
-        if (supplierResponses != null)
-        {
-            suppliers = supplierResponses.Data;
-        }
-        await LoadData();
+        GenerateFakeProducts();
+        ApplyFiltersAndPagination();
     }
-    private async Task LoadData()
+
+    private void GenerateFakeProducts()
     {
+        var random = new Random();
+        var productNames = new[]
+        {
+            "Laptop Pro 15", "Wireless Mouse", "USB-C Hub", "Mechanical Keyboard", "4K Monitor",
+            "Webcam HD", "Desk Lamp LED", "Office Chair", "Standing Desk", "Cable Organizer",
+            "Phone Stand", "Tablet Case", "Power Bank", "Bluetooth Speaker", "Smart Watch",
+            "Fitness Tracker", "Yoga Mat", "Water Bottle", "Gym Bag", "Running Shoes",
+            "Coffee Maker", "Electric Kettle", "Toaster Oven", "Blender", "Air Fryer",
+            "Vacuum Cleaner", "Washing Machine", "Refrigerator", "Microwave Oven", "Dishwasher"
+        };
 
-        productFilter.Page = CurrentPage;
-        productFilter.Limit = limit;
-        var response = await productService.GetAllProduct(productFilter);
+        var barcodes = new[]
+        {
+            "1234567890123", "2345678901234", "3456789012345", "4567890123456", "5678901234567",
+            "6789012345678", "7890123456789", "8901234567890", "9012345678901", "0123456789012"
+        };
 
-        products = response.Data.Products ?? new();
-        dataRes = response.Data;
-        Console.WriteLine($"[Products] LoadData: Page={CurrentPage}, Limit={limit}, TotalProducts={dataRes.TotalProduct}");
+        allProducts = productNames.Select((name, index) => new blazor_web.Models.Product
+        {
+            ProductId = index + 1,
+            ProductName = name,
+            CategoryId = random.Next(1, 6),
+            SupplierId = random.Next(1, 6),
+            Barcode = barcodes[random.Next(barcodes.Length)],
+            Price = (decimal)Math.Round(random.Next(10, 1000) + random.NextDouble(), 2),
+            Unit = random.Next(0, 2) == 0 ? "pcs" : "set",
+            CreatedAt = DateTime.Now.AddDays(-random.Next(1, 365))
+        }).ToList();
+
+        totalProducts = allProducts.Count;
+        filteredProducts = new List<blazor_web.Models.Product>(allProducts);
+    }
+
+    private void ApplyFiltersAndPagination()
+    {
+        // Apply filters (simplified for demo)
+        filteredProducts = allProducts.Where(p =>
+            (string.IsNullOrEmpty(searchTerm) || p.ProductName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) &&
+            (!categoryId.HasValue || p.CategoryId == categoryId.Value) &&
+            (!supplierId.HasValue || p.SupplierId == supplierId.Value) &&
+            (!maxPrice.HasValue || p.Price <= maxPrice.Value)
+        ).ToList();
+
+        // Update totals
+        totalProducts = filteredProducts.Count;
+        totalPages = (int)Math.Ceiling((double)totalProducts / itemsPerPage);
+
+        // Ensure current page is valid
+        currentPage = Math.Min(currentPage, Math.Max(1, totalPages));
+
+        // Get paginated results
+        paginatedProducts = filteredProducts
+            .Skip((currentPage - 1) * itemsPerPage)
+            .Take(itemsPerPage)
+            .ToList();
+    }
+
+    private void HandleFilterChanged()
+    {
+        currentPage = 1; // Reset to first page when filters change
+        ApplyFiltersAndPagination();
         StateHasChanged();
     }
 
-    private async Task HandleFilterChanged(ProductFilter newFilter)
+    private void HandlePageChanged(int page)
     {
-        CurrentPage = 1;
-        productFilter = newFilter;
-        await LoadData();
+        currentPage = page;
+        ApplyFiltersAndPagination();
+        StateHasChanged();
     }
 
-    private async Task OnLimitChange(ChangeEventArgs e)
+    private void HandleItemsPerPageChanged(int pageSize)
     {
-        if (int.TryParse(e.Value?.ToString(), out int newLimit))
-        {
-            limit = newLimit;
-        }
-        else limit = 8;
-        Console.WriteLine($"[Products] OnLimitChange: {limit}");
-        CurrentPage = 1;
-        await LoadData();
-    }
-    private async Task HandlePageChanged(int newPage)
-    {
-
-        CurrentPage = newPage;
-        await JS.InvokeVoidAsync("scrollTo", new object[] { 0, 0 });
-        await LoadData();
+        itemsPerPage = pageSize;
+        currentPage = 1; // Reset to first page
+        ApplyFiltersAndPagination();
+        StateHasChanged();
     }
 
-    private async Task HandleItemsPerPageChanged(int newLimit)
+    private async Task HandleAddToCart(blazor_web.Models.Product product)
     {
-        limit = newLimit;
-        CurrentPage = 1;
-        await JS.InvokeVoidAsync("scrollTo", new object[] { 0, 0 });
-        await LoadData();
-    }
-
-    private async Task Search()
-    {
-        CurrentPage = 1;
-        await LoadData();
-    }
-
-    private string FormatPrice(decimal price)
-    {
-        return price.ToString("N0") + " ₫";
-    }
-
-
-
-    private async Task HandleAddToCart(ProductResponse data)
-    {
-        var product = ProductMapper.ToModel(data);
         Console.WriteLine($"[Products] HandleAddToCart: {product.ProductId} - {product.ProductName}");
         await CartService.AddItemAsync(product, 1);
 
@@ -208,19 +219,4 @@
         showAddToCartMessage = true;
     }
 
-    private async Task OnSortChange(ChangeEventArgs e)
-    {
-        var sortValue = e.Value?.ToString();
-        if (!string.IsNullOrEmpty(sortValue))
-        {
-            var parts = sortValue.Split('-');
-            if (parts.Length == 2)
-            {
-                productFilter.SortBy = parts[0];
-                productFilter.SortOrder = parts[1];
-                CurrentPage = 1;
-                await LoadData();
-            }
-        }
-    }
 }
