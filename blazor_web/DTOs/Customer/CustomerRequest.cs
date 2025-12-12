@@ -27,6 +27,9 @@ public record UpdateCustomerRequest : CreateCustomerRequest { }
 public record GetCustomerRequest
 {
     [FromQuery]
+    public int? Id { get; init; }
+    
+    [FromQuery]
     public string? Search { get; init; }
 
     [FromQuery]

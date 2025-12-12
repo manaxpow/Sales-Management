@@ -186,7 +186,7 @@
         return string.IsNullOrEmpty(nameError) && string.IsNullOrEmpty(phoneError);
     }
 
-     private void ValidateName()
+    private void ValidateName()
     {
         if (string.IsNullOrWhiteSpace(updateRequest.Name))
         {
@@ -196,7 +196,8 @@
         {
             nameError = "Họ và tên không được chứa số.";
         }
-        else if (!System.Text.RegularExpressions.Regex.IsMatch(updateRequest.Name, @"^[a-zA-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯĂẠẢẤẦẨẪẬẮẰẲẴẶẸẺẼỀỀỂỄỆỈỊỌỎỐỒỔỖỘỚỜỞỠỢỤỦỨỪỬỮỰỲỴÝỶỸ\s-]+$"))
+        else if (!System.Text.RegularExpressions.Regex.IsMatch(updateRequest.Name,
+        @"^[a-zA-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯĂẠẢẤẦẨẪẬẮẰẲẴẶẸẺẼỀỀỂỄỆỈỊỌỎỐỒỔỖỘỚỜỞỠỢỤỦỨỪỬỮỰỲỴÝỶỸ\s-]+$"))
         {
             nameError = "Họ và tên chỉ được chứa chữ cái và dấu tiếng Việt.";
         }
@@ -227,9 +228,9 @@
         {
             var numbersOnly = string.Concat(value.Where(char.IsDigit));
             if (numbersOnly.Length > 10)
-                numbersOnly = numbersOnly[..10]; // Giới hạn 10 số
+                numbersOnly = numbersOnly[..10];
             updateRequest.Phone = numbersOnly;
-            ValidatePhone(); // Validate ngay khi nhập
+            ValidatePhone();
             StateHasChanged();
         }
     }
@@ -251,9 +252,10 @@
 
                 var apiResponse = await CustomerService.GetCustomerAsync(new GetCustomerRequest
                 {
-                    Search = myId.ToString(),
+                    Id = myId,
                     Limit = 1
                 });
+
 
                 var customer = apiResponse.Data?.Customers?.FirstOrDefault(x => x.Id == myId);
 
