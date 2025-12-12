@@ -1,30 +1,32 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-public class CustomerService : ICustomerService {
+public class CustomerService : ICustomerService
+{
     private readonly AppDbContext _context;
 
-    public CustomerService(AppDbContext context) {
+    public CustomerService(AppDbContext context)
+    {
         _context = context;
     }
 
     public async Task<bool> CheckExistCustomer(string? email, string? phone, int? id = null)
-{
-    var query = _context.Customers.AsNoTracking().AsQueryable();
+    {
+        var query = _context.Customers.AsNoTracking().AsQueryable();
 
-    if (id.HasValue)
-        query = query.Where(c => c.CustomerId != id.Value);
+        if (id.HasValue)
+            query = query.Where(c => c.CustomerId != id.Value);
 
-    if (!string.IsNullOrWhiteSpace(email) || !string.IsNullOrWhiteSpace(phone))
-        return await query.AnyAsync(c => c.Email == email || c.Phone == phone);
+        if (!string.IsNullOrWhiteSpace(email) || !string.IsNullOrWhiteSpace(phone))
+            return await query.AnyAsync(c => c.Email == email || c.Phone == phone);
 
-    if (!string.IsNullOrWhiteSpace(email))
-        return await query.AnyAsync(c => c.Email == email);
+        if (!string.IsNullOrWhiteSpace(email))
+            return await query.AnyAsync(c => c.Email == email);
 
-    if (!string.IsNullOrWhiteSpace(phone))
-        return await query.AnyAsync(c => c.Phone == phone);
+        if (!string.IsNullOrWhiteSpace(phone))
+            return await query.AnyAsync(c => c.Phone == phone);
 
-    return false;
-}
+        return false;
+    }
 
     public async Task<ApiResponse<CustomerResponse>> CreateCustomer(CreateCustomerRequest newCustomer)
     {
@@ -54,9 +56,9 @@ public class CustomerService : ICustomerService {
             CreatedAt = customer.CreatedAt,
             UpdatedAt = customer.UpdatedAt
         }, "Created customer successfully", 201);
-    }   
-        
-    
+    }
+
+
     public async Task<ApiResponse<string>> DeleteCustomer(int id)
     {
         var customer = await _context.Customers.FindAsync(id);
@@ -69,56 +71,56 @@ public class CustomerService : ICustomerService {
     }
 
 
-public async Task<ApiResponse<GetCustomerResponse>> GetAllCustomer(GetCustomerRequest request)
-{
-    var query = _context.Customers.AsNoTracking().AsQueryable();
-
-    // Search theo name/phone/email
-    if (!string.IsNullOrWhiteSpace(request.Search))
+    public async Task<ApiResponse<GetCustomerResponse>> GetAllCustomer(GetCustomerRequest request)
     {
-        var kw = request.Search.Trim();
-        var pattern = $"%{kw}%"; 
+        var query = _context.Customers.AsNoTracking().AsQueryable();
 
-        query = query.Where(c =>
-            EF.Functions.Like(c.Name, pattern) ||
-            EF.Functions.Like(c.Phone, pattern) ||
-            EF.Functions.Like(c.Email, pattern));
-    }
-
-    // Phân trang
-    var limit = request.Limit.GetValueOrDefault(10);
-    var page  = request.Page.GetValueOrDefault(1);
-    if (page  < 1)  page = 1;
-
-    var total = await query.CountAsync();
-
-    var customers = await query
-        .OrderByDescending(c => c.CreatedAt)
-        .Skip((page - 1) * limit)
-        .Take(limit)
-        .Select(c => new CustomerResponse
+        // Search theo name/phone/email
+        if (!string.IsNullOrWhiteSpace(request.Search))
         {
-            Id        = c.CustomerId, 
-            Name      = c.Name,
-            Phone     = c.Phone,
-            Email     = c.Email,
-            Address   = c.Address,
-            CreatedAt = c.CreatedAt,
-            UpdatedAt = c.UpdatedAt
-        })
-        .ToListAsync();
+            var kw = request.Search.Trim();
+            var pattern = $"%{kw}%";
 
-    var payload = new GetCustomerResponse
-    {
-        Customers  = customers,
-        Total      = total,
-        CurrentPage = page,                          
-        TotalPage = (int)Math.Ceiling(total / (double)limit)
-    };
+            query = query.Where(c =>
+                EF.Functions.Like(c.Name, pattern) ||
+                EF.Functions.Like(c.Phone, pattern) ||
+                EF.Functions.Like(c.Email, pattern));
+        }
 
-    return new ApiResponse<GetCustomerResponse>()
-        .SuccessResponse(payload, "Fetched customers successfully");
-}
+        // Phân trang
+        var limit = request.Limit.GetValueOrDefault(10);
+        var page = request.Page.GetValueOrDefault(1);
+        if (page < 1) page = 1;
+
+        var total = await query.CountAsync();
+
+        var customers = await query
+            .OrderByDescending(c => c.CreatedAt)
+            .Skip((page - 1) * limit)
+            .Take(limit)
+            .Select(c => new CustomerResponse
+            {
+                Id = c.CustomerId,
+                Name = c.Name,
+                Phone = c.Phone,
+                Email = c.Email,
+                Address = c.Address,
+                CreatedAt = c.CreatedAt,
+                UpdatedAt = c.UpdatedAt
+            })
+            .ToListAsync();
+
+        var payload = new GetCustomerResponse
+        {
+            Customers = customers,
+            Total = total,
+            CurrentPage = page,
+            TotalPage = (int)Math.Ceiling(total / (double)limit)
+        };
+
+        return new ApiResponse<GetCustomerResponse>()
+            .SuccessResponse(payload, "Fetched customers successfully");
+    }
 
 
 
@@ -142,7 +144,7 @@ public async Task<ApiResponse<GetCustomerResponse>> GetAllCustomer(GetCustomerRe
 
     public async Task<ApiResponse<CustomerResponse>> UpdateCustomer(int id, UpdateCustomerRequest updatedCustomer)
     {
-        if(await CheckExistCustomer(updatedCustomer.Email, updatedCustomer.Phone, id))
+        if (await CheckExistCustomer(updatedCustomer.Email, updatedCustomer.Phone, id))
             return new ApiResponse<CustomerResponse>().ErrorResponse("Customer already exists, check your email or phone", 400);
 
         var customer = await _context.Customers.FindAsync(id);
