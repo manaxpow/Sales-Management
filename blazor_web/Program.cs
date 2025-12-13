@@ -50,6 +50,7 @@ builder.Services.AddScoped<ISupplierService, SupplierService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IUserService, UserService>();
 
+builder.Services.AddBlazoredToast();
 
 var app = builder.Build();
 

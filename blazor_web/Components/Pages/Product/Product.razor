@@ -113,134 +113,76 @@
 </div>
 
 @code {
+    // ===================== DATA =====================
     private List<CategoryResponse> categories = new();
     private List<SupplierResponse> suppliers = new();
     private List<ProductResponse> products = new();
+    private List<ProductResponse> paginatedProducts = new();
+
     private ProductFilter productFilter = new();
     private GetProductResponse dataRes = new();
+
     public int CurrentPage = 1;
     private int limit = 8;
 
+    private bool _isLoading;
+    private string? _errorMessage;
+
+    // ===================== UI =====================
     private string addToCartMessage = "";
     private bool showAddToCartMessage = false;
     private SnackBoard snackBoard = new SnackBoard();
 
-
-    // products
-    private List<ProductResponse> paginatedProducts = new();
-    private bool _isLoading = true;
-    private string? _errorMessage;
-
+    // ===================== LIFECYCLE =====================
     protected override async Task OnInitializedAsync() {
-        await LoadProductsAsync();
-    }
-
-    // Build query string from current state
-    private string BuildQueryString() {
-        var qs = new List<string>
-        {
-            $"page={currentPage}",
-            $"pageSize={itemsPerPage}"
-        };
-
-        if (!string.IsNullOrWhiteSpace(searchTerm)) qs.Add($"search={Uri.EscapeDataString(searchTerm)}");
-        if (categoryId.HasValue) qs.Add($"categoryId={categoryId.Value}");
-        if (supplierId.HasValue) qs.Add($"supplierId={supplierId.Value}");
-        if (maxPrice.HasValue) qs.Add($"maxPrice={maxPrice.Value}");
-        if (!string.IsNullOrWhiteSpace(sortBy)) qs.Add($"sort={Uri.EscapeDataString(sortBy)}");
-
-        return string.Join("&", qs);
-    }
-
-    private async Task LoadProductsAsync() {
-        _isLoading = true;
-        _errorMessage = null;
-        paginatedProducts.Clear();
-
-        try {
-            var qs = BuildQueryString();
-            // API returns ApiResponse<GetProductResponse>
-            var apiResp = await Http.GetFromJsonAsync<ApiResponse<GetProductResponse>>($"products?{qs}");
-
-            if (apiResp == null) {
-                _errorMessage = "No response from server.";
-                return;
-            }
-
-            if (!apiResp.Success || apiResp.Data == null) {
-                _errorMessage = apiResp.Message ?? "Failed to load products";
-                return;
-            }
-
-            var data = apiResp.Data;
-
-            totalProducts = data.TotalProduct;
-            totalPages = data.TotalPage > 0 ? data.TotalPage : (int)Math.Ceiling((double)totalProducts / itemsPerPage);
-            currentPage = data.CurrentPage > 0 ? data.CurrentPage : currentPage;
-
-            // Map ProductResponse -> Models.Product
-            paginatedProducts = data.Products;
-        } catch (Exception ex) {
-            Console.WriteLine($"[Products] LoadProductsAsync error: {ex}");
-            _errorMessage = "Error loading products. Please try again later.";
-        } finally {
-            _isLoading = false;
-            StateHasChanged();
-        }
-        if (supplierResponses != null)
-        {
-            suppliers = supplierResponses.Data;
-        }
         await LoadData();
     }
-    private async Task LoadData()
-    {
+
+    // ===================== CORE LOAD =====================
+    private async Task LoadData() {
+        _isLoading = true;
 
         productFilter.Page = CurrentPage;
         productFilter.Limit = limit;
+
         var response = await productService.GetAllProduct(productFilter);
 
         products = response.Data.Products ?? new();
+        paginatedProducts = products;
         dataRes = response.Data;
-        Console.WriteLine($"[Products] LoadData: Page={CurrentPage}, Limit={limit}, TotalProducts={dataRes.TotalProduct}");
+
+        _isLoading = false;
         StateHasChanged();
     }
 
-    private async Task HandleFilterChanged(ProductFilter newFilter)
-    {
+    // ===================== FILTER =====================
+    private async Task HandleFilterChanged(ProductFilter filter) {
         CurrentPage = 1;
-        productFilter = newFilter;
+        productFilter = filter;
         await LoadData();
     }
 
-    // Filter / paging callbacks
-    private async Task HandleFilterChanged(ProductFilter args) {
-        categoryId = args?.CategoryId;
-        supplierId = args?.SupplierId;
-        currentPage = 1;
-        await LoadProductsAsync();
+    // ===================== SORT =====================
+    private async Task OnSortChange(ChangeEventArgs e) {
+        // productFilter.Sort = e.Value?.ToString();
+        CurrentPage = 1;
+        await LoadData();
     }
 
-    private async Task HandleItemsPerPageChanged(int newLimit)
-    {
+    // ===================== PAGINATION =====================
+    private async Task HandlePageChanged(int page) {
+        CurrentPage = page;
+        await LoadData();
+    }
+
+    private async Task HandleItemsPerPageChanged(int newLimit) {
         limit = newLimit;
         CurrentPage = 1;
-        await JS.InvokeVoidAsync("scrollTo", new object[] { 0, 0 });
+        await JS.InvokeVoidAsync("scrollTo", 0, 0);
         await LoadData();
     }
 
-    private async Task Search()
-    {
-        CurrentPage = 1;
-        await LoadData();
-    }
-
-    private string FormatPrice(decimal price)
-    {
-        return price.ToString("N0") + " ₫";
-    }
-
-    // Add to cart
+    // ===================== CART =====================
     private blazor_web.Models.Product ConvertToModel(ProductResponse r) {
         return new blazor_web.Models.Product {
             ProductId = r.ProductId,

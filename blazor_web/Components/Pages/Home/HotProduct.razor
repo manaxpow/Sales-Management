@@ -49,23 +49,27 @@
 </div>
 
 @code {
-    private List<ProductResponse> HotProducts { get; set; } = new();
+    // ===================== DATA =====================
+    private List<ProductResponse> HotProducts = new();
     private bool _isLoading = true;
     private string? _errorMessage;
 
     [Parameter]
     public int Limit { get; set; } = 8;
 
+    // ===================== LIFECYCLE =====================
     protected override async Task OnInitializedAsync() {
         await LoadHotProductsAsync();
     }
 
+    // ===================== LOAD HOT PRODUCTS =====================
     private async Task LoadHotProductsAsync() {
         _isLoading = true;
         _errorMessage = null;
 
         try {
-            var apiResp = await Http.GetFromJsonAsync<ApiResponse<GetProductResponse>>("products");
+            var apiResp =
+                await Http.GetFromJsonAsync<ApiResponse<GetProductResponse>>("products");
 
             if (apiResp?.Success != true || apiResp.Data?.Products == null) {
                 _errorMessage = apiResp?.Message ?? "Lỗi tải dữ liệu.";
@@ -85,55 +89,25 @@
             StateHasChanged();
         }
     }
-    private async Task HandleAddToCart(ProductResponse data)
-    {
-        var product = ProductMapper.ToModel(data);
-        Console.WriteLine($"[Products] HandleAddToCart: {product.ProductId} - {product.ProductName}");
-        await CartService.AddItemAsync(product, 1);
-        snackBoard.Show($"{product.ProductName} has been added to your cart!", "success");
 
-    }
-
-    private async Task LoadData()
-    {
-        var response = await productService.GetAllProduct(new ProductFilter
-        {
-            Page = 1,
-            Limit = 8
-        });
-        Console.WriteLine($"[HotProduct] LoadData: Retrieved {response.Data?.Products?.Count ?? 0} products");
-    }
-    private Product MapToModelProduct(ProductResponse r) {
-        return new Product {
-            ProductId = r.ProductId,
-            ProductName = r.ProductName ?? string.Empty,
-            Barcode = r.Barcode ?? string.Empty,
-            CategoryId = r.CategoryId,
-            SupplierId = r.SupplierId,
-            Price = r.Price,
-            Unit = r.Unit ?? "pcs",
-            CreatedAt = DateTime.Now
-        };
-    }
-
-    private async Task HandleAddToCart(Product product) {
+    // ===================== ADD TO CART =====================
+    private async Task HandleAddToCart(ProductResponse data) {
         try {
-            // Convert ProductResponse → Product model for Cart
             var product = new Product {
-                ProductId = r.ProductId,
-                ProductName = r.ProductName,
-                Barcode = r.Barcode,
-                CategoryId = r.CategoryId,
-                SupplierId = r.SupplierId,
-                Price = r.Price,
-                Unit = r.Unit,
+                ProductId = data.ProductId,
+                ProductName = data.ProductName ?? "",
+                Barcode = data.Barcode ?? "",
+                CategoryId = data.CategoryId,
+                SupplierId = data.SupplierId,
+                Price = data.Price,
+                Unit = data.Unit ?? "pcs",
                 CreatedAt = DateTime.Now
             };
 
             var success = await CartService.AddItemAsync(product, 1);
 
             if (success)
-                Toast.ShowSuccess($"Đã thêm “{r.ProductName}” vào giỏ hàng!");
+                Toast.ShowSuccess($"Đã thêm “{product.ProductName}” vào giỏ hàng!");
             else
                 Toast.ShowWarning("Không thể thêm vào giỏ hàng.");
         } catch (Exception ex) {
