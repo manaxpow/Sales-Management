@@ -43,8 +43,13 @@ namespace blazor_web.Services.Storage
         public async Task<LoginResponse?> GetLoginInfoAsync()
         {
             var json = await GetItemAsync(LOGIN_INFO_KEY);
+
+            // Debug: In ra xem json lấy được là gì
             if (string.IsNullOrEmpty(json))
+            {
                 return null;
+            }
+
 
             try
             {
@@ -53,7 +58,7 @@ namespace blazor_web.Services.Storage
                     PropertyNameCaseInsensitive = true
                 });
             }
-            catch
+            catch (Exception ex)
             {
                 return null;
             }

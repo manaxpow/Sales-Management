@@ -215,7 +215,7 @@
             if (result.Success && result.Data != null) {
                 // Store login information in localStorage
                 await LocalStorageService.SetLoginInfoAsync(result.Data);
-                Console.WriteLine($"Login info stored for user: {result.Data.User?.UserName}");
+                Console.WriteLine($"Login info stored for user: {result.Data}");
 
                 // Redirect to home page or dashboard
                 NavigationManager.NavigateTo("/", forceLoad: true);
