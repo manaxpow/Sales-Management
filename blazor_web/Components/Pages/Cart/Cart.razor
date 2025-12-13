@@ -24,7 +24,8 @@
             </div>
             <div class="flex items-center space-x-2">
                 <svg class="w-8 h-8 text-green-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
                 <span class="text-xl font-semibold">@totalItems Items</span>
             </div>
@@ -40,23 +41,29 @@
                 <div class="border-b border-gray-200 px-6 py-4">
                     <div class="flex items-center justify-between">
                         <h2 class="text-lg font-semibold text-gray-800">Cart Items</h2>
-                        <button @onclick="ClearCartAsync" class="text-sm text-red-600 hover:text-red-700 font-medium transition-colors duration-200">
+                        <button @onclick="ClearCartAsync"
+                            class="text-sm text-red-600 hover:text-red-700 font-medium transition-colors duration-200">
                             Clear Cart
                         </button>
                     </div>
                 </div>
 
                 <div class="divide-y divide-gray-200">
-                    @if (_isLoading) {
+                    @if (_isLoading)
+                    {
                         <div class="p-6 text-center text-gray-500 text-sm">
                             Loading cart...
                         </div>
-                    } else if (cartItems.Count > 0) {
-                        @foreach (var item in cartItems) {
+                    }
+                    else if (cartItems.Count > 0)
+                    {
+                        @foreach (var item in cartItems)
+                        {
                             <div class="p-6 hover:bg-gray-50 transition-colors duration-200">
                                 <div class="flex items-center space-x-4">
                                     <div class="flex-shrink-0 w-20 h-20 bg-gray-100 rounded-lg overflow-hidden">
-                                        <img src="@GetProductImage(item.ProductId)" alt="@item.ProductName" class="w-full h-full object-cover" />
+                                        <img src="@GetProductImage(item.ProductId)" alt="@item.ProductName"
+                                            class="w-full h-full object-cover" />
                                     </div>
 
                                     <div class="flex-1 min-w-0">
@@ -65,43 +72,57 @@
                                     </div>
 
                                     <div class="flex items-center space-x-2">
-                                        <button @onclick="() => DecreaseQuantityAsync(item)" class="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-700 flex items-center justify-center transition-all duration-200">
+                                        <button @onclick="() => DecreaseQuantityAsync(item)"
+                                            class="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-700 flex items-center justify-center transition-all duration-200">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M20 12H4" />
                                             </svg>
                                         </button>
                                         <span class="w-12 text-center font-semibold text-gray-900">@item.Quantity</span>
-                                        <button @onclick="() => IncreaseQuantityAsync(item)" class="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-700 flex items-center justify-center transition-all duration-200">
+                                        <button @onclick="() => IncreaseQuantityAsync(item)"
+                                            class="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-700 flex items-center justify-center transition-all duration-200">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M12 4v16m8-8H4" />
                                             </svg>
                                         </button>
                                     </div>
 
                                     <div class="flex flex-col items-end space-y-2">
                                         <div class="text-right">
-                                            <p class="text-lg font-bold text-gray-900">$@item.Subtotal.ToString("F2")</p>
-                                            <p class="text-sm text-gray-500">$@item.PriceSnapshot.ToString("F2") each</p>
+                                            <p class="text-lg font-bold text-gray-900">@PriceHelper.FormatPrice(item.Subtotal)
+                                                each</p>
+                                            <p class="text-sm text-gray-500">@PriceHelper.FormatPrice(item.PriceSnapshot) each
+                                            </p>
                                         </div>
-                                        <button @onclick="() => RemoveItemAsync(item)" class="text-red-600 hover:text-red-700 transition-colors duration-200">
+                                        <button @onclick="() => RemoveItemAsync(item)"
+                                            class="text-red-600 hover:text-red-700 transition-colors duration-200">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                             </svg>
                                         </button>
                                     </div>
                                 </div>
                             </div>
                         }
-                    } else {
+                    }
+                    else
+                    {
                         <div class="p-12 text-center">
-                            <svg class="mx-auto h-16 w-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                            <svg class="mx-auto h-16 w-16 text-gray-400 mb-4" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                             </svg>
                             <h3 class="text-lg font-medium text-gray-900 mb-2">Your cart is empty</h3>
                             <p class="text-gray-500 mb-6">Looks like you haven't added any products to your cart yet.</p>
-                            <a href="/products" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-all duration-200 transform hover:scale-105">
+                            <a href="/products"
+                                class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-all duration-200 transform hover:scale-105">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                 </svg>
                                 Continue Shopping
                             </a>
@@ -110,11 +131,14 @@
                 </div>
             </div>
 
-            @if (cartItems.Count > 0) {
+            @if (cartItems.Count > 0)
+            {
                 <div class="mt-6">
-                    <a href="/products" class="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium transition-colors duration-200">
+                    <a href="/products"
+                        class="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium transition-colors duration-200">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                         </svg>
                         Continue Shopping
                     </a>
@@ -130,26 +154,27 @@
                 <div class="space-y-3 mb-6">
                     <div class="flex justify-between text-sm">
                         <span class="text-gray-600">Subtotal (@totalItems items)</span>
-                        <span class="font-medium text-gray-900">$@subtotal.ToString("F2")</span>
+                        <span class="font-medium text-gray-900">@PriceHelper.FormatPrice(subtotal)</span>
                     </div>
                     <div class="flex justify-between text-sm">
                         <span class="text-gray-600">Shipping</span>
-                        <span class="font-medium text-gray-900">$@shipping.ToString("F2")</span>
+                        <span class="font-medium text-gray-900">@PriceHelper.FormatPrice(shipping)</span>
                     </div>
                     <div class="flex justify-between text-sm">
                         <span class="text-gray-600">Tax (10%)</span>
-                        <span class="font-medium text-gray-900">$@tax.ToString("F2")</span>
+                        <span class="font-medium text-gray-900">@PriceHelper.FormatPrice(tax)</span>
                     </div>
-                    @if (discount > 0) {
+                    @if (discount > 0)
+                    {
                         <div class="flex justify-between text-sm">
                             <span class="text-green-600">Discount</span>
-                            <span class="font-medium text-green-600">-$@discount.ToString("F2")</span>
+                            <span class="font-medium text-green-600">-@PriceHelper.FormatPrice(discount)</span>
                         </div>
                     }
                     <div class="border-t pt-3">
                         <div class="flex justify-between">
                             <span class="text-lg font-bold text-gray-900">Total</span>
-                            <span class="text-lg font-bold text-blue-600">$@total.ToString("F2")</span>
+                            <span class="text-lg font-bold text-blue-600">@PriceHelper.FormatPrice(total)</span>
                         </div>
                     </div>
                 </div>
@@ -158,35 +183,43 @@
                     <label class="block text-sm font-medium text-gray-700 mb-2">Promo Code</label>
                     <div class="flex space-x-2">
                         <input type="text" @bind="promoCode" @bind:event="oninput" placeholder="Enter promo code"
-                               class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm" />
-                        <button class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium rounded-lg transition-all duration-200 text-sm"
-                                @onclick="ApplyPromotionAsync" disabled="@_isApplyingPromo">
-                            @if (_isApplyingPromo) {
+                            class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm" />
+                        <button
+                            class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium rounded-lg transition-all duration-200 text-sm"
+                            @onclick="ApplyPromotionAsync" disabled="@_isApplyingPromo">
+                            @if (_isApplyingPromo)
+                            {
                                 <span>Applying...</span>
-                            } else {
+                            }
+                            else
+                            {
                                 <span>Apply</span>
                             }
                         </button>
                     </div>
 
-                    @if (!string.IsNullOrEmpty(_promoMessage)) {
+                    @if (!string.IsNullOrEmpty(_promoMessage))
+                    {
                         <div class="mt-2 text-sm @( _promoError ? "text-red-600" : "text-green-600")">
                             @_promoMessage
                         </div>
                     }
                 </div>
 
-                <button class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                        disabled="@(_isCheckingOut || cartItems.Count == 0)" @onclick="CheckoutAsync">
+                <button
+                    class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled="@(_isCheckingOut || cartItems.Count == 0)" @onclick="CheckoutAsync">
                     <div class="flex items-center justify-center">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                         </svg>
                         Proceed to Checkout
                     </div>
                 </button>
 
-                @if (!string.IsNullOrEmpty(_checkoutMessage)) {
+                @if (!string.IsNullOrEmpty(_checkoutMessage))
+                {
                     <div class="mt-4 text-sm @( _checkoutError ? "text-red-600" : "text-green-600")">
                         @_checkoutMessage
                     </div>
@@ -194,7 +227,8 @@
 
                 <div class="mt-4 flex items-center justify-center text-xs text-gray-500">
                     <svg class="w-4 h-4 mr-1 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                     </svg>
                     Secure Checkout
                 </div>
@@ -225,8 +259,10 @@
     private decimal total = 0;
     private int totalItems = 0;
 
-    protected override async Task OnAfterRenderAsync(bool firstRender) {
-        if (firstRender) {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
             _isLoading = true;
             StateHasChanged();
 
@@ -237,12 +273,14 @@
         }
     }
 
-    private async Task LoadCartFromApiAsync() {
+    private async Task LoadCartFromApiAsync()
+    {
         cartItems.Clear();
         _activeCart = null;
 
         var loginInfo = await LocalStorageService.GetLoginInfoAsync();
-        if (loginInfo == null || loginInfo.User == null) {
+        if (loginInfo == null || loginInfo.User == null)
+        {
             CalculateTotals(); // empty
             return;
         }
@@ -251,41 +289,58 @@
 
         // GET carts for user - backend may return list or single; handle both
         var cartsResp = await Http.GetFromJsonAsync<ApiResponse<List<CartResponse>>>($"carts/user/{userId}?status=active");
-        if (cartsResp != null && cartsResp.Success && cartsResp.Data != null && cartsResp.Data.Any()) {
+        if (cartsResp != null && cartsResp.Success && cartsResp.Data != null && cartsResp.Data.Any())
+        {
             _activeCart = cartsResp.Data.First();
-        } else {
+        }
+        else
+        {
             // try GET single /carts/active/{userId} or create new cart
             // fallback: create new cart
-            var createResp = await Http.PostAsJsonAsync("carts", new { UserId = userId, CustomerId = loginInfo.Customer?.Id, Status = "active" });
-            if (createResp.IsSuccessStatusCode) {
+            var createResp = await Http.PostAsJsonAsync("carts", new
+            {
+                UserId = userId,
+                CustomerId = loginInfo.Customer?.Id,
+                Status
+            = "active"
+            });
+            if (createResp.IsSuccessStatusCode)
+            {
                 var created = await createResp.Content.ReadFromJsonAsync<ApiResponse<CartResponse>>();
-                if (created != null && created.Success && created.Data != null) {
+                if (created != null && created.Success && created.Data != null)
+                {
                     _activeCart = created.Data;
                 }
             }
         }
 
-        if (_activeCart == null) {
+        if (_activeCart == null)
+        {
             CalculateTotals();
             return;
         }
 
         // load items for cart
-        var itemsResp = await Http.GetFromJsonAsync<ApiResponse<List<CartItemResponse>>>($"cart-items?cartId={_activeCart.CartId}");
-        if (itemsResp != null && itemsResp.Success && itemsResp.Data != null) {
+        var itemsResp = await
+        Http.GetFromJsonAsync<ApiResponse<List<CartItemResponse>>>($"cart-items?cartId={_activeCart.CartId}");
+        if (itemsResp != null && itemsResp.Success && itemsResp.Data != null)
+        {
             cartItems = itemsResp.Data;
         }
 
         // prefer backend totals when available
-        if (_activeCart != null) {
-            subtotal = _activeCart.TotalAmount - (_activeCart.ShippingAmount + _activeCart.TaxAmount - _activeCart.DiscountAmount); // best-effort if backend total is full amount
+        if (_activeCart != null)
+        {
+            subtotal = _activeCart.TotalAmount - (_activeCart.ShippingAmount + _activeCart.TaxAmount - _activeCart.DiscountAmount);
+            // best-effort if backend total is full amount
             // but safer: compute from items
         }
 
         CalculateTotals();
     }
 
-    private void CalculateTotals() {
+    private void CalculateTotals()
+    {
         // prefer to compute from items for accurate per-item pricing
         subtotal = cartItems.Sum(i => i.PriceSnapshot * i.Quantity);
         totalItems = cartItems.Sum(i => i.Quantity);
@@ -296,28 +351,37 @@
         total = subtotal + shipping + tax - discount;
     }
 
-    private string GetProductImage(int? productId) {
+    private string GetProductImage(int? productId)
+    {
         // placeholder: nếu có URL từ BE thì dùng; hiện chưa có nên trả ảnh mặc định
         return $"https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=200&h=200&fit=crop";
     }
 
-    private async Task IncreaseQuantityAsync(CartItemResponse item) {
+    private async Task IncreaseQuantityAsync(CartItemResponse item)
+    {
         item.Quantity++;
         await UpdateCartItemOnServerAsync(item);
     }
 
-    private async Task DecreaseQuantityAsync(CartItemResponse item) {
-        if (item.Quantity > 1) {
+    private async Task DecreaseQuantityAsync(CartItemResponse item)
+    {
+        if (item.Quantity > 1)
+        {
             item.Quantity--;
             await UpdateCartItemOnServerAsync(item);
-        } else {
+        }
+        else
+        {
             await RemoveItemAsync(item);
         }
     }
 
-    private async Task UpdateCartItemOnServerAsync(CartItemResponse item) {
-        try {
-            var req = new CartItemUpdateRequest {
+    private async Task UpdateCartItemOnServerAsync(CartItemResponse item)
+    {
+        try
+        {
+            var req = new CartItemUpdateRequest
+            {
                 ProductId = item.ProductId,
                 PriceSnapshot = item.PriceSnapshot,
                 Quantity = item.Quantity,
@@ -325,68 +389,95 @@
             };
 
             var put = await Http.PutAsJsonAsync($"cart-items/{item.CartItemId}", req);
-            if (put.IsSuccessStatusCode) {
+            if (put.IsSuccessStatusCode)
+            {
                 var api = await put.Content.ReadFromJsonAsync<ApiResponse<CartItemResponse>>();
-                if (api != null && api.Success && api.Data != null) {
+                if (api != null && api.Success && api.Data != null)
+                {
                     var updated = api.Data;
                     var local = cartItems.FirstOrDefault(x => x.CartItemId == updated.CartItemId);
-                    if (local != null) {
+                    if (local != null)
+                    {
                         local.Quantity = updated.Quantity;
                         local.PriceSnapshot = updated.PriceSnapshot;
                         local.Subtotal = updated.Subtotal;
                     }
                 }
             }
-        } catch (Exception ex) {
+        }
+        catch (Exception ex)
+        {
             Console.WriteLine($"[Cart] UpdateCartItemOnServerAsync error: {ex}");
-        } finally {
+        }
+        finally
+        {
             CalculateTotals();
             StateHasChanged();
         }
     }
 
-    private async Task RemoveItemAsync(CartItemResponse item) {
-        try {
+    private async Task RemoveItemAsync(CartItemResponse item)
+    {
+        try
+        {
             var del = await Http.DeleteAsync($"cart-items/{item.CartItemId}");
-            if (del.IsSuccessStatusCode) {
+            if (del.IsSuccessStatusCode)
+            {
                 cartItems.Remove(item);
-            } else {
+            }
+            else
+            {
                 var body = await del.Content.ReadAsStringAsync();
                 Console.WriteLine($"[Cart] Remove failed: {body}");
             }
-        } catch (Exception ex) {
+        }
+        catch (Exception ex)
+        {
             Console.WriteLine($"[Cart] RemoveItemAsync error: {ex}");
-        } finally {
+        }
+        finally
+        {
             CalculateTotals();
             StateHasChanged();
         }
     }
 
-    private async Task ClearCartAsync() {
-        if (_activeCart == null) {
+    private async Task ClearCartAsync()
+    {
+        if (_activeCart == null)
+        {
             cartItems.Clear();
             CalculateTotals();
             return;
         }
 
-        try {
+        try
+        {
             var del = await Http.DeleteAsync($"carts/{_activeCart.CartId}");
-            if (del.IsSuccessStatusCode) {
+            if (del.IsSuccessStatusCode)
+            {
                 cartItems.Clear();
                 _activeCart = null;
-            } else {
+            }
+            else
+            {
                 var body = await del.Content.ReadAsStringAsync();
                 Console.WriteLine($"[Cart] ClearCart failed: {body}");
             }
-        } catch (Exception ex) {
+        }
+        catch (Exception ex)
+        {
             Console.WriteLine($"[Cart] ClearCartAsync error: {ex}");
-        } finally {
+        }
+        finally
+        {
             CalculateTotals();
             StateHasChanged();
         }
     }
 
-    private async Task CheckoutAsync() {
+    private async Task CheckoutAsync()
+    {
         if (cartItems.Count == 0 || _activeCart == null) return;
 
         _isCheckingOut = true;
@@ -394,9 +485,11 @@
         _checkoutError = false;
         StateHasChanged();
 
-        try {
+        try
+        {
             var loginInfo = await LocalStorageService.GetLoginInfoAsync();
-            if (loginInfo == null || loginInfo.User == null) {
+            if (loginInfo == null || loginInfo.User == null)
+            {
                 _checkoutMessage = "Bạn cần đăng nhập trước khi thanh toán.";
                 _checkoutError = true;
                 return;
@@ -404,44 +497,57 @@
 
             // call checkout endpoint
             var resp = await Http.PostAsync($"carts/{_activeCart.CartId}/checkout", null);
-            if (resp.IsSuccessStatusCode) {
+            if (resp.IsSuccessStatusCode)
+            {
                 var api = await resp.Content.ReadFromJsonAsync<ApiResponse<CartResponse>>();
-                if (api != null && api.Success) {
+                if (api != null && api.Success)
+                {
                     cartItems.Clear();
                     _activeCart = null;
                     CalculateTotals();
                     _checkoutMessage = "Đặt hàng thành công.";
                     _checkoutError = false;
-                } else {
+                }
+                else
+                {
                     _checkoutMessage = api?.Message ?? "Thanh toán thất bại.";
                     _checkoutError = true;
                 }
-            } else {
+            }
+            else
+            {
                 var body = await resp.Content.ReadAsStringAsync();
                 _checkoutMessage = $"Thanh toán thất bại: {body}";
                 _checkoutError = true;
             }
-        } catch (Exception ex) {
+        }
+        catch (Exception ex)
+        {
             _checkoutMessage = "Có lỗi xảy ra khi thanh toán: " + ex.Message;
             _checkoutError = true;
             Console.WriteLine($"[Cart] Checkout error: {ex}");
-        } finally {
+        }
+        finally
+        {
             _isCheckingOut = false;
             StateHasChanged();
         }
     }
 
-    private async Task ApplyPromotionAsync() {
+    private async Task ApplyPromotionAsync()
+    {
         _promoMessage = null;
         _promoError = false;
 
-        if (string.IsNullOrWhiteSpace(promoCode)) {
+        if (string.IsNullOrWhiteSpace(promoCode))
+        {
             _promoMessage = "Vui lòng nhập mã khuyến mãi.";
             _promoError = true;
             return;
         }
 
-        if (subtotal <= 0) {
+        if (subtotal <= 0)
+        {
             _promoMessage = "Giỏ hàng trống, không thể áp dụng khuyến mãi.";
             _promoError = true;
             return;
@@ -450,11 +556,13 @@
         _isApplyingPromo = true;
         StateHasChanged();
 
-        try {
+        try
+        {
             var code = promoCode.Trim().ToUpper();
             var apiResponse = await Http.GetFromJsonAsync<ApiResponse<PromotionResponse>>($"promotion/by-code/{code}");
 
-            if (apiResponse == null || !apiResponse.Success || apiResponse.Data == null) {
+            if (apiResponse == null || !apiResponse.Success || apiResponse.Data == null)
+            {
                 _promoMessage = apiResponse?.Message ?? "Không tìm thấy mã khuyến mãi.";
                 _promoError = true;
                 discount = 0;
@@ -465,7 +573,9 @@
             var promo = apiResponse.Data;
             var now = DateTime.Now;
 
-            if (promo.Status != 1 || promo.StartDate > now || promo.EndDate < now || (promo.Usagelimit > 0 && promo.Usedcount >= promo.Usagelimit) || promo.MinOrderAmount > subtotal) {
+            if (promo.Status != 1 || promo.StartDate > now || promo.EndDate < now || (promo.Usagelimit > 0 && promo.Usedcount >=
+            promo.Usagelimit) || promo.MinOrderAmount > subtotal)
+            {
                 _promoMessage = "Không thể áp dụng mã khuyến mãi.";
                 _promoError = true;
                 discount = 0;
@@ -478,7 +588,8 @@
             discount = newDiscount;
 
             // Optionally sync promo to cart on server (PATCH carts/{id} with PromoId / PromoCodeSnapshot)
-            if (_activeCart != null) {
+            if (_activeCart != null)
+            {
                 var patch = await Http.PatchAsync($"carts/{_activeCart.CartId}/apply-promo/{promo.PromotionCode}", null);
                 // handle patch result if needed
             }
@@ -486,13 +597,17 @@
             CalculateTotals();
             _promoMessage = $"Áp dụng mã {promo.PromotionCode} thành công. Giảm {discount:C}.";
             _promoError = false;
-        } catch (Exception ex) {
+        }
+        catch (Exception ex)
+        {
             _promoMessage = "Có lỗi xảy ra khi áp dụng mã khuyến mãi.";
             _promoError = true;
             discount = 0;
             CalculateTotals();
             Console.WriteLine($"[Cart] ApplyPromotionAsync error: {ex}");
-        } finally {
+        }
+        finally
+        {
             _isApplyingPromo = false;
             StateHasChanged();
         }

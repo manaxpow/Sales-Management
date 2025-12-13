@@ -11,7 +11,6 @@
 
 @inject HttpClient Http
 @inject blazor_web.Services.Cart.ICartService CartService
-@inject Blazored.Toast.Services.IToastService Toast
 @inject NavigationManager Navigation
 
 <div class="py-12">
@@ -24,28 +23,36 @@
         </p>
     </div>
 
-    @if (_isLoading) {
+    @if (_isLoading)
+    {
         <div class="text-center py-8">
             <div class="inline-block animate-pulse text-gray-500">Loading hot products...</div>
         </div>
-    } else if (!string.IsNullOrEmpty(_errorMessage)) {
+    }
+    else if (!string.IsNullOrEmpty(_errorMessage))
+    {
         <div class="text-center py-8 text-red-600">
             @_errorMessage
         </div>
-    } else {
+    }
+    else
+    {
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-            @foreach (var p in HotProducts) {
+            @foreach (var p in HotProducts)
+            {
                 <ProductCard Product="@p" OnAddToCartClick="HandleAddToCart" />
             }
         </div>
 
         <div class="text-center mt-12">
             <a href="/products"
-               class="no-underline inline-block bg-gray-800 hover:bg-gray-900 text-white font-semibold py-3 px-8 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg">
+                class="no-underline inline-block bg-gray-800 hover:bg-gray-900 text-white font-semibold py-3 px-8 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg">
                 View All Products
             </a>
         </div>
     }
+    <SnackBoard @ref="snackBoard" />
+
 </div>
 
 @code {
@@ -53,47 +60,60 @@
     private List<ProductResponse> HotProducts = new();
     private bool _isLoading = true;
     private string? _errorMessage;
+    private SnackBoard snackBoard = new SnackBoard();
+
 
     [Parameter]
     public int Limit { get; set; } = 8;
 
     // ===================== LIFECYCLE =====================
-    protected override async Task OnInitializedAsync() {
+    protected override async Task OnInitializedAsync()
+    {
         await LoadHotProductsAsync();
     }
 
     // ===================== LOAD HOT PRODUCTS =====================
-    private async Task LoadHotProductsAsync() {
+    private async Task LoadHotProductsAsync()
+    {
         _isLoading = true;
         _errorMessage = null;
 
-        try {
+        try
+        {
             var apiResp =
-                await Http.GetFromJsonAsync<ApiResponse<GetProductResponse>>("products");
+            await Http.GetFromJsonAsync<ApiResponse<GetProductResponse>>("products");
 
-            if (apiResp?.Success != true || apiResp.Data?.Products == null) {
+            if (apiResp?.Success != true || apiResp.Data?.Products == null)
+            {
                 _errorMessage = apiResp?.Message ?? "Lỗi tải dữ liệu.";
                 return;
             }
 
             HotProducts = apiResp.Data.Products
-                .OrderByDescending(p => p.Quantity)
-                .ThenByDescending(p => p.ProductId)
-                .Take(Limit)
-                .ToList();
-        } catch (Exception ex) {
+            .OrderByDescending(p => p.Quantity)
+            .ThenByDescending(p => p.ProductId)
+            .Take(Limit)
+            .ToList();
+        }
+        catch (Exception ex)
+        {
             Console.WriteLine($"[HotProducts] Load error: {ex}");
             _errorMessage = "Có lỗi khi tải sản phẩm. Thử lại sau.";
-        } finally {
+        }
+        finally
+        {
             _isLoading = false;
             StateHasChanged();
         }
     }
 
     // ===================== ADD TO CART =====================
-    private async Task HandleAddToCart(ProductResponse data) {
-        try {
-            var product = new Product {
+    private async Task HandleAddToCart(ProductResponse data)
+    {
+        try
+        {
+            var product = new Product
+            {
                 ProductId = data.ProductId,
                 ProductName = data.ProductName ?? "",
                 Barcode = data.Barcode ?? "",
@@ -107,12 +127,15 @@
             var success = await CartService.AddItemAsync(product, 1);
 
             if (success)
-                Toast.ShowSuccess($"Đã thêm “{product.ProductName}” vào giỏ hàng!");
+                snackBoard.Show($"{product.ProductName} has been added to your cart!", "success");
+
             else
-                Toast.ShowWarning("Không thể thêm vào giỏ hàng.");
-        } catch (Exception ex) {
+                snackBoard.Show("Cannot add to cart.", "warning");
+        }
+        catch (Exception ex)
+        {
             Console.WriteLine(ex);
-            Toast.ShowError("Lỗi khi thêm vào giỏ!");
+            snackBoard.Show("An error occurred while adding to cart.", "error");
         }
     }
 }

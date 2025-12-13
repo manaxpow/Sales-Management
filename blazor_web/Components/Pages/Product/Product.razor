@@ -87,8 +87,10 @@
         @if (products.Count > 0)
         {
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                @foreach (var product in paginatedProducts) {
-                    <ProductCard Product="@product" OnAddToCartClick="HandleAddToCart" />
+                @foreach (var product in products)
+                {
+                    <blazor_web.Components.UI.Card.ProductCard Product="@product"
+                        OnAddToCartClick="@((ProductResponse p) => HandleAddToCart(p))" />
                 }
             </div>
         }
@@ -114,6 +116,7 @@
 
 @code {
     // ===================== DATA =====================
+
     private List<CategoryResponse> categories = new();
     private List<SupplierResponse> suppliers = new();
     private List<ProductResponse> products = new();
@@ -134,12 +137,24 @@
     private SnackBoard snackBoard = new SnackBoard();
 
     // ===================== LIFECYCLE =====================
-    protected override async Task OnInitializedAsync() {
+    protected override async Task OnInitializedAsync()
+    {
+        ApiResponse<List<CategoryResponse>>? cateRes = await categoryService.GetAll();
+        var supplierResponses = await supplierService.GetSuppliersAsync();
+        if (cateRes != null)
+        {
+            categories = cateRes.Data;
+        }
+        if (supplierResponses != null)
+        {
+            suppliers = supplierResponses.Data;
+        }
         await LoadData();
     }
 
     // ===================== CORE LOAD =====================
-    private async Task LoadData() {
+    private async Task LoadData()
+    {
         _isLoading = true;
 
         productFilter.Page = CurrentPage;
@@ -156,35 +171,52 @@
     }
 
     // ===================== FILTER =====================
-    private async Task HandleFilterChanged(ProductFilter filter) {
+    private async Task HandleFilterChanged(ProductFilter filter)
+    {
         CurrentPage = 1;
         productFilter = filter;
         await LoadData();
     }
 
     // ===================== SORT =====================
-    private async Task OnSortChange(ChangeEventArgs e) {
-        // productFilter.Sort = e.Value?.ToString();
-        CurrentPage = 1;
-        await LoadData();
+    private async Task OnSortChange(ChangeEventArgs e)
+    {
+        var sortValue = e.Value?.ToString();
+        if (!string.IsNullOrEmpty(sortValue))
+        {
+            var parts = sortValue.Split('-');
+            if (parts.Length == 2)
+            {
+                productFilter.SortBy = parts[0];
+                productFilter.SortOrder = parts[1];
+                CurrentPage = 1;
+                await LoadData();
+            }
+        }
+
     }
 
     // ===================== PAGINATION =====================
-    private async Task HandlePageChanged(int page) {
+    private async Task HandlePageChanged(int page)
+    {
         CurrentPage = page;
+        await JS.InvokeVoidAsync("scrollTo", new object[] { 0, 0 });
         await LoadData();
     }
 
-    private async Task HandleItemsPerPageChanged(int newLimit) {
+    private async Task HandleItemsPerPageChanged(int newLimit)
+    {
         limit = newLimit;
         CurrentPage = 1;
-        await JS.InvokeVoidAsync("scrollTo", 0, 0);
+        await JS.InvokeVoidAsync("scrollTo", new object[] { 0, 0 });
         await LoadData();
     }
 
     // ===================== CART =====================
-    private blazor_web.Models.Product ConvertToModel(ProductResponse r) {
-        return new blazor_web.Models.Product {
+    private blazor_web.Models.Product ConvertToModel(ProductResponse r)
+    {
+        return new blazor_web.Models.Product
+        {
             ProductId = r.ProductId,
             ProductName = r.ProductName ?? "",
             CategoryId = r.CategoryId,
@@ -196,17 +228,19 @@
         };
     }
 
-    private async Task HandleAddToCart(ProductResponse product) {
+    private async Task HandleAddToCart(ProductResponse product)
+    {
         var model = ConvertToModel(product);
         var success = await CartService.AddItemAsync(model, 1);
 
         addToCartMessage = success
-            ? $"Đã thêm \"{product.ProductName}\" vào giỏ hàng."
-            : $"Không thể thêm \"{product.ProductName}\". Thử lại sau.";
+        ? $"Đã thêm \"{product.ProductName}\" vào giỏ hàng."
+        : $"Không thể thêm \"{product.ProductName}\". Thử lại sau.";
 
         showAddToCartMessage = true;
-
-        _ = Task.Run(async () => {
+        snackBoard.Show($"{product.ProductName} has been added to your cart!", "success", "top-right");
+        _ = Task.Run(async () =>
+        {
             await Task.Delay(3000);
             showAddToCartMessage = false;
             await InvokeAsync(StateHasChanged);
