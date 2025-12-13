@@ -1,6 +1,7 @@
 @page "/profile"
 @rendermode InteractiveServer
 
+@using System.ComponentModel.DataAnnotations
 @using blazor_web.DTOs.Customer
 @using blazor_web.DTOs.Auth
 @using blazor_web.Services.Storage
@@ -14,139 +15,128 @@
 
 <PageTitle>Hồ sơ cá nhân</PageTitle>
 
-<div class="min-h-screen bg-gray-50/50 py-8 px-4 sm:px-6">
-    <div class="max-w-3xl mx-auto">
-        <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
+<div class="min-h-screen bg-gray-50 py-10 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100 transition-all duration-300 hover:shadow-2xl">
 
-            <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-8 py-6">
-                <div class="flex items-center space-x-5">
+            <div class="relative bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 px-8 py-10 overflow-hidden">
+                <div class="absolute top-0 right-0 -mr-10 -mt-10 w-40 h-40 rounded-full bg-white/10 blur-3xl"></div>
+                <div class="absolute bottom-0 left-0 -ml-10 -mb-10 w-40 h-40 rounded-full bg-white/10 blur-3xl"></div>
+
+                <div class="relative flex items-center space-x-6 z-10">
                     <div class="flex-shrink-0">
-                        <div class="w-16 h-16 rounded-full bg-white/20 p-1 backdrop-blur-sm">
-                            <div
-                                class="w-full h-full rounded-full bg-white flex items-center justify-center text-2xl font-bold text-indigo-600 uppercase">
-                                @(loginInfo?.Customer?.Name?.FirstOrDefault() ?? 'U')
+                        <div class="w-20 h-20 rounded-full bg-white/20 p-1.5 backdrop-blur-md shadow-inner">
+                            <div class="w-full h-full rounded-full bg-white flex items-center justify-center text-3xl font-extrabold text-indigo-600 uppercase shadow-sm">
+                                @(GetAvatarInitial())
                             </div>
                         </div>
                     </div>
 
                     <div class="text-white">
-                        <h1 class="text-xl font-bold">Hồ sơ cá nhân</h1>
-                        <p class="text-blue-100 text-sm opacity-90 mt-0.5">Xin chào, @(loginInfo?.Customer?.Name ??
-                                                        "Khách")!</p>
+                        <h1 class="text-2xl font-bold tracking-tight">Hồ sơ cá nhân</h1>
+                        <p class="text-blue-100 text-sm font-medium opacity-90 mt-1 flex items-center">
+                            <i class="fas fa-id-badge mr-2"></i>
+                            Xin chào, @(profileModel.Name ?? "Bạn")!
+                        </p>
                     </div>
                 </div>
             </div>
 
-            <div class="p-8">
+            <div class="p-8 sm:p-10">
                 @if (isLoading)
                 {
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 animate-pulse">
-                        <div class="h-10 bg-gray-100 rounded-lg w-full"></div>
-                        <div class="h-10 bg-gray-100 rounded-lg w-full"></div>
-                        <div class="h-10 bg-gray-100 rounded-lg w-full"></div>
-                        <div class="md:col-span-2 h-20 bg-gray-100 rounded-lg w-full"></div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 animate-pulse">
+                        <div class="h-12 bg-gray-100 rounded-xl w-full"></div>
+                        <div class="h-12 bg-gray-100 rounded-xl w-full"></div>
+                        <div class="h-12 bg-gray-100 rounded-xl w-full"></div>
+                        <div class="md:col-span-2 h-24 bg-gray-100 rounded-xl w-full"></div>
                     </div>
                 }
                 else
                 {
-                    <EditForm Model="updateRequest" OnValidSubmit="UpdateProfile">
+                    <EditForm Model="profileModel" OnValidSubmit="UpdateProfile" class="space-y-6">
                         <DataAnnotationsValidator />
-                        <ValidationSummary
-                            class="text-red-600 text-xs bg-red-50 p-3 rounded-lg border border-red-100 mb-5" />
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                            
                             <div class="group">
-                                <label class="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1.5 ml-1">
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
                                     Họ và tên <span class="text-red-500">*</span>
                                 </label>
-                                <div class="relative">
-                                    <div
-                                        class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                                        <i class="fas fa-user text-sm"></i>
+                                <div class="relative transition-all duration-200 focus-within:ring-2 focus-within:ring-blue-500/20 rounded-xl">
+                                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
+                                        <i class="fas fa-user"></i>
                                     </div>
-                                    <InputText @bind-Value="updateRequest.Name"
-                                        class="w-full pl-9 pr-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 placeholder-gray-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                                        placeholder="Nhập họ tên" />
+                                    <InputText @bind-Value="profileModel.Name"
+                                        class="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:bg-white focus:outline-none focus:border-blue-500 transition-colors"
+                                        placeholder="Nhập họ và tên của bạn" />
                                 </div>
-                                <ValidationMessage For="() => updateRequest.Name" class="text-red-500 text-xs mt-1 ml-1" />
-                                @if (nameError != null)
-                                {
-                                    <div class="text-red-500 text-xs mt-1 ml-1">@nameError</div>
-                                }
+                                <ValidationMessage For="() => profileModel.Name" class="text-red-500 text-xs mt-1.5 ml-1 font-medium" />
                             </div>
 
                             <div class="group">
-                                <label class="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1.5 ml-1">
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
                                     Số điện thoại <span class="text-red-500">*</span>
                                 </label>
-                                <div class="relative">
-                                    <div
-                                        class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                                        <i class="fas fa-phone text-sm"></i>
+                                <div class="relative transition-all duration-200 focus-within:ring-2 focus-within:ring-blue-500/20 rounded-xl">
+                                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
+                                        <i class="fas fa-phone"></i>
                                     </div>
-                                    <InputText @bind-Value="updateRequest.Phone" @oninput="OnPhoneInput"
-                                        class="w-full pl-9 pr-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 placeholder-gray-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                                        placeholder="Ví dụ: 0901234567" />
+                                    <InputText @bind-Value="profileModel.Phone" @oninput="OnPhoneInput"
+                                        class="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:bg-white focus:outline-none focus:border-blue-500 transition-colors"
+                                        placeholder="0901234567" />
                                 </div>
-                                <ValidationMessage For="() => updateRequest.Phone" class="text-red-500 text-xs mt-1 ml-1" />
-                                @if (phoneError != null)
-                                {
-                                    <div class="text-red-500 text-xs mt-1 ml-1">@phoneError</div>
-                                }
+                                <ValidationMessage For="() => profileModel.Phone" class="text-red-500 text-xs mt-1.5 ml-1 font-medium" />
                             </div>
 
-                            <!-- Các trường khác giữ nguyên -->
                             <div class="group">
-                                <label class="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1.5 ml-1">
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
                                     Email <span class="text-red-500">*</span>
                                 </label>
-                                <div class="relative">
-                                    <div
-                                        class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                                        <i class="fas fa-envelope text-sm"></i>
+                                <div class="relative transition-all duration-200 focus-within:ring-2 focus-within:ring-blue-500/20 rounded-xl">
+                                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
+                                        <i class="fas fa-envelope"></i>
                                     </div>
-                                    <InputText @bind-Value="updateRequest.Email"
-                                        class="w-full pl-9 pr-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 placeholder-gray-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                                        placeholder="email@example.com" />
+                                    <InputText @bind-Value="profileModel.Email"
+                                        class="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:bg-white focus:outline-none focus:border-blue-500 transition-colors"
+                                        placeholder="name@example.com" />
                                 </div>
-                                <ValidationMessage For="() => updateRequest.Email" class="text-red-500 text-xs mt-1 ml-1" />
+                                <ValidationMessage For="() => profileModel.Email" class="text-red-500 text-xs mt-1.5 ml-1 font-medium" />
                             </div>
 
                             <div class="md:col-span-2 group">
-                                <label class="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1.5 ml-1">Địa
-                                    chỉ</label>
-                                <div class="relative">
-                                    <div class="absolute top-3 left-3 flex items-start pointer-events-none text-gray-400">
-                                        <i class="fas fa-map-marker-alt text-sm"></i>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Địa chỉ</label>
+                                <div class="relative transition-all duration-200 focus-within:ring-2 focus-within:ring-blue-500/20 rounded-xl">
+                                    <div class="absolute top-3.5 left-4 flex items-start pointer-events-none text-gray-400">
+                                        <i class="fas fa-map-marker-alt"></i>
                                     </div>
-                                    <InputTextArea @bind-Value="updateRequest.Address" rows="2"
-                                        class="w-full pl-9 pr-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 placeholder-gray-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none"
-                                        placeholder="Nhập địa chỉ" />
+                                    <InputTextArea @bind-Value="profileModel.Address" rows="3"
+                                        class="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:bg-white focus:outline-none focus:border-blue-500 transition-colors resize-none"
+                                        placeholder="Nhập địa chỉ nhận hàng" />
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Nút lưu và hủy giữ nguyên -->
-                        <div class="flex items-center justify-end space-x-3 mt-8 pt-5 border-t border-gray-100">
+                        <div class="flex items-center justify-end space-x-4 pt-8 border-t border-gray-100 mt-4">
                             <button type="button" @onclick="GoHome"
-                                class="px-5 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors">
-                                Hủy
+                                class="px-6 py-2.5 rounded-xl text-sm font-bold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 hover:text-gray-900 transition-all duration-200 shadow-sm">
+                                Hủy bỏ
                             </button>
 
-                            <button type="submit" disabled="@(isSubmitting || !IsValid())"
-                                class="flex items-center space-x-2 px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium shadow-md hover:bg-blue-700 hover:shadow-lg transition-all disabled:opacity-70 disabled:shadow-none">
+                            <button type="submit" disabled="@isSubmitting"
+                                class="relative flex items-center justify-center space-x-2 px-8 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none">
                                 @if (isSubmitting)
                                 {
-                                    <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none"
-                                        viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                                            stroke-width="4"></circle>
-                                        <path class="opacity-75" fill="currentColor"
-                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                                        </path>
+                                    <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                     </svg>
+                                    <span>Đang xử lý...</span>
                                 }
-                                <span>Lưu thay đổi</span>
+                                else
+                                {
+                                    <span>Lưu thay đổi</span>
+                                }
                             </button>
                         </div>
                     </EditForm>
@@ -157,83 +147,57 @@
 
     @if (showSuccess)
     {
-        <div class="fixed top-20 right-5 z-50 animate-[slideIn_0.3s_ease-out]">
-            <div class="bg-white border-l-4 border-green-500 px-4 py-3 rounded shadow-lg flex items-center space-x-3">
-                <i class="fas fa-check-circle text-green-500 text-lg"></i>
-                <div>
-                    <p class="text-sm font-bold text-gray-800">Thành công</p>
-                    <p class="text-xs text-gray-500">Đã cập nhật hồ sơ.</p>
+        <div class="fixed top-5 right-5 z-50 animate-[slideInRight_0.4s_ease-out]">
+            <div class="bg-white border-l-4 border-green-500 px-6 py-4 rounded-lg shadow-2xl flex items-center space-x-4 max-w-sm">
+                <div class="flex-shrink-0 bg-green-100 p-2 rounded-full">
+                    <i class="fas fa-check text-green-600 text-lg"></i>
                 </div>
+                <div>
+                    <h3 class="text-sm font-bold text-gray-900">Cập nhật thành công!</h3>
+                    <p class="text-xs text-gray-500 mt-0.5">Thông tin hồ sơ đã được lưu lại.</p>
+                </div>
+                <button @onclick="() => showSuccess = false" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
         </div>
     }
 </div>
 
+<style>
+    @@keyframes slideInRight {
+        from { opacity: 0; transform: translateX(100%); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+</style>
+
 @code {
+    // === LOGIC GIỮ NGUYÊN ===
+    public class ProfileViewModel
+    {
+        [Required(ErrorMessage = "Vui lòng nhập họ và tên.")]
+        [RegularExpression(@"^[a-zA-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯĂẠẢẤẦẨẪẬẮẰẲẴẶẸẺẼỀỀỂỄỆỈỊỌỎỐỒỔỖỘỚỜỞỠỢỤỦỨỪỬỮỰỲỴÝỶỸ\s]+$", 
+            ErrorMessage = "Họ tên không được chứa số hoặc ký tự đặc biệt.")]
+        public string Name { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Vui lòng nhập số điện thoại.")]
+        [RegularExpression(@"^0(3|5|7|8|9)[0-9]{8}$", ErrorMessage = "SĐT không hợp lệ (phải bắt đầu bằng 03,05,07,08,09 và đủ 10 số).")]
+        public string Phone { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Vui lòng nhập Email.")]
+        [EmailAddress(ErrorMessage = "Địa chỉ Email không đúng định dạng.")]
+        public string Email { get; set; } = string.Empty;
+
+        public string? Address { get; set; }
+    }
+
     private LoginResponse? loginInfo;
-    private UpdateCustomerRequest updateRequest = new();
+    private ProfileViewModel profileModel = new();
+    
     private bool isLoading = true;
     private bool isSubmitting = false;
     private bool showSuccess = false;
 
-    private string? nameError;
-    private string? phoneError;
-
-    private bool IsValid()
-    {
-        ValidateName();
-        ValidatePhone();
-        return string.IsNullOrEmpty(nameError) && string.IsNullOrEmpty(phoneError);
-    }
-
-    private void ValidateName()
-    {
-        if (string.IsNullOrWhiteSpace(updateRequest.Name))
-        {
-            nameError = "Họ và tên là bắt buộc.";
-        }
-        else if (System.Text.RegularExpressions.Regex.IsMatch(updateRequest.Name, @"\d"))
-        {
-            nameError = "Họ và tên không được chứa số.";
-        }
-        else if (!System.Text.RegularExpressions.Regex.IsMatch(updateRequest.Name,
-        @"^[a-zA-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯĂẠẢẤẦẨẪẬẮẰẲẴẶẸẺẼỀỀỂỄỆỈỊỌỎỐỒỔỖỘỚỜỞỠỢỤỦỨỪỬỮỰỲỴÝỶỸ\s-]+$"))
-        {
-            nameError = "Họ và tên chỉ được chứa chữ cái và dấu tiếng Việt.";
-        }
-        else
-        {
-            nameError = null;
-        }
-    }
-
-    private void ValidatePhone()
-    {
-        if (string.IsNullOrWhiteSpace(updateRequest.Phone))
-        {
-            phoneError = "Số điện thoại là bắt buộc.";
-        }
-        else if (!System.Text.RegularExpressions.Regex.IsMatch(updateRequest.Phone, @"^0(3|5|7|8|9)[0-9]{8}$"))
-        {
-            phoneError = "Số điện thoại phải có 10 số và bắt đầu bằng 03, 05, 07, 08 hoặc 09.";
-        }
-        else
-        {
-            phoneError = null;
-        }
-    }
-    private void OnPhoneInput(ChangeEventArgs e)
-    {
-        if (e.Value is string value)
-        {
-            var numbersOnly = string.Concat(value.Where(char.IsDigit));
-            if (numbersOnly.Length > 10)
-                numbersOnly = numbersOnly[..10];
-            updateRequest.Phone = numbersOnly;
-            ValidatePhone();
-            StateHasChanged();
-        }
-    }
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -242,74 +206,115 @@
             {
                 loginInfo = await LocalStorageService.GetLoginInfoAsync();
 
-                if (loginInfo?.Customer == null)
+                if (loginInfo?.User == null || loginInfo.User.Id <= 0)
                 {
-                    Navigation.NavigateTo("/login");
+                    Navigation.NavigateTo("/login", forceLoad: true);
                     return;
                 }
 
-                var myId = loginInfo.Customer.Id;
-
-                var apiResponse = await CustomerService.GetCustomerAsync(new GetCustomerRequest
+                if (loginInfo.Customer != null && loginInfo.Customer.Id > 0)
                 {
-                    Id = myId,
-                    Limit = 1
-                });
+                    var apiResponse = await CustomerService.GetCustomerAsync(new GetCustomerRequest
+                    {
+                        Id = loginInfo.Customer.Id,
+                        Limit = 1
+                    });
 
-
-                var customer = apiResponse.Data?.Customers?.FirstOrDefault(x => x.Id == myId);
-
-                if (customer != null)
-                {
-                    updateRequest.Name = customer.Name;
-                    updateRequest.Phone = customer.Phone;
-                    updateRequest.Email = customer.Email;
-                    updateRequest.Address = customer.Address;
+                    var customer = apiResponse.Data?.Customers?.FirstOrDefault();
+                    if (customer != null)
+                    {
+                        profileModel.Name = customer.Name;
+                        profileModel.Phone = customer.Phone;
+                        profileModel.Email = customer.Email;
+                        profileModel.Address = customer.Address;
+                        
+                        loginInfo.Customer.Name = customer.Name;
+                    }
                 }
-
-                isLoading = false;
-                StateHasChanged();
+                else
+                {
+                    profileModel.Name = loginInfo.User.FullName;
+                }
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                Console.WriteLine($"Error: {ex.Message}");
+            }
+            finally
+            {
                 isLoading = false;
                 StateHasChanged();
             }
+        }
+    }
+
+    private void OnPhoneInput(ChangeEventArgs e)
+    {
+        if (e.Value is string value)
+        {
+            var numbersOnly = new string(value.Where(char.IsDigit).ToArray());
+            if (numbersOnly.Length > 10) numbersOnly = numbersOnly[..10];
+            profileModel.Phone = numbersOnly;
         }
     }
 
     private async Task UpdateProfile()
     {
-        if (!IsValid())
-        {
-            return;
-        }
-
         isSubmitting = true;
 
-        var userId = loginInfo.Customer.Id;
-        var result = await CustomerService.UpdateCustomerAsync(userId, updateRequest);
-
-        if (result.Success)
+        try
         {
-            showSuccess = true;
-            loginInfo = await LocalStorageService.GetLoginInfoAsync();
+            var updateRequest = new UpdateCustomerRequest
+            {
+                Name = profileModel.Name,
+                Phone = profileModel.Phone,
+                Email = profileModel.Email,
+                Address = profileModel.Address
+            };
+
+            var idToUpdate = (loginInfo!.Customer != null && loginInfo.Customer.Id > 0) 
+                             ? loginInfo.Customer.Id 
+                             : loginInfo.User.Id;
+
+            var result = await CustomerService.UpdateCustomerAsync(idToUpdate, updateRequest);
+
+            if (result.Success)
+            {
+                if (loginInfo.Customer == null) loginInfo.Customer = new CustomerResponse(); // Đã sửa theo logic bạn cung cấp
+                
+                loginInfo.Customer.Name = profileModel.Name;
+                loginInfo.Customer.Phone = profileModel.Phone;
+                
+                @* await LocalStorageService.SaveLoginInfoAsync(loginInfo); // Lưu lại local storage *@
+
+                showSuccess = true;
+                StateHasChanged();
+                await Task.Delay(3000);
+                showSuccess = false;
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("alert", result.Message ?? "Cập nhật thất bại.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            await JS.InvokeVoidAsync("alert", "Lỗi hệ thống.");
+        }
+        finally
+        {
+            isSubmitting = false;
             StateHasChanged();
-            await Task.Delay(3000);
-            showSuccess = false;
         }
-        else
-        {
-            await JS.InvokeVoidAsync("alert", result.Message ?? "Cập nhật thất bại!");
-        }
-
-        isSubmitting = false;
-        StateHasChanged();
     }
 
-    private void GoHome()
+    private char GetAvatarInitial()
     {
-        Navigation.NavigateTo("/");
+        if (!string.IsNullOrEmpty(profileModel.Name)) return profileModel.Name[0];
+        if (!string.IsNullOrEmpty(loginInfo?.User?.FullName)) return loginInfo.User.FullName[0];
+        return 'U';
     }
+
+    private void GoHome() => Navigation.NavigateTo("/");
 }

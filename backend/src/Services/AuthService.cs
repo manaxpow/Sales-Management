@@ -39,13 +39,14 @@ public class AuthService(AppDbContext context, ILogger<AuthService> logger) : IA
         {
             var customer = await context.Customers
                 .FirstOrDefaultAsync(c => c.UserId == user.Id);
+            Console.WriteLine($"Customer {user.Id}");
 
             if (customer != null)
             {
                 CustomerRes = new CustomerResponse
                 {
                     Id = customer.CustomerId,
-                    Name = customer.Name ?? user.FullName,      
+                    Name = customer.Name ?? user.FullName,
                     Email = customer.Email ?? user.UserName,
                     Phone = customer.Phone,
                     Address = customer.Address,
@@ -71,6 +72,7 @@ public class AuthService(AppDbContext context, ILogger<AuthService> logger) : IA
             AccessToken = accessToken
         };
         // return user info or token
+        Console.WriteLine($"CustomerRes {CustomerRes}");
         return response.SuccessResponse(Data, "Login success");
 
     }

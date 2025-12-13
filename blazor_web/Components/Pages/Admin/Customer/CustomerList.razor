@@ -198,8 +198,7 @@ else
     // Hàm này trả về ApiResponse để Dialog biết có lỗi hay không
     private async Task<ApiResponse<CustomerResponse>> SaveCustomerAsync(CustomerResponse updatedData)
     {
-        var request = new UpdateCustomerRequest
-        {
+        var request = new UpdateCustomerRequest     {
             Name = updatedData.Name,
             Phone = updatedData.Phone,
             Email = updatedData.Email,

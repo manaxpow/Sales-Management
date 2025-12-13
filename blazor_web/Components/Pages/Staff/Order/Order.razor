@@ -8,8 +8,8 @@
 @inject IJSRuntime JS
 @inject NavigationManager Nav
 @inject IOrderService orderService
-@inject ICustomerService customerService
 @inject IProductService productService
+@inject ICustomerService customerService
 @rendermode InteractiveServer
 
 
@@ -642,6 +642,7 @@
         var rs = await orderService.GetOrderItemsAsync(order.Id);
         foreach(var item in rs.Data){
             var response = await productService.GetProductById(item.Productid);
+
             var product = response.Data;
             list.Add(new OrderItemDto{
                 ProductName = product.ProductName,

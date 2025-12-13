@@ -1,12 +1,19 @@
-@inject ICartService CartService
+@*
+    Hot Products Component - Display featured products using ProductCard
+*@
 
 @using System.Threading.Tasks
 @using blazor_web.Components.UI
 @using blazor_web.Components.UI.Card
-@using blazor_web.Services.Cart
-@inject IProductService productService
+@using blazor_web.Models
+@using Microsoft.AspNetCore.Components
+@using System.Net.Http.Json
+
+@inject HttpClient Http
+@inject blazor_web.Services.Cart.ICartService CartService
+@inject NavigationManager Navigation
+
 <div class="py-12">
-    <!-- Section Header -->
     <div class="text-center mb-12">
         <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
             🔥 Hot Products
@@ -16,58 +23,119 @@
         </p>
     </div>
 
-    <!-- Products Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-        @foreach (var product in HotProducts)
-        {
-            <ProductCard Product="@product" OnAddToCartClick="@((ProductResponse p) => HandleAddToCart(p))" />
-        }
-    </div>
+    @if (_isLoading)
+    {
+        <div class="text-center py-8">
+            <div class="inline-block animate-pulse text-gray-500">Loading hot products...</div>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <div class="text-center py-8 text-red-600">
+            @_errorMessage
+        </div>
+    }
+    else
+    {
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+            @foreach (var p in HotProducts)
+            {
+                <ProductCard Product="@p" OnAddToCartClick="HandleAddToCart" />
+            }
+        </div>
 
-    <!-- View All Products Button -->
-    <div class="text-center mt-12">
-        <a href="/products"
-            class="no-underline inline-block bg-gray-800 hover:bg-gray-900 text-white font-semibold py-3 px-8 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg">
-            View All Products
-        </a>
-    </div>
-
+        <div class="text-center mt-12">
+            <a href="/products"
+                class="no-underline inline-block bg-gray-800 hover:bg-gray-900 text-white font-semibold py-3 px-8 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg">
+                View All Products
+            </a>
+        </div>
+    }
     <SnackBoard @ref="snackBoard" />
+
 </div>
 
 @code {
+    // ===================== DATA =====================
+    private List<ProductResponse> HotProducts = new();
+    private bool _isLoading = true;
+    private string? _errorMessage;
     private SnackBoard snackBoard = new SnackBoard();
-    public List<ProductResponse> HotProducts { get; set; } = new();
 
-    public GetProductResponse ProductData { get; set; } = new();
-    private bool _loaded = false;
+
+    [Parameter]
+    public int Limit { get; set; } = 8;
+
+    // ===================== LIFECYCLE =====================
     protected override async Task OnInitializedAsync()
     {
-        if (!_loaded)
-        {
-            _loaded = true;
-            await LoadData();
-        }
-        // For demo purposes, we will just take the first 8 products as hot products
+        await LoadHotProductsAsync();
     }
+
+    // ===================== LOAD HOT PRODUCTS =====================
+    private async Task LoadHotProductsAsync()
+    {
+        _isLoading = true;
+        _errorMessage = null;
+
+        try
+        {
+            var apiResp =
+            await Http.GetFromJsonAsync<ApiResponse<GetProductResponse>>("products");
+
+            if (apiResp?.Success != true || apiResp.Data?.Products == null)
+            {
+                _errorMessage = apiResp?.Message ?? "Lỗi tải dữ liệu.";
+                return;
+            }
+
+            HotProducts = apiResp.Data.Products
+            .OrderByDescending(p => p.Quantity)
+            .ThenByDescending(p => p.ProductId)
+            .Take(Limit)
+            .ToList();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[HotProducts] Load error: {ex}");
+            _errorMessage = "Có lỗi khi tải sản phẩm. Thử lại sau.";
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    // ===================== ADD TO CART =====================
     private async Task HandleAddToCart(ProductResponse data)
     {
-        var product = ProductMapper.ToModel(data);
-        Console.WriteLine($"[Products] HandleAddToCart: {product.ProductId} - {product.ProductName}");
-        await CartService.AddItemAsync(product, 1);
-        snackBoard.Show($"{product.ProductName} has been added to your cart!", "success");
-
-    }
-
-    private async Task LoadData()
-    {
-        var response = await productService.GetAllProduct(new ProductFilter
+        try
         {
-            Page = 1,
-            Limit = 8
-        });
-        Console.WriteLine($"[HotProduct] LoadData: Retrieved {response.Data?.Products?.Count ?? 0} products");
+            var product = new Product
+            {
+                ProductId = data.ProductId,
+                ProductName = data.ProductName ?? "",
+                Barcode = data.Barcode ?? "",
+                CategoryId = data.CategoryId,
+                SupplierId = data.SupplierId,
+                Price = data.Price,
+                Unit = data.Unit ?? "pcs",
+                CreatedAt = DateTime.Now
+            };
 
-        HotProducts = response.Data?.Products ?? new List<ProductResponse>();
+            var success = await CartService.AddItemAsync(product, 1);
+
+            if (success)
+                snackBoard.Show($"{product.ProductName} has been added to your cart!", "success");
+
+            else
+                snackBoard.Show("Cannot add to cart.", "warning");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            snackBoard.Show("An error occurred while adding to cart.", "error");
+        }
     }
 }
