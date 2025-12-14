@@ -4,9 +4,6 @@ using blazor_web.DTOs.CartItem.Request;
 using blazor_web.DTOs.CartItem.Response;
 using blazor_web.Models;
 using blazor_web.Services.Storage;
-using System.Net.Http.Json;
-using System.Threading.Tasks;
-
 namespace blazor_web.Services.Cart {
     public class CartService : ICartService {
         private readonly HttpClient _http;
@@ -16,7 +13,6 @@ namespace blazor_web.Services.Cart {
             _http = http;
             _localStorage = localStorage;
         }
-
         // Helper: get or create active cart for current user
         private async Task<int?> GetOrCreateActiveCartIdAsync() {
             var loginInfo = await _localStorage.GetLoginInfoAsync();

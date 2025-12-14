@@ -1,0 +1,115 @@
+<div class="bg-white rounded-lg shadow-md">
+    <div class="border-b border-gray-200 px-6 py-4">
+        <h2 class="text-lg font-semibold text-gray-800 flex items-center">
+            <svg class="w-5 h-5 inline mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/>
+            </svg>
+            Available Promotions
+        </h2>
+    </div>
+    <div class="p-6">
+        <!-- Promo Code Input -->
+        <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Enter Promo Code</label>
+            <div class="flex space-x-2">
+                <input type="text" disabled @bind="PromoCodeInput" placeholder="Enter promo code" class="text-gray-400 flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"/>
+                <button @onclick="ClearPromoCode" class="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors duration-200">
+                    Clear
+                </button>
+            </div>
+        </div>
+
+        <!-- Available Promotions List -->
+        <div class="space-y-3 h-72 overflow-y-auto">
+            @if (IsLoadingPromotions)
+            {
+                <div class="text-center text-gray-500 text-sm py-4">
+                    Loading promotions...
+                </div>
+            }
+            else if (AvailablePromotions?.Count > 0)
+            {
+                @foreach (var promo in AvailablePromotions)
+                {
+                    <div class="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors duration-200">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-center mb-1">
+                                    <span class="inline-block px-2 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded mr-2">
+                                        @promo.Code
+                                    </span>
+                                    <span class="text-sm font-medium text-gray-900">
+                                        @(promo.DiscountType == 1 ? $"{promo.DiscountValue:F0}% OFF" : PriceHelper.FormatPrice((decimal)promo.DiscountValue) + " OFF")
+                                    </span>
+                                </div>
+                                <p class="text-sm text-gray-600">@promo.Description</p>
+                                <p class="text-xs text-gray-500 mt-1">
+                                    Min order: @PriceHelper.FormatPrice((decimal)promo.MinOrderAmount) | Valid until: @promo.EndDate.ToString("MMM dd, yyyy")
+                                </p>
+                            </div>
+                            @if ((decimal)promo.MinOrderAmount > Subtotal)
+                            {
+                                <span class="ml-4 px-3 py-1 text-sm bg-gray-300 text-gray-600 rounded cursor-not-allowed">
+                                    Not Eligible
+                                </span>
+                            }
+                            else
+                            {
+                                @if (AppliedPromo.Code == promo.Code)
+                                {
+                                    <button disabled class="ml-4 px-3 py-1 text-sm bg-green-500 text-white rounded">
+                                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                        </svg>
+                                        Applied
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button @onclick="() => ApplyPromotion(promo)" class="ml-4 px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors duration-200">
+                                        Apply
+                                    </button>
+                                }
+                            }
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="text-center text-gray-500 text-sm py-4">
+                    No promotions available at the moment.
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public List<PromotionRes>? AvailablePromotions { get; set; }
+
+    [Parameter] public bool IsLoadingPromotions { get; set; }
+
+    public PromotionRes AppliedPromo = new PromotionRes();
+
+    [Parameter] public decimal Subtotal { get; set; }
+
+    [Parameter] public EventCallback<PromotionRes> OnPromotionApplied { get; set; }
+
+    public string PromoCodeInput = string.Empty;
+
+    private async Task ClearPromoCode()
+    {
+        AppliedPromo = new PromotionRes();
+        PromoCodeInput = string.Empty;
+        await OnPromotionApplied.InvokeAsync(new PromotionRes());
+    }
+
+    private async Task ApplyPromotion(PromotionRes promo)
+    {
+        AppliedPromo = promo;
+        PromoCodeInput = promo.Code;
+        await OnPromotionApplied.InvokeAsync(promo);
+    }
+
+}

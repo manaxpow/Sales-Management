@@ -1,5 +1,7 @@
-﻿namespace blazor_web.DTOs.CartItem.Response {
-    public class CartItemResponse {
+﻿namespace blazor_web.DTOs.CartItem.Response
+{
+    public class CartItemResponse
+    {
         public int CartItemId { get; set; }
         public int CartId { get; set; }
         public int? ProductId { get; set; }
@@ -10,5 +12,8 @@
         public decimal Subtotal { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
+
+
+        public string ImageProduct { get; set; } = string.Empty;
     }
 }

@@ -18,7 +18,8 @@ public class CartItemService : ICartItemService {
             Unit = i.Unit,
             Subtotal = i.Subtotal,
             CreatedAt = i.CreatedAt,
-            UpdatedAt = i.UpdatedAt
+            UpdatedAt = i.UpdatedAt,
+
         }).ToListAsync();
 
         return new ApiResponse<IEnumerable<CartItemResponse>>().SuccessResponse(list, "Fetched cart items");

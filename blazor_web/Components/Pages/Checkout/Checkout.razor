@@ -1,0 +1,526 @@
+@page "/checkout"
+@rendermode InteractiveServer
+
+
+@using blazor_web.Components.UI
+@using blazor_web.Services.Storage
+@using blazor_web.DTOs.Cart.Response
+@using blazor_web.DTOs.CartItem.Response
+@using blazor_web.DTOs.Customer
+@using blazor_web.Dtos.Orders
+@using blazor_web.Services.Orders
+@using blazor_web.Services.Payment
+@inject IOrderService OrderService
+@inject HttpClient Http
+@inject IPaymentService PaymentService
+@inject ILocalStorageService LocalStorageService
+@inject IPromotionService PromotionService
+<PageTitle>Checkout</PageTitle>
+
+<!-- Checkout Header -->
+<div class="bg-linear-to-r from-blue-600 to-blue-800 text-white py-8 px-4 rounded-lg mb-8 shadow-xl">
+    <div class="max-w-7xl mx-auto">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold mb-2">Checkout</h1>
+                <p class="text-blue-100">Complete your order information and proceed to payment</p>
+            </div>
+            <div class="flex items-center space-x-2">
+                <svg class="w-8 h-8 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span class="text-xl font-semibold">Secure Checkout</span>
+            </div>
+        </div>
+
+        <!-- Progress Steps -->
+        <div class="mt-6 flex items-center justify-center space-x-4">
+            <div class="flex items-center">
+                <div class="w-8 h-8 bg-white text-blue-600 rounded-full flex items-center justify-center font-semibold">
+                    1
+                </div>
+                <span class="ml-2 text-white">Cart</span>
+            </div>
+            <div class="w-16 h-1 bg-blue-400"></div>
+            <div class="flex items-center">
+                <div class="w-8 h-8 bg-white text-blue-600 rounded-full flex items-center justify-center font-semibold">
+                    2
+                </div>
+                <span class="ml-2 text-white font-semibold">Checkout</span>
+            </div>
+            <div class="w-16 h-1 bg-blue-400"></div>
+            <div class="flex items-center">
+                <div class="w-8 h-8 bg-blue-400 text-white rounded-full flex items-center justify-center font-semibold">
+                    3
+                </div>
+                <span class="ml-2 text-blue-200">Payment</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="max-w-7xl mx-auto">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Main Content - Left Side -->
+        <div class="lg:col-span-2 space-y-6">
+
+            <!-- Cart Items Section -->
+            <div class="bg-white rounded-lg shadow-md">
+                <div class="border-b border-gray-200 px-6 py-4">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-lg font-semibold text-gray-800">
+                            Order Items (@cartItems.Count items)
+                        </h2>
+                        <a href="/cart" class="text-sm text-blue-600 hover:text-blue-700 font-medium">
+                            Edit Cart
+                        </a>
+                    </div>
+                </div>
+
+                <div class="divide-y divide-gray-200  overflow-y-scroll">
+                    @if (_isLoading)
+                    {
+                        <div class="p-6 text-center text-gray-500 text-sm">
+                            Loading cart items...
+                        </div>
+                    }
+                    else if (cartItems.Count > 0)
+                    {
+                        @foreach (var item in cartItems)
+                        {
+                            <div class="p-6 hover:bg-gray-50 transition-colors duration-200">
+                                <div class="flex items-center space-x-4">
+                                    <div class="flex-shrink-0 w-20 h-20 bg-gray-100 rounded-lg overflow-hidden">
+                                        <img src="@GetProductImage(item.ProductId)" alt="@item.ProductName"
+                                             class="w-full h-full object-cover"/>
+                                    </div>
+
+                                    <div class="flex-1 min-w-0">
+                                        <h3 class="text-lg font-medium text-gray-900 truncate">@item.ProductName</h3>
+                                        <p class="text-sm text-gray-500">Product ID: @item.ProductId</p>
+                                        <p class="text-sm text-gray-500">
+                                            Quantity: @item.Quantity ×
+                                            @PriceHelper.FormatPrice(item.PriceSnapshot)
+                                        </p>
+                                    </div>
+
+                                    <div class="text-right">
+                                        <p class="text-lg font-bold text-gray-900">@PriceHelper.FormatPrice(item.Subtotal)</p>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="p-12 text-center">
+                            <svg class="mx-auto h-16 w-16 text-gray-400 mb-4" fill="none" stroke="currentColor"
+                                 viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                            </svg>
+                            <h3 class="text-lg font-medium text-gray-900 mb-2">Your cart is empty</h3>
+                            <p class="text-gray-500 mb-6">Add some products to your cart before checkout.</p>
+                            <a href="/products"
+                               class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-all duration-200">
+                                Continue Shopping
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Customer Information and Shipping Address Component -->
+            <CustomerInfoAddressComponent CustomerInfo="@customerInfo"/>
+
+            <!-- Available Promotions Component -->
+            <AvailablePromotionsComponent AvailablePromotions="@availablePromotions"
+                                          IsLoadingPromotions="@_isLoadingPromotions" Subtotal="@subtotal"
+                                          OnPromotionApplied="HandlePromotionApplied"/>
+
+            <!-- Payment Method Section -->
+            <div class="bg-white rounded-lg shadow-md">
+                <div class="border-b border-gray-200 px-6 py-4">
+                    <h2 class="text-lg font-semibold text-gray-800 flex items-center">
+                        <svg class="w-5 h-5 inline mr-2 text-gray-600" fill="none" stroke="currentColor"
+                             viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                        </svg>
+                        Payment Method
+                    </h2>
+                </div>
+
+                <div class="p-6">
+                    <div class="space-y-3">
+                        <label
+                            class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                            <input type="radio" name="payment" value="1" checked class="mr-3"/>
+                            <div class="flex-1">
+                                <div class="font-medium text-gray-900">Cash on Delivery</div>
+                                <div class="text-sm text-gray-500">Pay when you receive your order</div>
+                            </div>
+                        </label>
+
+                        <label
+                            class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                            <input type="radio" name="payment" value="2" class="mr-3"/>
+                            <div class="flex-1">
+                                <div class="font-medium text-gray-900">Credit Card</div>
+                                <div class="text-sm text-gray-500">Pay with Visa, Mastercard, or other cards</div>
+                            </div>
+                        </label>
+
+                        <label
+                            class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                            <input type="radio" name="payment" value="3" class="mr-3"/>
+                            <div class="flex-1">
+                                <div class="font-medium text-gray-900">Bank Transfer</div>
+                                <div class="text-sm text-gray-500">Transfer directly to our bank account</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Sidebar - Order Summary -->
+        <div class="lg:col-span-1">
+            <div class="bg-white rounded-lg shadow-md p-6 sticky top-6">
+                <h2 class="text-lg font-semibold text-gray-800 mb-4">Order Summary</h2>
+
+                <div class="space-y-3 mb-6">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-600">Subtotal (@totalItems items)</span>
+                        <span class="font-medium text-gray-900">@PriceHelper.FormatPrice(subtotal)</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-600">Shipping</span>
+                        <span class="font-medium text-gray-900">@PriceHelper.FormatPrice(shipping)</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-600">Tax (10%)</span>
+                        <span class="font-medium text-gray-900">@PriceHelper.FormatPrice(tax)</span>
+                    </div>
+                    @if (discount > 0)
+                    {
+                        <div class="flex justify-between text-sm">
+                            <span class="text-green-600">Discount</span>
+                            <span class="font-medium text-green-600">-@PriceHelper.FormatPrice(discount)</span>
+                        </div>
+                    }
+                    <div class="border-t pt-3">
+                        <div class="flex justify-between">
+                            <span class="text-lg font-bold text-gray-900">Total</span>
+                            <span class="text-lg font-bold text-blue-600">@PriceHelper.FormatPrice(total)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="space-y-3">
+                    <button
+                        class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed mb-3"
+                        @onclick="HandlePlaceOrder"
+                        disabled="@(_isProcessing || cartItems.Count == 0)">
+                        <div class="flex items-center justify-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M5 13l4 4L19 7"/>
+                            </svg>
+                            Place Order
+                        </div>
+                    </button>
+
+                    <a href="/cart"
+                       class="block w-full text-center text-gray-600 hover:text-gray-700 font-medium py-2 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-200">
+                        Return to Cart
+                    </a>
+                </div>
+
+                <!-- Security Badge -->
+                <div class="mt-6 flex items-center justify-center text-xs text-gray-500">
+                    <svg class="w-4 h-4 mr-1 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                    </svg>
+                    Secure & Encrypted Checkout
+                </div>
+            </div>
+        </div>
+    </div>
+    <SnackBoard @ref="snackBoard"></SnackBoard>
+</div>
+
+
+@code {
+
+    private SnackBoard snackBoard = new SnackBoard();
+
+    // Data properties
+    private CartResponse? _activeCart;
+
+    private List<CartItemResponse> cartItems = new();
+    private CustomerResponse? customerInfo;
+
+    private bool _isLoading = true;
+    private bool _isProcessing = false;
+    private bool _isLoadingPromotions = true;
+
+
+    // Summary calculations
+    private decimal subtotal = 0;
+    private decimal shipping = 0;
+    private decimal tax = 0;
+    private decimal discount = 0;
+    private decimal total = 0;
+    private int totalItems = 0;
+
+    //promotion 
+    private List<PromotionRes> availablePromotions = new();
+    private PromotionRes? selectedPromotion = null;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _isLoading = true;
+            _isLoadingPromotions = true;
+            StateHasChanged();
+
+            await LoadCheckoutDataAsync();
+
+            _isLoading = false;
+            _isLoadingPromotions = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadCheckoutDataAsync()
+    {
+        // Load cart data
+        await LoadCartFromApiAsync();
+
+        // Load customer info
+        await LoadCustomerInfoAsync();
+
+        // Load promotions
+        await LoadPromotionsAsync();
+
+        CalculateTotals();
+    }
+
+    private async Task LoadCartFromApiAsync()
+    {
+        cartItems.Clear();
+        _activeCart = null;
+
+        var loginInfo = await LocalStorageService.GetLoginInfoAsync();
+        if (loginInfo == null || loginInfo.User == null)
+        {
+            CalculateTotals();
+            return;
+        }
+
+        var userId = loginInfo.User.Id;
+
+        // GET carts for user
+        var cartsResp = await Http.GetFromJsonAsync<ApiResponse<List<CartResponse>>>($"carts/user/{userId}?status=active");
+        if (cartsResp is { Success: true, Data: not null } && cartsResp.Data.Any())
+        {
+            _activeCart = cartsResp.Data.First();
+        }
+
+        if (_activeCart == null)
+        {
+            CalculateTotals();
+            return;
+        }
+
+        // load items for cart
+        var itemsResp = await
+            Http.GetFromJsonAsync<ApiResponse<List<CartItemResponse>>>($"cart-items?cartId={_activeCart.CartId}");
+        if (itemsResp is { Success: true, Data: not null })
+        {
+            cartItems = itemsResp.Data;
+        }
+    }
+
+    private async Task LoadCustomerInfoAsync()
+    {
+        var loginInfo = await LocalStorageService.GetLoginInfoAsync();
+        if (loginInfo?.Customer != null)
+        {
+            customerInfo = loginInfo.Customer;
+        }
+    }
+
+    private async Task LoadPromotionsAsync()
+    {
+        try
+        {
+            var promoResp = await PromotionService.GetAll(new GetAllPromotionReq
+            {
+                Page = 1,
+                Limit = 50,
+                Status = (int)PromotionStatus.Active
+            });
+            if (promoResp is { Success: true, Data: not null })
+            {
+                availablePromotions = promoResp.Data.Promotions;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading promotions: {ex.Message}");
+        }
+    }
+
+    private void CalculateTotals()
+    {
+        subtotal = cartItems.Sum(i => i.PriceSnapshot * i.Quantity);
+        totalItems = cartItems.Sum(i => i.Quantity);
+        tax = subtotal * 0.1m;
+        shipping = _activeCart?.ShippingAmount ?? (subtotal > 0 ? 10m : 0m); // $10 shipping if items exist
+        if (discount > subtotal) discount = subtotal;
+        total = subtotal + shipping + tax - discount;
+    }
+
+    private string GetProductImage(int? productId)
+    {
+        return $"https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=200&h=200&fit=crop";
+    }
+
+
+    private async Task HandlePromotionApplied(PromotionRes promo)
+    {
+        if (string.IsNullOrWhiteSpace(promo.Code))
+        {
+            // Clear promotion
+            discount = 0;
+        }
+        else
+        {
+            if (promo.DiscountType == 1)
+            {
+                // Percentage discount
+                discount = subtotal * ((decimal)promo.DiscountValue / 100m);
+            }
+            else if (promo.DiscountType == 2)
+            {
+                // Fixed amount discount
+                discount = (decimal)promo.DiscountValue;
+            }
+
+            selectedPromotion = promo;
+            CalculateTotals();
+        }
+
+        StateHasChanged();
+    }
+
+    // handle place order 
+    private async Task HandlePlaceOrder()
+    {
+        try
+        {
+            _isProcessing = true;
+            var loginInfo = await LocalStorageService.GetLoginInfoAsync();
+            if (loginInfo?.Customer == null)
+            {
+                snackBoard.Show("Please log in to place an order.", "error");
+                return;
+            }
+
+            if (cartItems.Count == 0)
+            {
+                snackBoard.Show("Your cart is empty.", "error");
+                return;
+            }
+
+            var customerId = loginInfo.Customer.Id;
+            CreateOrderWithItemsRequest payload = new()
+            {
+                Customerid = customerId,
+                PromotionCode = selectedPromotion?.Code ?? null,
+                Status = 0,
+                Userid = loginInfo.User.Id,
+                Items = cartItems.Select(p => new CreateOrderItemDto
+                {
+                    Productid = p.ProductId > 0 ? p.ProductId.Value : 0,
+                    Price = p.PriceSnapshot,
+                    Quantity = p.Quantity
+                }).ToList()
+            };
+
+            Console.WriteLine(payload.Items.Count);
+
+            var response = await OrderService.CreateWithItemsAsync(payload);
+            
+            if (response.Success)
+            {
+                var paymentResponse = await PaymentService.CreatePayment(new PaymentRequest
+                {
+                    OrderId = response.Data.Id,
+                    Amount = total,
+                    Paymentmethod = 1,
+                    PaymentDate = DateTime.UtcNow
+                });
+                if (paymentResponse.Success)
+                {
+                    snackBoard.Show("Thành công", "success");
+                }
+                else
+                {
+                    snackBoard.Show("Lỗi thanh toán: " + paymentResponse.Message, "error");
+                }
+
+                await ChangeStatusCart();
+                StateHasChanged();
+            }
+            else
+            {
+                snackBoard.Show("Thất bại:" + response.Message, "error");
+            }
+        }
+        catch (Exception ex)
+        {
+            snackBoard.Show("Lỗi: " + ex.Message, "error");
+        }
+
+        finally
+        {
+            _isProcessing = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ChangeStatusCart()
+    {
+        var response = await Http.PostAsync($"carts/{_activeCart.CartId}/checkout", null);
+        if (response.IsSuccessStatusCode)
+        {
+            var api = await response.Content.ReadFromJsonAsync<ApiResponse
+                <CartResponse>>();
+            if (api is { Success: true })
+            {
+                cartItems.Clear();
+                _activeCart = null;
+                CalculateTotals();
+            }
+            else
+            {
+                snackBoard.Show("Cập nhật giỏ hàng thất bại:" + api?.Message, "error");
+            }
+        }
+    }
+
+    private enum PromotionStatus
+    {
+        Inactive = 0,
+        Active = 1,
+        Expired = 2
+    }
+
+}
