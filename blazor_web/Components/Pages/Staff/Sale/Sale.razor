@@ -622,13 +622,13 @@
 
     // Computed
     private List<ProductResponse> filteredProducts => allProducts
-        .Where(p => p.Status == ProductStatus.Active)
-        .Where(p => string.IsNullOrWhiteSpace(searchTerm) ||
-                    p.ProductName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                    p.Barcode.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                    (p.CategoryName?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false))
-        .Where(p => categoryFilter == "Tất cả" || p.CategoryName == categoryFilter)
-        .ToList();
+    .Where(p => p.Status == ProductStatus.Active)
+    .Where(p => string.IsNullOrWhiteSpace(searchTerm) ||
+    p.ProductName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+    p.Barcode.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+    (p.CategoryName?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false))
+    .Where(p => categoryFilter == "Tất cả" || p.CategoryName == categoryFilter)
+    .ToList();
 
     private List<ProductResponse> PaginatedProducts => filteredProducts
     .Skip((currentPage - 1) * pageSize)

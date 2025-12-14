@@ -6,7 +6,7 @@
     <!-- Product Image -->
     <div class="relative overflow-hidden h-48 sm:h-56">
         <img src="http://localhost:8081/@Product.ImageProduct" alt="@Product.ProductName"
-            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+             class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"/>
     </div>
 
     <!-- Product Info -->
@@ -52,39 +52,63 @@
         </div>
 
         <!-- Created Date -->
-        <div class="text-xs text-gray-400 mb-4">
-            Created: @Product.CreatedAt.ToString("MMM dd, yyyy")
+        <div class="flex items-center justify-between mb-4">
+            @if (Product.Quantity > 0)
+            {
+                <div
+                    class="text-xs text-gray-400 ">
+                    Stock: @Product.Quantity
+                </div>
+            }
+            else
+            {
+                <div
+                    class="text-sm px-3 py-1 rounded-full font-semibold bg-gray-100 text-gray-600">
+                    Stock: N/A
+                </div>
+            }
+            <div class="text-xs text-gray-400 ">
+                Created: @Product.CreatedAt.ToString("MMM dd, yyyy")
+            </div>
         </div>
 
         <!-- Action Button -->
         <div class="flex space-x-2">
-            <button
-                class="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-3 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg flex items-center justify-center text-sm"
-                @onclick="HandleAddToCartClick">
-                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-                Add to Cart
-            </button>
+            @if (Product.Quantity <= 0)
+            {
+                <span class="flex-1 bg-red-600 text-white font-semibold py-2 px-3 rounded-lg text-center text-sm">
+                    Out of Stock
+                </span>
+            }
+            else
+            {
+                <button
+                    class="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-3 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg flex items-center justify-center text-sm"
+                    @onclick="HandleAddToCartClick">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                    Add to Cart
+                </button>
+            }
         </div>
     </div>
 </div>
 
 @code {
-    [Parameter]
-    public ProductResponse Product { get; set; } = new();
+    [Parameter] public ProductResponse Product { get; set; } = new();
 
-    [Parameter]
-    public EventCallback<ProductResponse> OnAddToCartClick { get; set; }
+    [Parameter] public EventCallback<ProductResponse> OnAddToCartClick { get; set; }
 
     private Task HandleAddToCartClick()
     {
         Console.WriteLine($"[ProductCard] Click AddToCart: {Product.ProductId} - {Product.ProductName}");
         return OnAddToCartClick.HasDelegate
-        ? OnAddToCartClick.InvokeAsync((Product))
-        : Task.CompletedTask;
+            ? OnAddToCartClick.InvokeAsync((Product))
+            : Task.CompletedTask;
     }
+
 }
 
 @*

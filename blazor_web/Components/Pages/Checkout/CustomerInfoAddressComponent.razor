@@ -1,0 +1,79 @@
+@using blazor_web.DTOs.Customer
+
+<div class="space-y-6">
+    <!-- Customer Information Section -->
+    <div class="bg-white rounded-lg shadow-md">
+        <div class="border-b border-gray-200 px-6 py-4">
+            <h2 class="text-lg font-semibold text-gray-800 flex items-center">
+                <svg class="w-5 h-5 inline mr-2 text-gray-600" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M5.121 17.804A13.937 13.937 0 0112 15c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Customer Information
+            </h2>
+        </div>
+        <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                    <input type="text" value="@CustomerInfo?.Name" readonly
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-600" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input type="email" value="@CustomerInfo?.Email" readonly
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-600" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                    <input type="tel" value="@CustomerInfo?.Phone" readonly
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-600" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shipping Address Section -->
+    <div class="bg-white rounded-lg shadow-md">
+        <div class="border-b border-gray-200 px-6 py-4">
+            <h2 class="text-lg font-semibold text-gray-800 flex items-center">
+                <svg class="w-5 h-5 inline mr-2 text-gray-600" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                Shipping Address
+            </h2>
+        </div>
+
+        <div class="p-6">
+            <div class="mb-4">
+                <label class="flex items-center">
+                    <input type="radio" name="address" checked class="mr-2" />
+                    <span class="text-sm font-medium text-gray-700">Use default address</span>
+                </label>
+            </div>
+
+            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <div class="space-y-2">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Delivery Address</label>
+                        <textarea readonly rows="2" value="@CustomerInfo?.Address"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-600"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public CustomerResponse? CustomerInfo { get; set; }
+
+    [Parameter]
+    public EventCallback<CustomerResponse?> CustomerInfoChanged { get; set; }
+}
