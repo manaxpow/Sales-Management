@@ -45,6 +45,7 @@ public static class ServiceExtensions
         builder.Services.AddScoped<IInventoryService, InventoryService>();
         builder.Services.AddScoped<ICartService, CartService>();
         builder.Services.AddScoped<ICartItemService, CartItemService>();
+        builder.Services.AddScoped<IHistoryService, HistoryService>();
 
         // global error handler
         builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
