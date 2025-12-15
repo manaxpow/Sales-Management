@@ -108,6 +108,11 @@ public class OrderService : IOrderService
         var o = await _db.Orders.FindAsync(id);
         if (o == null) return new ApiResponse<OrderResponse>().ErrorResponse("Order not found", 404);
 
+        if (req.Status == 2 && o.Status != 2)
+        {
+            await RestoreProductQuantity(o.Id);
+        }
+
         o.Customerid = req.Customerid;
         o.Userid = req.Userid;
         o.Status = req.Status;
@@ -318,6 +323,25 @@ public class OrderService : IOrderService
             await transaction.RollbackAsync();
             return new ApiResponse<CreateOrderResponse>()
                 .ErrorResponse($"Failed to create order: {ex.Message}", 500);
+        }
+    }
+
+    private async Task RestoreProductQuantity(int orderId)
+    {
+        // 1. Lấy danh sách sản phẩm trong đơn hàng đó
+        var orderDetails = await _db.OrderItems
+            .Where(od => od.OrderId == orderId)
+            .ToListAsync();
+
+        // 2. Duyệt qua từng sản phẩm để cộng lại số lượng
+        foreach (var item in orderDetails)
+        {
+            var product = await _db.Inventory.FindAsync(item.Productid);
+            if (product != null)
+            {
+                // Cộng lại số lượng vào kho
+                product.Quantity += item.Quantity;
+            }
         }
     }
 }

@@ -152,9 +152,9 @@
                                             <button class="btn btn-outline-primary" @onclick="() => EditOrder(order)" title="Cập nhật trạng thái">
                                                 <i class="bi bi-pencil"></i>
                                             </button>
-                                            <button class="btn btn-outline-danger" @onclick="() => DeleteOrder(order)" title="Xóa đơn hàng">
+                                            @* <button class="btn btn-outline-danger" @onclick="() => DeleteOrder(order)" title="Xóa đơn hàng">
                                                 <i class="bi bi-trash"></i>
-                                            </button>
+                                            </button> *@
                                         </div>
                                     </td>
                                 </tr>
@@ -390,7 +390,7 @@
 
                     <div class="mb-3">
                         <label class="form-label fw-bold">Trạng thái mới</label>
-                        <select class="form-select" @bind="newStatus" disabled="@(selectedOrder?.Status == "completed")">>
+                        <select class="form-select" @bind="newStatus" disabled="@(selectedOrder?.Status == "completed" || selectedOrder?.Status == "canceled")">>
                             <option value="pending">Chờ xử lý</option>
                             <option value="completed">Hoàn thành</option>
                             <option value="canceled">Đã hủy</option>
@@ -401,7 +401,7 @@
                     <button class="btn btn-secondary" @onclick="CloseEditDialog">
                         <i class="bi bi-x"></i> Hủy bỏ
                     </button>
-                    <button class="btn btn-primary" @onclick="UpdateStatus" disabled="@(selectedOrder?.Status == "completed")">>
+                    <button class="btn btn-primary" @onclick="UpdateStatus" disabled="@(selectedOrder?.Status == "completed" || selectedOrder?.Status == "canceled")">
                         <i class="bi bi-check"></i> Cập nhật
                     </button>
                 </div>
@@ -411,7 +411,7 @@
 }
 
 <!-- Delete Dialog -->
-@if (deleteDialogOpen && selectedOrder != null)
+@* @if (deleteDialogOpen && selectedOrder != null)
 {
     <div class="modal fade show d-block bg-dark bg-opacity-50" tabindex="-1" @onclick="CloseDeleteDialog">
         <div class="modal-dialog modal-dialog-centered" @onclick:stopPropagation>
@@ -472,7 +472,7 @@
             </div>
         </div>
     </div>
-}
+} *@
 
 <!-- Snackbar -->
 @if (snackbarOpen)
