@@ -118,6 +118,11 @@
                         </div>
 
                         <div class="flex items-center justify-end space-x-4 pt-8 border-t border-gray-100 mt-4">
+                            <button type="button" @onclick="GoToChangePassword"
+                                class="px-6 py-2.5 rounded-xl text-sm font-bold text-blue-700 bg-blue-50 border border-blue-300 hover:bg-blue-100 hover:text-blue-900 transition-all duration-200 shadow-sm mr-2">
+                                <i class="fas fa-key mr-2"></i>
+                                Đổi mật khẩu
+                            </button>
                             <button type="button" @onclick="GoHome"
                                 class="px-6 py-2.5 rounded-xl text-sm font-bold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 hover:text-gray-900 transition-all duration-200 shadow-sm">
                                 Hủy bỏ
@@ -317,4 +322,5 @@
     }
 
     private void GoHome() => Navigation.NavigateTo("/");
+    private void GoToChangePassword() => Navigation.NavigateTo("/customer/profile/change-password");
 }

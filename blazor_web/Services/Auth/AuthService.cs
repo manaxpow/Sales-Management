@@ -172,5 +172,133 @@ namespace blazor_web.Services.Auth {
                 };
             }
         }
+
+        public async Task<ApiResponse<bool>> ChangePasswordAsync(ChangePasswordRequest request)
+        {
+            try
+            {
+                Console.WriteLine($"=== AuthService.ChangePasswordAsync called ===");
+                Console.WriteLine($"HttpClient BaseAddress: {_httpClient.BaseAddress}");
+                Console.WriteLine($"Calling change password API for user ID: {request.UserId}");
+
+                using var formData = new MultipartFormDataContent();
+
+                formData.Add(new StringContent(request.UserId.ToString()), "UserId");
+
+                if (!string.IsNullOrEmpty(request.Password))
+                {
+                    Console.WriteLine($"Adding current password: [length {request.Password.Length}]");
+                    formData.Add(new StringContent(request.Password), "Password");
+                }
+
+                if (!string.IsNullOrEmpty(request.NewPassword))
+                {
+                    Console.WriteLine($"Adding new password: [length {request.NewPassword.Length}]");
+                    formData.Add(new StringContent(request.NewPassword), "NewPassword");
+                }
+
+                Console.WriteLine($"Making POST request to: auth/change-password");
+
+                var response = await _httpClient.PostAsync("auth/change-password", formData);
+                Console.WriteLine($"Response status code: {response.StatusCode}");
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError($"Change password API failed with status {response.StatusCode}: {errorContent}");
+
+                    try
+                    {
+                        // Try to parse as validation error array first
+                        using var doc = JsonDocument.Parse(errorContent);
+                        
+                        if (doc.RootElement.ValueKind == JsonValueKind.Array)
+                        {
+                            var errors = new List<string>();
+                            foreach (var item in doc.RootElement.EnumerateArray())
+                            {
+                                if (item.TryGetProperty("message", out var messageProp))
+                                {
+                                    errors.Add(messageProp.GetString() ?? "");
+                                }
+                            }
+                            
+                            if (errors.Any())
+                            {
+                                return new ApiResponse<bool>
+                                {
+                                    Success = false,
+                                    Message = string.Join("; ", errors)
+                                };
+                            }
+                        }
+                        else
+                        {
+                            // Try to parse as ApiResponse
+                            var errorApiResponse = JsonSerializer.Deserialize<ApiResponse<bool>>(errorContent, new JsonSerializerOptions
+                            {
+                                PropertyNameCaseInsensitive = true
+                            });
+
+                            if (errorApiResponse != null && !string.IsNullOrEmpty(errorApiResponse.Message))
+                            {
+                                return new ApiResponse<bool>
+                                {
+                                    Success = false,
+                                    Message = errorApiResponse.Message
+                                };
+                            }
+                        }
+                    }
+                    catch (JsonException ex)
+                    {
+                        _logger.LogError($"Failed to parse error response: {ex.Message}");
+                    }
+
+                    return new ApiResponse<bool>
+                    {
+                        Success = false,
+                        Message = "Đổi mật khẩu thất bại. Vui lòng thử lại."
+                    };
+                }
+
+                var successfulApiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<bool>>(new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+                if (successfulApiResponse == null || !successfulApiResponse.Success)
+                {
+                    return new ApiResponse<bool>
+                    {
+                        Success = false,
+                        Message = successfulApiResponse?.Message ?? "Change password failed: API returned success status but missing data."
+                    };
+                }
+
+                Console.WriteLine($"Password changed successfully");
+                return successfulApiResponse;
+            }
+            catch (HttpRequestException ex)
+            {
+                Console.WriteLine($"HttpRequestException: {ex.Message}");
+                _logger.LogError($"Change password API error: {ex.Message}");
+                return new ApiResponse<bool>
+                {
+                    Success = false,
+                    Message = $"Network error: {ex.Message}. Please check if API server is running at {_httpClient.BaseAddress}"
+                };
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Exception: {ex.Message}");
+                _logger.LogError($"Unexpected error in ChangePasswordAsync: {ex.Message}");
+                return new ApiResponse<bool>
+                {
+                    Success = false,
+                    Message = $"An unexpected error occurred: {ex.Message}"
+                };
+            }
+        }
     }
 }

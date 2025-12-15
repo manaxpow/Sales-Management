@@ -8,6 +8,7 @@ public class InventoryService(AppDbContext context, ILogger<InventoryService> lo
 
         var query = context.Inventory
             .Include(x => x.Product)
+            .Where(x => x.Product.Status != 3) // Exclude deleted products (status = 3)
             .AsQueryable();
 
         if (!string.IsNullOrEmpty(inventoryRequest.Search))

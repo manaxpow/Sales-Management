@@ -17,3 +17,21 @@ public class AuthValidator : AbstractValidator<LoginRequest>
 
     }
 }
+
+public class ChangePasswordValidator : AbstractValidator<ChangePasswordRequest>
+{
+    public ChangePasswordValidator()
+    {
+        RuleFor(x => x.UserId)
+            .GreaterThan(0).WithMessage("UserId phải lớn hơn 0");
+
+        RuleFor(x => x.Password)
+            .NotEmpty().WithMessage("Mật khẩu hiện tại không được để trống")
+            .MinimumLength(6).WithMessage("Mật khẩu hiện tại tối thiểu 6 kí tự");
+
+        RuleFor(x => x.NewPassword)
+            .NotEmpty().WithMessage("Mật khẩu mới không được để trống")
+            .MinimumLength(6).WithMessage("Mật khẩu mới tối thiểu 6 kí tự")
+            .NotEqual(x => x.Password).WithMessage("Mật khẩu mới phải khác mật khẩu hiện tại");
+    }
+}

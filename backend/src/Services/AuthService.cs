@@ -143,4 +143,49 @@ public class AuthService(AppDbContext context, ILogger<AuthService> logger) : IA
             return registerRes.ErrorResponse("Registration failed: " + ex.Message, 500);
         }
     }
+
+    public async Task<ApiResponse<bool>> ChangePassword(ChangePasswordRequest changePasswordRequest)
+    {
+        ApiResponse<bool> response = new();
+
+        try
+        {
+            // Find user by ID
+            var user = await context.Users
+                .FirstOrDefaultAsync(u => u.Id == changePasswordRequest.UserId);
+            
+            if (user == null)
+            {
+                logger.LogError($"User with ID {changePasswordRequest.UserId} not found");
+                return response.ErrorResponse("User not found", 404);
+            }
+
+            // Verify current password
+            if (!AuthHelpers.VerifyPassword(user, changePasswordRequest.Password))
+            {
+                logger.LogError($"Invalid current password for user ID {changePasswordRequest.UserId}");
+                return response.ErrorResponse("Current password is incorrect", 400);
+            }
+
+            // Check if new password is the same as current password
+            if (AuthHelpers.VerifyPassword(user, changePasswordRequest.NewPassword))
+            {
+                return response.ErrorResponse("New password must be different from current password", 400);
+            }
+
+            // Update password
+            user.Password = AuthHelpers.HashPassword(null, changePasswordRequest.NewPassword);
+            user.UpdatedAt = DateTime.Now;
+
+            await context.SaveChangesAsync();
+
+            logger.LogInformation($"Password changed successfully for user ID {changePasswordRequest.UserId}");
+            return response.SuccessResponse(true, "Password changed successfully");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, $"Error changing password for user ID {changePasswordRequest.UserId}");
+            return response.ErrorResponse("Failed to change password: " + ex.Message, 500);
+        }
+    }
 }
