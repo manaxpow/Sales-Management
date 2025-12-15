@@ -1,0 +1,267 @@
+@page "/staff/profile"
+@rendermode InteractiveServer
+
+@using System.ComponentModel.DataAnnotations
+@using blazor_web.DTOs.User
+@using blazor_web.DTOs.Auth
+@using blazor_web.Services.Storage
+@using blazor_web.Models
+@using blazor_web.Services.User
+
+@inject ILocalStorageService LocalStorageService
+@inject IUserService UserService
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+
+<PageTitle>Hồ sơ Staff</PageTitle>
+
+<div class="min-h-screen bg-gray-50 py-10 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100 transition-all duration-300 hover:shadow-2xl">
+
+            <div class="relative bg-gradient-to-br from-green-600 via-teal-600 to-cyan-700 px-8 py-10 overflow-hidden">
+                <div class="absolute top-0 right-0 -mr-10 -mt-10 w-40 h-40 rounded-full bg-white/10 blur-3xl"></div>
+                <div class="absolute bottom-0 left-0 -ml-10 -mb-10 w-40 h-40 rounded-full bg-white/10 blur-3xl"></div>
+
+                <div class="relative flex items-center space-x-6 z-10">
+                    <div class="flex-shrink-0">
+                        <div class="w-20 h-20 rounded-full bg-white/20 p-1.5 backdrop-blur-md shadow-inner">
+                            <div class="w-full h-full rounded-full bg-white flex items-center justify-center text-3xl font-extrabold text-green-600 uppercase shadow-sm">
+                                @(GetAvatarInitial())
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-white">
+                        <h1 class="text-2xl font-bold tracking-tight">Hồ sơ Staff</h1>
+                        <p class="text-green-100 text-sm font-medium opacity-90 mt-1 flex items-center">
+                            <i class="fas fa-user-tie mr-2"></i>
+                            Xin chào, @(profileModel.FullName ?? "Staff")!
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-8 sm:p-10">
+                @if (isLoading)
+                {
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 animate-pulse">
+                        <div class="h-12 bg-gray-100 rounded-xl w-full"></div>
+                        <div class="h-12 bg-gray-100 rounded-xl w-full"></div>
+                    </div>
+                }
+                else
+                {
+                    <EditForm Model="profileModel" OnValidSubmit="UpdateProfile" class="space-y-6">
+                        <DataAnnotationsValidator />
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                            
+                            <div class="group">
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Tên đăng nhập <span class="text-gray-400 text-xs">(Không thay đổi)</span>
+                                </label>
+                                <div class="relative transition-all duration-200 rounded-xl">
+                                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
+                                        <i class="fas fa-user-lock"></i>
+                                    </div>
+                                    <InputText @bind-Value="profileModel.UserName" disabled="true"
+                                        class="w-full pl-11 pr-4 py-3 bg-gray-100 border border-gray-200 rounded-xl text-gray-600 placeholder-gray-400 cursor-not-allowed transition-colors"
+                                        placeholder="Tên đăng nhập" />
+                                </div>
+                            </div>
+
+                            <div class="group">
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Vai trò <span class="text-gray-400 text-xs">(Không thay đổi)</span>
+                                </label>
+                                <div class="relative transition-all duration-200 rounded-xl">
+                                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
+                                        <i class="fas fa-shield-alt"></i>
+                                    </div>
+                                    <InputText @bind-Value="profileModel.Role" disabled="true"
+                                        class="w-full pl-11 pr-4 py-3 bg-gray-100 border border-gray-200 rounded-xl text-gray-600 placeholder-gray-400 cursor-not-allowed transition-colors"
+                                        placeholder="Vai trò" />
+                                </div>
+                            </div>
+
+                            <div class="group md:col-span-2">
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Họ và tên <span class="text-red-500">*</span>
+                                </label>
+                                <div class="relative transition-all duration-200 focus-within:ring-2 focus-within:ring-green-500/20 rounded-xl">
+                                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <InputText @bind-Value="profileModel.FullName"
+                                        class="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:bg-white focus:outline-none focus:border-green-500 transition-colors"
+                                        placeholder="Nhập họ và tên của bạn" />
+                                </div>
+                                <ValidationMessage For="() => profileModel.FullName" class="text-red-500 text-xs mt-1.5 ml-1 font-medium" />
+                            </div>
+
+                        </div>
+
+                        <div class="flex items-center justify-between pt-8 border-t border-gray-100 mt-4">
+                            <div class="flex items-center space-x-3">
+                                <button type="button" @onclick="GoToChangePassword"
+                                    class="px-4 py-2 rounded-xl text-sm font-semibold text-green-600 bg-green-50 border border-green-200 hover:bg-green-100 hover:text-green-700 transition-all duration-200 shadow-sm">
+                                    <i class="fas fa-key mr-2"></i>
+                                    Đổi mật khẩu
+                                </button>
+                            </div>
+                            
+                            <div class="flex items-center space-x-4">
+                                <button type="button" @onclick="GoToDashboard"
+                                    class="px-6 py-2.5 rounded-xl text-sm font-bold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 hover:text-gray-900 transition-all duration-200 shadow-sm">
+                                    Hủy bỏ
+                                </button>
+
+                                <button type="submit" disabled="@isSubmitting"
+                                    class="relative flex items-center justify-center space-x-2 px-8 py-2.5 bg-green-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-green-200 hover:bg-green-700 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none">
+                                    @if (isSubmitting)
+                                    {
+                                        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        <span>Đang xử lý...</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Lưu thay đổi</span>
+                                    }
+                                </button>
+                            </div>
+                        </div>
+                    </EditForm>
+                }
+            </div>
+        </div>
+    </div>
+
+    @if (showSuccess)
+    {
+        <div class="fixed top-5 right-5 z-50 animate-[slideInRight_0.4s_ease-out]">
+            <div class="bg-white border-l-4 border-green-500 px-6 py-4 rounded-lg shadow-2xl flex items-center space-x-4 max-w-sm">
+                <div class="flex-shrink-0 bg-green-100 p-2 rounded-full">
+                    <i class="fas fa-check text-green-600 text-lg"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold text-gray-900">Cập nhật thành công!</h3>
+                    <p class="text-xs text-gray-500 mt-0.5">Thông tin hồ sơ đã được lưu lại.</p>
+                </div>
+                <button @onclick="() => showSuccess = false" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    @@keyframes slideInRight {
+        from { opacity: 0; transform: translateX(100%); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+</style>
+
+@code {
+    public class ProfileViewModel
+    {
+        [Required(ErrorMessage = "Vui lòng nhập họ và tên.")]
+        [StringLength(100, ErrorMessage = "Họ tên không được quá 100 ký tự.")]
+        public string FullName { get; set; } = string.Empty;
+
+        public string UserName { get; set; } = string.Empty;
+        public string Role { get; set; } = string.Empty;
+    }
+
+    private LoginResponse? loginInfo;
+    private ProfileViewModel profileModel = new();
+    
+    private bool isLoading = true;
+    private bool isSubmitting = false;
+    private bool showSuccess = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            loginInfo = await LocalStorageService.GetLoginInfoAsync();
+
+            if (loginInfo?.User == null || loginInfo.User.Id <= 0)
+            {
+                Navigation.NavigateTo("/login", forceLoad: true);
+                return;
+            }
+
+            // Load thông tin user từ login info
+            profileModel.UserName = loginInfo.User.UserName ?? string.Empty;
+            profileModel.FullName = loginInfo.User.FullName ?? string.Empty;
+            profileModel.Role = loginInfo.User.Role ?? string.Empty;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task UpdateProfile()
+    {
+        isSubmitting = true;
+
+        try
+        {
+            var updateRequest = new UpdateUserRequest
+            {
+                FullName = profileModel.FullName,
+                Password = null, // Không đổi mật khẩu ở trang profile
+                Role = profileModel.Role
+            };
+
+            var result = await UserService.UpdateUserAsync(loginInfo!.User.Id, updateRequest);
+
+            if (result.Success)
+            {
+                // Cập nhật lại local storage
+                loginInfo.User.FullName = profileModel.FullName;
+                await LocalStorageService.SetLoginInfoAsync(loginInfo);
+
+                showSuccess = true;
+                StateHasChanged();
+                await Task.Delay(3000);
+                showSuccess = false;
+                StateHasChanged();
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("alert", result.Message ?? "Cập nhật thất bại.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            await JS.InvokeVoidAsync("alert", "Lỗi hệ thống.");
+        }
+        finally
+        {
+            isSubmitting = false;
+            StateHasChanged();
+        }
+    }
+
+    private char GetAvatarInitial()
+    {
+        if (!string.IsNullOrEmpty(profileModel.FullName)) return profileModel.FullName[0];
+        if (!string.IsNullOrEmpty(loginInfo?.User?.FullName)) return loginInfo.User.FullName[0];
+        return 'S';
+    }
+
+    private void GoToDashboard() => Navigation.NavigateTo("/staff");
+    private void GoToChangePassword() => Navigation.NavigateTo("/staff/profile/change-password");
+}

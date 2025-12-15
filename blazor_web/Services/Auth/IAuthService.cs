@@ -7,5 +7,6 @@ namespace blazor_web.Services.Auth
     {
         Task<ApiResponse<LoginResponse>> LoginAsync(LoginRequest request);
         Task<ApiResponse<int>> RegisterAsync(RegisterRequest request);
+        Task<ApiResponse<bool>> ChangePasswordAsync(ChangePasswordRequest request);
     }
 }

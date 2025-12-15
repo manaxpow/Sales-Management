@@ -81,7 +81,39 @@ public static class AuthRoute
             // validate
 
         });
+
+        AuthRoute.MapPost("/change-password", async ([AsParameters] ChangePasswordRequest changePasswordRequest, IAuthServices authServices, IValidator<ChangePasswordRequest> validator) =>
+        {
+            try
+            {
+                ValidationResult result = await validator.ValidateAsync(changePasswordRequest);
+                if (!result.IsValid)
+                {
+                    return Results.BadRequest(result.Errors.Select(e => new
+                    {
+                        field = e.PropertyName,
+                        message = e.ErrorMessage
+                    }));
+                }
+                var auth = await authServices.ChangePassword(changePasswordRequest);
+                if (auth.Success)
+                {
+                    return Results.Ok(auth);
+                }
+                else return Results.BadRequest(auth);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error", e.Data);
+                var err = new ErrorResponse
+                {
+                    Message = e.Message.ToString() ?? "Lỗi không xác định",
+                    StatusCode = 400,
+                    Title = "Something wrong"
+                };
+                return Results.Json(err);
+            }
+        });
         return group;
     }
 }
-

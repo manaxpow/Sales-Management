@@ -1,12 +1,31 @@
+@using blazor_web.Services.Storage
+@rendermode InteractiveServer
+@inject NavigationManager Navigation
+@inject ILocalStorageService LocalStorage
+
 <div class="h-full bg-gray-900 text-gray-200 p-4 flex flex-col" x-data="{ activeMenu: '' }">
     <!-- Logo and Title -->
     <div class="flex items-center justify-center mb-8 pb-4 border-b border-gray-800">
-        <img src="https://picsum.photos/seed/admin/40/40.jpg" alt="User Avatar"
-            class="w-40 h-40 rounded-full border-2 border-gray-200">
+        <div class="w-40 h-40 rounded-full bg-gray-300 border-2 border-gray-200 flex items-center justify-center">
+            <svg class="w-20 h-20 text-gray-700" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3a7 7 0 007 7v1a1 1 0 001 1h4a1 1 0 001 1v4a1 1 0 001 1m-6 0h6z" clip-rule="evenodd" />
+            </svg>
+        </div>
     </div>
 
     <!-- Navigation Menu -->
     <nav class="flex-1 space-y-2 overflow-y-auto">
+
+        <!-- Profile -->
+        <a href="/admin/profile"
+            class="flex items-center px-4 py-3 text-gray-200 rounded-lg hover:bg-gray-800 hover:text-white transition-all duration-200 group">
+            <svg class="w-5 h-5 mr-3 text-gray-400 group-hover:text-white" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+            </svg>
+            <span class="font-medium">Hồ sơ cá nhân</span>
+        </a>
 
         <!-- Dashboard -->
         <a href="/admin"
@@ -129,13 +148,6 @@
             <div x-show="open" x-transition:enter="transition ease-out duration-200"
                 x-transition:enter-start="opacity-0 transform -translate-y-2"
                 x-transition:enter-end="opacity-100 transform translate-y-0" class="ml-4 space-y-1">
-                <a href="/admin/categories/create"
-                    class="flex items-center px-4 py-2 text-sm text-gray-400 rounded-lg hover:bg-gray-800 hover:text-white transition-all duration-200">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                    </svg>
-                    Tạo danh mục
-                </a>
                 <a href="/admin/categories"
                     class="flex items-center px-4 py-2 text-sm text-gray-400 rounded-lg hover:bg-gray-800 hover:text-white transition-all duration-200">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -144,49 +156,6 @@
                         </path>
                     </svg>
                     Quản lý danh mục
-                </a>
-            </div>
-        </div>
-
-        <!-- Product Types Menu with Submenu -->
-        <div x-data="{ open: activeMenu === 'productTypes' }" class="space-y-1">
-            <button
-                class="w-full flex items-center justify-between px-4 py-3 text-gray-200 rounded-lg hover:bg-gray-800 hover:text-white transition-all duration-200 group"
-                @click="open = !open; activeMenu = open ? 'productTypes' : ''">
-                <div class="flex items-center">
-                    <svg class="w-5 h-5 mr-3 text-gray-400 group-hover:text-white" fill="none" stroke="currentColor"
-                        viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z">
-                        </path>
-                    </svg>
-                    <span class="font-medium">Loại sản phẩm</span>
-                </div>
-                <svg class="w-4 h-4 transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none"
-                    stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                </svg>
-            </button>
-
-            <!-- Submenu Items -->
-            <div x-show="open" x-transition:enter="transition ease-out duration-200"
-                x-transition:enter-start="opacity-0 transform -translate-y-2"
-                x-transition:enter-end="opacity-100 transform translate-y-0" class="ml-4 space-y-1">
-                <a href="/admin/product-types/create"
-                    class="flex items-center px-4 py-2 text-sm text-gray-400 rounded-lg hover:bg-gray-800 hover:text-white transition-all duration-200">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                    </svg>
-                    Tạo loại sản phẩm
-                </a>
-                <a href="/admin/product-types"
-                    class="flex items-center px-4 py-2 text-sm text-gray-400 rounded-lg hover:bg-gray-800 hover:text-white transition-all duration-200">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2">
-                        </path>
-                    </svg>
-                    Quản lý loại sản phẩm
                 </a>
             </div>
         </div>
@@ -240,7 +209,7 @@
             <svg class="w-5 h-5 mr-3 text-gray-400 group-hover:text-white" fill="none" stroke="currentColor"
                 viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4">
+                    d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 00-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4">
                 </path>
             </svg>
             <span class="font-medium">Tồn kho</span>
@@ -250,7 +219,7 @@
         <div x-data="{ open: activeMenu === 'promotions' }" class="space-y-1">
             <button
                 class="w-full flex items-center justify-between px-4 py-3 text-gray-200 rounded-lg hover:bg-gray-800 hover:text-white transition-all duration-200 group"
-                @click="open = !open; activeMenu = open ? 'customers' : ''">
+                @click="open = !open; activeMenu = open ? 'promotions' : ''">
                 <div class="flex items-center">
                     <svg class="w-5 h-5 mr-3 text-gray-400 group-hover:text-white" fill="none" stroke="currentColor"
                         viewBox="0 0 24 24">
@@ -289,8 +258,6 @@
             </div>
         </div>
 
-
-
         <!-- Suppliers -->
         <a href="/admin/suppliers"
             class="flex items-center px-4 py-3 text-gray-200 rounded-lg hover:bg-gray-800 hover:text-white transition-all duration-200 group">
@@ -319,7 +286,7 @@
 
     <!-- Logout Button -->
     <div class="mt-auto pt-4 border-t border-gray-800">
-        <button onclick="window.location.href='/logout'"
+        <button @onclick="Logout"
             class="w-full flex items-center justify-center px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all duration-200 group">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -330,3 +297,11 @@
         </button>
     </div>
 </div>
+
+@code {
+    private async Task Logout()
+    {
+        await LocalStorage.RemoveLoginInfoAsync();
+        Navigation.NavigateTo("/login", true);
+    }
+}
