@@ -112,6 +112,8 @@ namespace backend.Migrations
 
                     b.HasIndex("CartId");
 
+                    b.HasIndex("ProductId");
+
                     b.ToTable("CartItems");
                 });
 
@@ -452,7 +454,14 @@ namespace backend.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Products", "Product")
+                        .WithMany("CartItems")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("Cart");
+
+                    b.Navigation("Product");
                 });
 
             modelBuilder.Entity("Inventory", b =>
@@ -492,6 +501,8 @@ namespace backend.Migrations
 
             modelBuilder.Entity("Products", b =>
                 {
+                    b.Navigation("CartItems");
+
                     b.Navigation("Inventory");
                 });
 #pragma warning restore 612, 618

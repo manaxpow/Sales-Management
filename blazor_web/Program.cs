@@ -55,6 +55,7 @@ builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IPaymentService,PaymentService>();
 builder.Services.AddScoped<IHistoryService, HistoryService>();
 
+builder.Services.AddScoped<IStatisticService, StatisticService>();
 builder.Services.AddBlazoredToast();
 
 var app = builder.Build();
@@ -67,7 +68,7 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-// Remove HTTPS redirection to avoid the warning
+// Remove HTTPS redirection to avoid warning
 // app.UseHttpsRedirection();
 
 app.UseAntiforgery();

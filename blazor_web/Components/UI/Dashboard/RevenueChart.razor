@@ -1,0 +1,98 @@
+@inject IJSRuntime JS
+@inject IStatisticService statisticService
+@if (isLoading)
+{
+    <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-2 text-muted">Đang tải dữ liệu...</p>
+    </div>
+}
+else
+{
+    <div class="card shadow-sm p-3 mb-4">
+        <h5>Doanh số bán ra</h5>
+
+        <select class="form-select w-auto mb-2" @onchange="OnPeriodChanged">
+            <option value="7d">7 ngày</option>
+            <option value="28d">28 ngày</option>
+            <option value="90d">90 ngày</option>
+            <option value="year">Năm</option>
+        </select>
+
+        <canvas id="revenueChart"></canvas>
+    </div>
+}
+
+@code {
+
+    private bool isLoading = false;
+    private SnackBoard snackBoard = new SnackBoard();
+    private string SelectedPeriod { get; set; } = "7d";
+    private bool _initialized = false;
+    private StatisticRevenuelResponse dataRes { get; set; } = new StatisticRevenuelResponse();
+    private string ErrorMessage { get; set; } = string.Empty;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            isLoading = true;
+            StateHasChanged();
+
+            await LoadDataAsync();
+
+            isLoading = false;
+            StateHasChanged();
+
+            // Wait for DOM to be ready after StateHasChanged
+            await Task.Delay(100);
+        }
+
+        Console.WriteLine($"OnAfterRenderAsync called. Initialized: {_initialized}, IsLoading: {isLoading}");
+        if (!_initialized && !isLoading && dataRes?.Revenues != null)
+        {
+            _initialized = true;
+            Console.WriteLine("Rendering revenue chart with data");
+            await JS.InvokeVoidAsync(
+                "dashboard.renderRevenueChart",
+                SelectedPeriod,
+                dataRes.Revenues
+            );
+        }
+    }
+
+
+    private async Task LoadDataAsync()
+    {
+        Console.WriteLine($"Loading data for period: {SelectedPeriod}");
+
+        try
+        {
+            var req = new StatisticRequest
+            {
+                StartDate = "2020/01/01",
+                EndDate = "2025/12/31",
+            };
+            var response = await statisticService.GetStatisticRevenue(req);
+            dataRes = response.Data;
+            StateHasChanged();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Error loading data: {e.Message}");
+        }
+    }
+
+    private async Task OnPeriodChanged(ChangeEventArgs e)
+    {
+        SelectedPeriod = e.Value?.ToString() ?? "7d";
+        Console.WriteLine($"Selected period changed to: {SelectedPeriod}");
+
+
+        await JS.InvokeVoidAsync("dashboard.renderRevenueChart", SelectedPeriod, dataRes.Revenues);
+        Console.WriteLine($"Revenue chart updated for period: {SelectedPeriod}");
+        StateHasChanged();
+    }
+
+
+}

@@ -16,6 +16,7 @@ public class OrderItemService : IOrderItemService {
                 Quantity = i.Quantity,
                 Price = i.Price,
                 SubTotal = i.SubTotal
+
             })
             .ToListAsync();
 

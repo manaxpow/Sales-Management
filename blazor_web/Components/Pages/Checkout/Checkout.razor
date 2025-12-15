@@ -2,7 +2,9 @@
 @rendermode InteractiveServer
 
 
+@using blazor_web.Components.Pages.Auth
 @using blazor_web.Components.UI
+@using blazor_web.DTOs.Auth
 @using blazor_web.Services.Storage
 @using blazor_web.DTOs.Cart.Response
 @using blazor_web.DTOs.CartItem.Response
@@ -15,6 +17,8 @@
 @inject IPaymentService PaymentService
 @inject ILocalStorageService LocalStorageService
 @inject IPromotionService PromotionService
+@inject NavigationManager Navigation
+
 <PageTitle>Checkout</PageTitle>
 
 <!-- Checkout Header -->
@@ -267,6 +271,7 @@
     private bool _isLoading = true;
     private bool _isProcessing = false;
     private bool _isLoadingPromotions = true;
+    private LoginResponse? user;
 
 
     // Summary calculations
@@ -288,6 +293,12 @@
             _isLoading = true;
             _isLoadingPromotions = true;
             StateHasChanged();
+            var isLogin = await LocalStorageService.IsLoggedInAsync();
+            if (!isLogin)
+            {
+                Navigation.NavigateTo("/login", true);
+                return;
+            }
 
             await LoadCheckoutDataAsync();
 
@@ -457,7 +468,7 @@
             Console.WriteLine(payload.Items.Count);
 
             var response = await OrderService.CreateWithItemsAsync(payload);
-            
+
             if (response.Success)
             {
                 var paymentResponse = await PaymentService.CreatePayment(new PaymentRequest
@@ -470,6 +481,7 @@
                 if (paymentResponse.Success)
                 {
                     snackBoard.Show("Thành công", "success");
+                    Navigation.NavigateTo($"/payment-success/{response.Data.Id}");
                 }
                 else
                 {

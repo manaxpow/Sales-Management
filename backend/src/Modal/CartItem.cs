@@ -1,10 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-public class CartItem {
-    public CartItem() { }
+public class CartItem
+{
+    public CartItem()
+    {
+    }
 
-    [Key]
-    public int CartItemId { get; set; }
+    [Key] public int CartItemId { get; set; }
     public int CartId { get; set; }
     public int? ProductId { get; set; }
     public string ProductName { get; set; } = string.Empty;
@@ -15,4 +17,5 @@ public class CartItem {
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public Cart? Cart { get; set; }
+    public Products Product { get; set; } = null!;
 }
