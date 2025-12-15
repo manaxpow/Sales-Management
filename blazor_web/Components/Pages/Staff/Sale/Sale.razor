@@ -834,8 +834,9 @@
 
         if (response.Success)
         {
-            Toast("Thành công");
             paymentOpen = false;
+            NewOrder();
+            Toast("Thành công");
             StateHasChanged();
         }
         else
