@@ -15,5 +15,6 @@
 
 
         public string ImageProduct { get; set; } = string.Empty;
+        public int QuantityRemain { get; set; }
     }
 }

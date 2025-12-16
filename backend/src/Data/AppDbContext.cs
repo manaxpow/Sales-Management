@@ -8,9 +8,8 @@ public class AppDbContext : DbContext
 {
     public AppDbContext(DbContextOptions dbContextOptions) : base(dbContextOptions)
     {
-
-
     }
+
     public DbSet<Products> Products { get; set; }
     public DbSet<Users> Users { get; set; }
     public DbSet<Suppliers> Suppliers { get; set; }
@@ -42,12 +41,24 @@ public class AppDbContext : DbContext
             .HasForeignKey<Inventory>(i => i.ProductId);
 
         modelBuilder.Entity<Inventory>()
-    .HasOne(i => i.Product)
-    .WithOne(p => p.Inventory)
-    .HasForeignKey<Inventory>(i => i.ProductId)
-    .OnDelete(DeleteBehavior.Cascade);
+            .HasOne(i => i.Product)
+            .WithOne(p => p.Inventory)
+            .HasForeignKey<Inventory>(i => i.ProductId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+
+        modelBuilder.Entity<CartItem>()
+            .HasOne(ci => ci.Cart)
+            .WithMany(c => c.Items)
+            .HasForeignKey(ci => ci.CartId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<CartItem>()
+            .HasOne(ci => ci.Product)
+            .WithMany(p => p.CartItems)
+            .HasForeignKey(ci => ci.ProductId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         base.OnModelCreating(modelBuilder);
     }
-
 }

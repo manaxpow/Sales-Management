@@ -1,0 +1,92 @@
+@inject IJSRuntime JS
+@inject IStatisticService statisticService
+@if (isLoading)
+{
+    <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-2 text-muted">Đang tải dữ liệu...</p>
+    </div>
+}
+else
+{
+    <div class="card shadow-sm p-3 mb-4">
+        <h5>Đơn hàng</h5>
+        <select class="form-select w-auto mb-2" @onchange="OnPeriodChanged">
+            <option value="7d">7 ngày</option>
+            <option value="28d">28 ngày</option>
+            <option value="90d">90 ngày</option>
+            <option value="year">Năm</option>
+        </select>
+        <canvas id="ordersChart"></canvas>
+    </div>
+}
+
+@code {
+    private string SelectedPeriod { get; set; } = "7d";
+    [Parameter] public int _status { get; set; } = -1;
+    private StatisticOrderResponse dataRes { get; set; } = new StatisticOrderResponse();
+    private bool isLoading = false;
+    private bool _initialized = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            Console.WriteLine("First render - loading data");
+            isLoading = true;
+            StateHasChanged();
+
+            await LoadDataAsync();
+
+            isLoading = false;
+            StateHasChanged();
+
+            // Wait for DOM to be ready after StateHasChanged
+            await Task.Delay(100);
+        }
+
+        if (!_initialized && !isLoading && dataRes?.StaOrder != null)
+        {
+            _initialized = true;
+            Console.WriteLine("Rendering orders chart with data");
+            await JS.InvokeVoidAsync(
+                "dashboard.renderOrdersChart",
+                SelectedPeriod,
+                dataRes.StaOrder
+            );
+        }
+    }
+
+    private async Task LoadDataAsync()
+    {
+        Console.Write("Loading order data..." + _status);
+        try
+        {
+            var req = new StatisticRequest
+            {
+                StartDate = "2020/01/01",
+                EndDate = "2025/12/31",
+            };
+            var response = await statisticService.GetStatisticOrder(req);
+            dataRes = response.Data;
+            Console.WriteLine($"Loaded order data: {dataRes.StaOrder}");
+            StateHasChanged();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Error loading data: {e.Message}");
+        }
+    }
+
+    private async Task OnPeriodChanged(ChangeEventArgs e)
+    {
+        await LoadDataAsync();
+        SelectedPeriod = e.Value?.ToString() ?? "month";
+        Console.WriteLine($"Selected period changed to: {SelectedPeriod}");
+
+        await JS.InvokeVoidAsync("dashboard.renderOrdersChart", SelectedPeriod, dataRes.StaOrder);
+        Console.WriteLine($"Orders chart updated for period: {SelectedPeriod}");
+        StateHasChanged();
+    }
+
+}

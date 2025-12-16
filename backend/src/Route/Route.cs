@@ -3,7 +3,6 @@ public class Routes
 {
     public static void Map(WebApplication app)
     {
-
         app.MapGroup("/api").DisableAntiforgery()
         .WithTags("Public endpoints")
         .MapUserEndPoint()
@@ -19,6 +18,8 @@ public class Routes
         .MapInventoryEndPoint()
         .MapCartEndPoint()
         .MapCartItemEndPoint()
+        .MapStatisticEndPoint()
         .MapHistoryEndPoint();
+        
     }
 }

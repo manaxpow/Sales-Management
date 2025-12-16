@@ -1,0 +1,451 @@
+@page "/admin"
+@using blazor_web.Components.UI.Dashboard
+@inject IStatisticService StatisticService
+@inject IJSRuntime JS
+@rendermode InteractiveServer
+
+<PageTitle>Dashboard</PageTitle>
+
+<div class="container-fluid py-4 px-4">
+<!-- Header Section -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="mb-1">Dashboard</h3>
+        <p class="text-muted mb-0">Tổng quan hệ thống quản lý bán hàng</p>
+    </div>
+    <div class="text-end">
+        <small class="text-muted">Cập nhật lần cuối: @DateTime.Now.ToString("dd/MM/yyyy HH:mm")</small>
+    </div>
+</div>
+
+<!-- Summary Cards Row -->
+<div class="row g-3 mb-4">
+    <!-- Total Revenue Card -->
+    <div class="col-xl-3 col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h6 class="text-muted mb-2">Tổng Doanh Thu</h6>
+                        <h4 class="mb-0 text-primary">@FormatCurrency(_revenueSTA?.TotalRevenue ?? 0)</h4>
+                        <small class="text-success">
+                            <i class="bi bi-arrow-up"></i> Trung bình: @FormatCurrency(_revenueSTA?.AverageRevenue ?? 0)
+                        </small>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <div class="bg-primary bg-opacity-10 rounded-3 p-3">
+                            <i class="bi bi-currency-dollar text-primary fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total Orders Card -->
+    <div class="col-xl-3 col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h6 class="text-muted mb-2">Tổng Đơn Hàng</h6>
+                        <h4 class="mb-0 text-info @StatusTextColor">
+                            @if (isLoadingOrders)
+                            {
+                                <div class="spinner-border spinner-border-sm me-2" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            }
+                            @(_orderSTA?.TotalOrders ?? 0)
+                        </h4>
+                        <small class="text-muted d-flex align-items-center gap-1">
+                            <i class="bi bi-bag"></i>
+                            Trạng thái:
+                            <select class="form-select form-select-sm select-like-text @(isLoadingOrders ? "disabled" : "") @StatusTextColor"
+                                    style="width: auto; display: inline-block;"
+                                    @bind="SelectedOrderStatus">
+                                <option value="all">Tất cả</option>
+                                <option value="pending">Chờ xử lý</option>
+                                <option value="completed">Hoàn thành</option>
+                                <option value="cancelled">Đã hủy</option>
+                            </select>
+                            @if (isLoadingOrders)
+                            {
+                                <span class="ms-2 small text-muted">Đang tải...</span>
+                            }
+                        </small>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <div class="bg-info bg-opacity-10 rounded-3 p-3">
+                            <i class="bi bi-bag-check text-info fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total Customers Card -->
+    <div class="col-xl-3 col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h6 class="text-muted mb-2">Khách Hàng</h6>
+                        <h4 class="mb-0 text-success">@GetTotalCustomers()</h4>
+                        <small class="text-muted">
+                            <i class="bi bi-people"></i> Khách hàng tích cực
+                        </small>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <div class="bg-success bg-opacity-10 rounded-3 p-3">
+                            <i class="bi bi-people-fill text-success fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total Products Card -->
+    <div class="col-xl-3 col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h6 class="text-muted mb-2">Sản Phẩm</h6>
+                        <h4 class="mb-0 text-warning">@GetTotalProducts()</h4>
+                        <small class="text-muted">
+                            <i class="bi bi-box"></i> Tổng số sản phẩm
+                        </small>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <div class="bg-warning bg-opacity-10 rounded-3 p-3">
+                            <i class="bi bi-box-seam text-warning fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-8">
+        <RevenueChart/>
+    </div>
+    <div class="col-lg-4">
+        <!-- Customer Statistics Card -->
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 pt-4 pb-3">
+                <h6 class="mb-0">
+                    <i class="bi bi-people text-primary me-2"></i>
+                    Thống Kê Khách Hàng
+                </h6>
+            </div>
+            <div class="card-body">
+                @if (_customerSTA?.ByWeek?.Any() == true)
+                {
+                    <div class="mb-3">
+                        <small class="text-muted">Theo tuần</small>
+                        <div class="d-flex justify-content-between align-items-center mt-1">
+                            <span>Tuần gần nhất</span>
+                            <span class="badge bg-primary rounded-pill">@_customerSTA.ByWeek.LastOrDefault()?.Count</span>
+                        </div>
+                    </div>
+                }
+
+                @if (_customerSTA?.ByMonth?.Any() == true)
+                {
+                    <div class="mb-3">
+                        <small class="text-muted">Theo tháng</small>
+                        <div class="d-flex justify-content-between align-items-center mt-1">
+                            <span>Tháng này</span>
+                            <span class="badge bg-info rounded-pill">@_customerSTA.ByMonth.LastOrDefault()?.Count</span>
+                        </div>
+                    </div>
+                }
+
+                @if (_customerSTA?.ByYear?.Any() == true)
+                {
+                    <div class="mb-3">
+                        <small class="text-muted">Theo năm</small>
+                        <div class="d-flex justify-content-between align-items-center mt-1">
+                            <span>Tổng năm nay</span>
+                            <span class="badge bg-success rounded-pill">@_customerSTA.ByYear.Sum(x => x.Count)</span>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Order Status Filter and Charts Row -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 pt-4 pb-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">
+                        <i class="bi bi-bar-chart text-info me-2"></i>
+                        Thống Kê Đơn Hàng
+                    </h6>
+
+                </div>
+            </div>
+            <div class="card-body @(isLoadingOrders ? "opacity-50" : "")">
+                <OrdersChart _status=GetStatusEnumValue(SelectedOrderStatus)/>
+                @if (isLoadingOrders)
+                {
+                    <div class="text-center py-3">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Đang tải dữ liệu đơn hàng...</span>
+                        </div>
+                        <p class="mt-2 text-muted">Đang tải dữ liệu đơn hàng...</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Category and Supplier Statistics Row -->
+<div class="row g-3">
+    <!-- Product by Category -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 pt-4 pb-3">
+                <h6 class="mb-0">
+                    <i class="bi bi-tags text-warning me-2"></i>
+                    Sản Phẩm Theo Danh Mục
+                </h6>
+            </div>
+            <div class="card-body">
+                @if (_productOfCateSTA?.Data?.Any() == true)
+                {
+                    <div class="row g-2">
+                        @foreach (var category in _productOfCateSTA.Data.Take(6))
+                        {
+                            <div class="col-6">
+                                <div class="d-flex justify-content-between align-items-center p-2 bg-light rounded">
+                                    <small class="text-truncate">@category.ItemName</small>
+                                    <span class="badge bg-warning text-dark">@category.TotalItem</span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    @if (_productOfCateSTA.Data.Count > 6)
+                    {
+                        <div class="text-center mt-3">
+                            <small class="text-muted">Còn @(_productOfCateSTA.Data.Count - 6) danh mục khác</small>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center py-3">
+                        <small class="text-muted">Không có dữ liệu</small>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Product by Supplier -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 pt-4 pb-3">
+                <h6 class="mb-0">
+                    <i class="bi bi-truck text-success me-2"></i>
+                    Sản Phẩm Theo Nhà Cung Cấp
+                </h6>
+            </div>
+            <div class="card-body">
+                @if (_productOfSupSTA?.Data?.Any() == true)
+                {
+                    <div class="row g-2">
+                        @foreach (var supplier in _productOfSupSTA.Data.Take(6))
+                        {
+                            <div class="col-6">
+                                <div class="d-flex justify-content-between align-items-center p-2 bg-light rounded">
+                                    <small class="text-truncate">@supplier.ItemName</small>
+                                    <span class="badge bg-success">@supplier.TotalItem</span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    @if (_productOfSupSTA.Data.Count > 6)
+                    {
+                        <div class="text-center mt-3">
+                            <small class="text-muted">Còn @(_productOfSupSTA.Data.Count - 6) nhà cung cấp khác</small>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center py-3">
+                        <small class="text-muted">Không có dữ liệu</small>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+@code {
+    private GetStatisticProduct _productOfSupSTA = new();
+    private GetStatisticProduct _productOfCateSTA = new();
+    private StatisticCustomerResponse _customerSTA = new();
+    private StatisticRevenuelResponse _revenueSTA = new();
+    private StatisticOrderResponse _orderSTA = new();
+    private string selectedOrderStatus = "all";
+    private bool isLoadingOrders = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadStatisticsData();
+    }
+
+    private async Task LoadStatisticsData()
+    {
+        try
+        {
+            // Load all statistics in parallel
+            var tasks = new[]
+            {
+                LoadProductStatistics(),
+                LoadCustomerStatistics(),
+                LoadRevenueStatistics(),
+                LoadOrderStatistics()
+            };
+
+            await Task.WhenAll(tasks);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading statistics: {ex.Message}");
+        }
+    }
+
+    private string SelectedOrderStatus
+    {
+        get => selectedOrderStatus;
+        set
+        {
+            if (selectedOrderStatus != value)
+            {
+                selectedOrderStatus = Enum.GetName(typeof(StatusOrder), GetStatusEnumValue(value));
+                _ = LoadOrderStatisticsWithStatus();
+                Console.WriteLine($"Order status changed to: {selectedOrderStatus}");
+            }
+        }
+    }
+
+    private async Task LoadOrderStatisticsWithStatus()
+    {
+        isLoadingOrders = true;
+        StateHasChanged();
+
+        try
+        {
+            await LoadOrderStatistics();
+        }
+        finally
+        {
+            isLoadingOrders = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadProductStatistics()
+    {
+        // Get product statistic by supplier
+        var supResponse = await StatisticService.GetStatisticProduct("supplier");
+        _productOfSupSTA = supResponse?.Data ?? new();
+
+        // Get product statistic by category
+        var cateResponse = await StatisticService.GetStatisticProduct("category");
+        _productOfCateSTA = cateResponse?.Data ?? new();
+    }
+
+    private async Task LoadCustomerStatistics()
+    {
+        // Get customer statistic
+        var cusSTAResponse = await StatisticService.GetStatisticCustomer();
+        _customerSTA = cusSTAResponse?.Data ?? new();
+    }
+
+    private async Task LoadRevenueStatistics()
+    {
+        // Get revenue statistic
+        var req = new StatisticRequest
+        {
+            StartDate = "2020/01/01",
+            EndDate = "2025/12/31",
+        };
+        var revenueResponse = await StatisticService.GetStatisticRevenue(req);
+        _revenueSTA = revenueResponse?.Data ?? new();
+    }
+
+    private async Task LoadOrderStatistics()
+    {
+        // Get order statistic with status filter
+        var req = new StatisticRequest
+        {
+            StartDate = "2020/01/01",
+            EndDate = "2025/12/31",
+            Status = selectedOrderStatus == "all" ? null : (int?)GetStatusEnumValue(selectedOrderStatus)
+        };
+        Console.WriteLine($"Loading order statistics with status: {selectedOrderStatus}");
+        var orderResponse = await StatisticService.GetStatisticOrder(req);
+        _orderSTA = orderResponse?.Data ?? new();
+    }
+
+    private int GetStatusEnumValue(string status)
+    {
+        return status switch
+        {
+            "all" => (int)StatusOrder.all,
+            "pending" => (int)StatusOrder.pending,
+            "completed" => (int)StatusOrder.completed,
+            "cancelled" => (int)StatusOrder.cancelled,
+            _ => (int)StatusOrder.completed
+        };
+    }
+
+    private string FormatCurrency(decimal amount)
+    {
+        return amount.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("vi-VN")) + "₫";
+    }
+
+    private int GetTotalCustomers()
+    {
+        return _customerSTA?.ByYear?.Sum(x => x.Count) ?? 0;
+    }
+
+    private int GetTotalProducts()
+    {
+        return _productOfCateSTA?.Data?.Sum(x => x.TotalItem) ?? 0;
+    }
+
+    private enum StatusOrder
+    {
+        all = -1,
+        pending = 0,
+        completed = 1,
+        cancelled = 2
+    }
+
+    private string StatusTextColor => selectedOrderStatus switch
+    {
+        "all" => "text-secondary",
+        "pending" => "text-warning",
+        "completed" => "text-success",
+        "cancelled" => "text-danger",
+        _ => "text-secondary"
+    };
+
+}

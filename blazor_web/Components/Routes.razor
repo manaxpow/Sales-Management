@@ -1,8 +1,13 @@
-﻿<Router AppAssembly="typeof(Program).Assembly">
-    <Found Context="routeData">
-        <CascadingAuthenticationState>
-            <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.Main.MainLayout)" />
-            <FocusOnNavigate RouteData="routeData" Selector="h1" />
-        </CascadingAuthenticationState>
-    </Found>
-</Router>
+﻿@using blazor_web.Components.Pages
+<CascadingAuthenticationState>
+    <Router AppAssembly="@typeof(Program).Assembly">
+        <Found Context="routeData">
+            <AuthorizeRouteView RouteData="@routeData"
+                                DefaultLayout="@typeof(Layout.Main.MainLayout)">
+                <NotAuthorized>
+                    <RedirectToLogin/>
+                </NotAuthorized>
+            </AuthorizeRouteView>
+        </Found>
+    </Router>
+</CascadingAuthenticationState>

@@ -1,14 +1,18 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-public class CartItemService : ICartItemService {
+public class CartItemService : ICartItemService
+{
     private readonly AppDbContext _db;
     public CartItemService(AppDbContext db) => _db = db;
 
-    public async Task<ApiResponse<IEnumerable<CartItemResponse>>> GetAll(int? cartId) {
+    public async Task<ApiResponse<IEnumerable<CartItemResponse>>> GetAll(int? cartId)
+    {
         var q = _db.CartItems.AsQueryable();
         if (cartId.HasValue) q = q.Where(i => i.CartId == cartId.Value);
+        q.Include(i => i.Product);
 
-        var list = await q.OrderBy(i => i.CartItemId).Select(i => new CartItemResponse {
+        var list = await q.OrderBy(i => i.CartItemId).Select(i => new CartItemResponse
+        {
             CartItemId = i.CartItemId,
             CartId = i.CartId,
             ProductId = i.ProductId,
@@ -19,17 +23,19 @@ public class CartItemService : ICartItemService {
             Subtotal = i.Subtotal,
             CreatedAt = i.CreatedAt,
             UpdatedAt = i.UpdatedAt,
-
+            quantityRemain = i.Product.Inventory!.Quantity
         }).ToListAsync();
 
         return new ApiResponse<IEnumerable<CartItemResponse>>().SuccessResponse(list, "Fetched cart items");
     }
 
-    public async Task<ApiResponse<CartItemResponse>> GetById(int id) {
+    public async Task<ApiResponse<CartItemResponse>> GetById(int id)
+    {
         var i = await _db.CartItems.FindAsync(id);
         if (i == null) return new ApiResponse<CartItemResponse>().ErrorResponse("Cart item not found", 404);
 
-        var resp = new CartItemResponse {
+        var resp = new CartItemResponse
+        {
             CartItemId = i.CartItemId,
             CartId = i.CartId,
             ProductId = i.ProductId,
@@ -45,24 +51,30 @@ public class CartItemService : ICartItemService {
         return new ApiResponse<CartItemResponse>().SuccessResponse(resp);
     }
 
-    public async Task<ApiResponse<CartItemResponse>> Create(CartItemRequest req) {
+    public async Task<ApiResponse<CartItemResponse>> Create(CartItemRequest req)
+    {
         var cart = await _db.Carts.FindAsync(req.CartId);
         if (cart == null) return new ApiResponse<CartItemResponse>().ErrorResponse("Cart not found", 404);
         if (cart.Status != "active") return new ApiResponse<CartItemResponse>().ErrorResponse("Cart not active", 400);
 
         // Fill product info if productId exists
-        if (req.ProductId.HasValue && string.IsNullOrEmpty(req.ProductName)) {
+        if (req.ProductId.HasValue && string.IsNullOrEmpty(req.ProductName))
+        {
             var product = await _db.Products.FindAsync(req.ProductId.Value);
             if (product != null) req.ProductName = product.ProductName;
         }
 
         // Prevent duplicate product in cart (unique constraint)
-        if (req.ProductId.HasValue) {
+        if (req.ProductId.HasValue)
+        {
             var exist = await _db.CartItems.AnyAsync(x => x.CartId == req.CartId && x.ProductId == req.ProductId.Value);
-            if (exist) return new ApiResponse<CartItemResponse>().ErrorResponse("Product already in cart. Use update to change quantity", 400);
+            if (exist)
+                return new ApiResponse<CartItemResponse>().ErrorResponse(
+                    "Product already in cart. Use update to change quantity", 400);
         }
 
-        var entity = new CartItem {
+        var entity = new CartItem
+        {
             CartId = req.CartId!.Value,
             ProductId = req.ProductId,
             ProductName = req.ProductName ?? string.Empty,
@@ -79,7 +91,8 @@ public class CartItemService : ICartItemService {
 
         await RecalculateCartTotals(entity.CartId);
 
-        var resp = new CartItemResponse {
+        var resp = new CartItemResponse
+        {
             CartItemId = entity.CartItemId,
             CartId = entity.CartId,
             ProductId = entity.ProductId,
@@ -95,7 +108,8 @@ public class CartItemService : ICartItemService {
         return new ApiResponse<CartItemResponse>().SuccessResponse(resp, "Created cart item", 201);
     }
 
-    public async Task<ApiResponse<CartItemResponse>> Update(int id, CartItemRequest req) {
+    public async Task<ApiResponse<CartItemResponse>> Update(int id, CartItemRequest req)
+    {
         var entity = await _db.CartItems.FindAsync(id);
         if (entity == null) return new ApiResponse<CartItemResponse>().ErrorResponse("Cart item not found", 404);
 
@@ -111,7 +125,8 @@ public class CartItemService : ICartItemService {
         await _db.SaveChangesAsync();
         await RecalculateCartTotals(entity.CartId);
 
-        var resp = new CartItemResponse {
+        var resp = new CartItemResponse
+        {
             CartItemId = entity.CartItemId,
             CartId = entity.CartId,
             ProductId = entity.ProductId,
@@ -127,7 +142,8 @@ public class CartItemService : ICartItemService {
         return new ApiResponse<CartItemResponse>().SuccessResponse(resp, "Updated cart item");
     }
 
-    public async Task<ApiResponse<string>> Delete(int id) {
+    public async Task<ApiResponse<string>> Delete(int id)
+    {
         var entity = await _db.CartItems.FindAsync(id);
         if (entity == null) return new ApiResponse<string>().ErrorResponse("Cart item not found", 404);
 
@@ -140,7 +156,8 @@ public class CartItemService : ICartItemService {
         return new ApiResponse<string>().SuccessResponse("Deleted cart item");
     }
 
-    private async Task RecalculateCartTotals(int cartId) {
+    private async Task RecalculateCartTotals(int cartId)
+    {
         var cart = await _db.Carts.Include(c => c.Items).FirstOrDefaultAsync(c => c.CartId == cartId);
         if (cart == null) return;
 

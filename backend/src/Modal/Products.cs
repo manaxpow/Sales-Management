@@ -11,23 +11,30 @@ using System.ComponentModel.DataAnnotations;
 
 public class Products
 {
-    public Products() { }
-    [Key]
-    public int ProductId { get; set; }
+    public Products()
+    {
+    }
+
+    [Key] public int ProductId { get; set; }
     public int SupplierId { get; set; }
     public int CategoryId { get; set; }
     public string ProductName { get; set; } = string.Empty;
     public string Barcode { get; set; } = string.Empty;
     public decimal Price { get; set; }
+
     public string Unit { get; set; } = "pcs";
+
     // 1 active 2 inactive 3 delete
     public int Status { get; set; } = 1;
 
     public string? ImageProduct { get; set; } = "/images/defaultImg.png";
+
     // references key
     public Categories? Category { get; set; }
     public Suppliers? Supplier { get; set; }
     public Inventory? Inventory { get; set; }
+
+    public ICollection<CartItem> CartItems { get; set; } = new List<CartItem>();
 
     public DateTime CreatedAt { get; set; }
 }

@@ -48,3 +48,21 @@ input:focus, textarea:focus, select:focus {
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 /* snackboard */
+.select-like-text {
+    border: none;
+    background: transparent;
+    padding: 0;
+    margin-left: 4px;
+    width: auto;
+    display: inline-block;
+    font-size: 0.875rem; /* giống <small> */
+    color: #6c757d;
+    appearance: none;          /* remove arrow */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+}
+
+.select-like-text:focus {
+    outline: none;
+    box-shadow: none;
+}

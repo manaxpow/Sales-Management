@@ -13,8 +13,9 @@ public static class ServiceExtensions
     public static void AddApplicationServices(this IHostApplicationBuilder builder)
     {
         if (builder == null) throw new ArgumentNullException(nameof(builder));
-        if (builder.Configuration == null) throw new ArgumentNullException(nameof
-        (builder.Configuration));
+        if (builder.Configuration == null)
+            throw new ArgumentNullException(nameof
+                (builder.Configuration));
         var secretKey = Environment.GetEnvironmentVariable("SECRET_KEY");
         if (string.IsNullOrEmpty(secretKey))
             throw new InvalidOperationException("SECRET_KEY environment variable is not set.");
@@ -45,7 +46,9 @@ public static class ServiceExtensions
         builder.Services.AddScoped<IInventoryService, InventoryService>();
         builder.Services.AddScoped<ICartService, CartService>();
         builder.Services.AddScoped<ICartItemService, CartItemService>();
+        builder.Services.AddScoped<IStatisticService, StatisticService>();
         builder.Services.AddScoped<IHistoryService, HistoryService>();
+
 
         // global error handler
         builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
@@ -55,19 +58,18 @@ public static class ServiceExtensions
         builder.Services.AddAuthorization();
         builder.Services.AddAuthentication();
         builder.Services.AddAuthentication("Bearer")
-
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = Environment.GetEnvironmentVariable("ASPNETCORE_URLS"),
-            ValidAudience = Environment.GetEnvironmentVariable("FRONTEND_URL"),
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
-        };
-    });
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = Environment.GetEnvironmentVariable("ASPNETCORE_URLS"),
+                    ValidAudience = Environment.GetEnvironmentVariable("FRONTEND_URL"),
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
+                };
+            });
     }
 }
