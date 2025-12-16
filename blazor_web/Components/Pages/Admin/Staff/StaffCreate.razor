@@ -4,8 +4,9 @@
 @* Inject Service User với đường dẫn đầy đủ để tránh xung đột *@
 @inject blazor_web.Services.User.IUserService UserService
 @inject NavigationManager NavManager
+<ProtectedRoute RequiredRoles="admin"/>
 
-@rendermode InteractiveServer
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
 
 <h3>Thêm mới Nhân viên</h3>
 
@@ -22,28 +23,28 @@
 
         @* Sử dụng Model Users trực tiếp vì Service của bạn nhận vào Entity Users *@
         <EditForm Model="@user" OnValidSubmit="HandleSubmit">
-            <DataAnnotationsValidator />
-            
+            <DataAnnotationsValidator/>
+
             @* Tên đăng nhập *@
             <div class="mb-3">
                 <label class="form-label">Tên đăng nhập <span class="text-danger">*</span></label>
-                <InputText class="form-control" @bind-Value="user.UserName" />
-                <ValidationMessage For="@(() => user.UserName)" class="text-danger" />
+                <InputText class="form-control" @bind-Value="user.UserName"/>
+                <ValidationMessage For="@(() => user.UserName)" class="text-danger"/>
             </div>
 
             @* Mật khẩu *@
             <div class="mb-3">
                 <label class="form-label">Mật khẩu <span class="text-danger">*</span></label>
                 @* type="password" để ẩn ký tự *@
-                <InputText type="password" class="form-control" @bind-Value="user.Password" />
-                <ValidationMessage For="@(() => user.Password)" class="text-danger" />
+                <InputText type="password" class="form-control" @bind-Value="user.Password"/>
+                <ValidationMessage For="@(() => user.Password)" class="text-danger"/>
             </div>
 
             @* Họ và tên *@
             <div class="mb-3">
                 <label class="form-label">Họ tên <span class="text-danger">*</span></label>
-                <InputText class="form-control" @bind-Value="user.FullName" />
-                <ValidationMessage For="@(() => user.FullName)" class="text-danger" />
+                <InputText class="form-control" @bind-Value="user.FullName"/>
+                <ValidationMessage For="@(() => user.FullName)" class="text-danger"/>
             </div>
 
             @* Vai trò (Dropdown) *@
@@ -52,7 +53,7 @@
                 <InputSelect class="form-select" @bind-Value="user.Role">
                     <option value="Staff">Nhân viên (Staff)</option>
                 </InputSelect>
-                <ValidationMessage For="@(() => user.Role)" class="text-danger" />
+                <ValidationMessage For="@(() => user.Role)" class="text-danger"/>
             </div>
 
             <div class="mt-4">
@@ -74,11 +75,12 @@
 </div>
 
 @code {
+
     private CreateUserRequest user = new CreateUserRequest
     {
         Role = "Staff"
     };
-    
+
     private string? errorMessage;
     private bool isSubmitting = false;
 
@@ -87,7 +89,7 @@
         try
         {
             isSubmitting = true;
-            errorMessage = null; 
+            errorMessage = null;
 
             // Gọi API tạo User
             var response = await UserService.CreateUserAsync(user);
@@ -111,4 +113,5 @@
             isSubmitting = false;
         }
     }
+
 }

@@ -82,7 +82,7 @@
                                             </svg>
                                         </button>
                                         <span class="w-12 text-center font-semibold text-gray-900 ">@item.Quantity</span>
-                                        <button disabled="@(_canIncrease)" @onclick="() => IncreaseQuantityAsync(item)"
+                                        <button disabled="@(!_canIncrease)" @onclick="() => IncreaseQuantityAsync(item)"
                                                 class="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-700 flex items-center justify-center transition-all duration-200      disabled:bg-gray-100
                                                 disabled:text-gray-400">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -337,9 +337,11 @@
 
     private async Task IncreaseQuantityAsync(CartItemResponse item)
     {
-        if (item.Quantity <= item.QuantityRemain)
+        if (item.Quantity < item.QuantityRemain)
             item.Quantity++;
+        
         else
+
         {
             _canIncrease = false;
             _snackBoard.Show("Không thể tăng số lượng. Đã đạt giới hạn tồn kho.", "warning");

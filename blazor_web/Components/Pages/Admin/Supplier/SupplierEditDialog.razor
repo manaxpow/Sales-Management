@@ -1,6 +1,8 @@
 @page "/admin/suppliers/edit/{SupplierId:int}"
+<ProtectedRoute RequiredRoles="admin"/>
+
 @layout AdminLayout
-@rendermode InteractiveServer
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
 
 @using blazor_web.DTOs.Supplier
 @using blazor_web.Services.Supplier

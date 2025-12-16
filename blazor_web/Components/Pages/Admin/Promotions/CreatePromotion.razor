@@ -1,12 +1,12 @@
 @page "/admin/promotions/create"
+<ProtectedRoute RequiredRoles="admin"/>
 
 @inject IPromotionService promotionService
 @using System.ComponentModel.DataAnnotations
 
 @using blazor_web.Models;
 @inject NavigationManager NavManager
-
-@rendermode InteractiveServer
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
 <div class="d-flex justify-content-center">
     <div class="card shadow-lg create-form w-full">
         <div class="card-body p-4">

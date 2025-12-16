@@ -1,8 +1,17 @@
 @inject NavigationManager Nav
+@inject NavigationManager NavigationManager
 
 @code {
+    [Parameter]
+    public string? ReturnUrl { get; set; }
+
     protected override void OnInitialized()
     {
-        Nav.NavigateTo("/login", true);
+        var currentUrl = ReturnUrl ?? NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        var loginUrl = string.IsNullOrEmpty(currentUrl) || currentUrl == "/" 
+            ? "/auth/login" 
+            : $"/auth/login?returnUrl={Uri.EscapeDataString(currentUrl)}";
+        
+        Nav.NavigateTo(loginUrl, true);
     }
 }

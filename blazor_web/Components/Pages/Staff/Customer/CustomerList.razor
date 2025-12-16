@@ -3,8 +3,8 @@
 @using blazor_web.Models
 @* QUAN TRỌNG: Dùng đường dẫn đầy đủ để tránh xung đột *@
 @inject blazor_web.Services.Customer.ICustomerService CustomerService
-@rendermode InteractiveServer
-
+<ProtectedRoute RequiredRoles="staff"/>
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
 <h3>Quản lý Customer (Staff)</h3>
 
 <div class="d-flex justify-content-between mb-3 align-items-center">

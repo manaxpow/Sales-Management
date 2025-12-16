@@ -1,4 +1,6 @@
 @page "/admin/inventory"
+<ProtectedRoute RequiredRoles="admin"/>
+
 @using blazor_web.Models
 @using blazor_web.Services.Inventory
 @using blazor_web.DTOs.Inventory
@@ -18,14 +20,21 @@
     @if (!string.IsNullOrEmpty(Message))
     {
         <div class="alert @(IsSuccess ? "alert-success" : "alert-danger") alert-dismissible fade show shadow-sm mb-3">
-            @if(IsSuccess) { <i class="bi bi-check-circle-fill me-2"></i> } else { <i class="bi bi-exclamation-triangle-fill me-2"></i> }
+            @if (IsSuccess)
+            {
+                <i class="bi bi-check-circle-fill me-2"></i>
+            }
+            else
+            {
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            }
             @Message
             <button type="button" class="btn-close" @onclick="() => Message = null"></button>
         </div>
     }
 
     @* Filter *@
-    <InventoryFilter OnFilterChanged="HandleFilterChanged" @ref="filterComponent" />
+    <InventoryFilter OnFilterChanged="HandleFilterChanged" @ref="filterComponent"/>
 
     @* Loading hoặc Bảng *@
     @if (isLoading)
@@ -43,7 +52,7 @@
                         TotalCount="totalCount"
                         OnPageChanged="HandlePageChanged"
                         OnPageSizeChanged="HandlePageSizeChanged"
-                        OnUpdate="OpenUpdateDialog" />
+                        OnUpdate="OpenUpdateDialog"/>
     }
 </div>
 
@@ -51,9 +60,10 @@
 <UpdateInventoryDialog Open="showUpdateDialog"
                        Product="updatingProduct"
                        OnClose="() => showUpdateDialog = false"
-                       OnSave="HandleUpdateQuantity" />
+                       OnSave="HandleUpdateQuantity"/>
 
 @code {
+
     // Data
     private List<ProductInventory> inventoryItems = new();
     private int totalCount = 0;
@@ -179,12 +189,13 @@
         Message = msg;
         IsSuccess = success;
         StateHasChanged();
-        
+
         // Auto hide after 3 seconds
-        _ = Task.Delay(3000).ContinueWith(_ => 
+        _ = Task.Delay(3000).ContinueWith(_ =>
         {
             Message = null;
             InvokeAsync(StateHasChanged);
         });
     }
+
 }

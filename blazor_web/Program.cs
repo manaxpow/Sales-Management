@@ -11,6 +11,7 @@ using blazor_web.Services.User;
 using blazor_web.Services.Inventory;
 using blazor_web.Services.Payment;
 using blazor_web.Services.History;
+using Microsoft.AspNetCore.Components.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -57,6 +58,10 @@ builder.Services.AddScoped<IHistoryService, HistoryService>();
 
 builder.Services.AddScoped<IStatisticService, StatisticService>();
 builder.Services.AddBlazoredToast();
+
+// Add Authentication services
+builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
+builder.Services.AddAuthorizationCore();
 
 var app = builder.Build();
 

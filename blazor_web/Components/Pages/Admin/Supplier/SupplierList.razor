@@ -1,6 +1,8 @@
 @page "/admin/suppliers"
+<ProtectedRoute RequiredRoles="admin"/>
+
 @layout AdminLayout
-@rendermode InteractiveServer
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
 
 @using blazor_web.Models
 @using blazor_web.DTOs.Supplier
@@ -21,12 +23,12 @@
 
             <div class="input-group input-group-sm w-auto">
                 <input type="text" placeholder="Tìm kiếm" @bind="searchTerm" @bind:event="oninput" class="form-control"
-                    style="width: 200px;" />
+                       style="width: 200px;"/>
 
                 @if (!string.IsNullOrEmpty(searchTerm))
                 {
                     <button @onclick="() => SetSearchTerm(string.Empty)" class="btn btn-outline-secondary"
-                        title="Xóa tìm kiếm">
+                            title="Xóa tìm kiếm">
                         &times;
                     </button>
                 }
@@ -34,9 +36,9 @@
 
             <button @onclick="HandleCreate" class="btn btn-primary rounded-2 d-flex align-items-center gap-1 shadow-sm">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M5 12h14" />
-                    <path d="M12 5v14" />
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M5 12h14"/>
+                    <path d="M12 5v14"/>
                 </svg>
                 <span>Thêm mới</span>
             </button>
@@ -48,88 +50,88 @@
             <div class="table-responsive">
                 <table class="table table-hover table-striped table-borderless mb-0">
                     <thead class="table-light">
-                        <tr class="text-secondary">
-                            <th scope="col" class="py-3 px-4">ID</th>
-                            <th scope="col" class="py-3 px-4">Tên nhà cung cấp</th>
-                            <th scope="col" class="py-3 px-4">Số điện thoại</th>
-                            <th scope="col" class="py-3 px-4">Email</th>
-                            <th scope="col" class="py-3 px-4">Địa chỉ</th>
-                            <th scope="col" class="py-3 px-4 text-center">Hành động</th>
-                        </tr>
+                    <tr class="text-secondary">
+                        <th scope="col" class="py-3 px-4">ID</th>
+                        <th scope="col" class="py-3 px-4">Tên nhà cung cấp</th>
+                        <th scope="col" class="py-3 px-4">Số điện thoại</th>
+                        <th scope="col" class="py-3 px-4">Email</th>
+                        <th scope="col" class="py-3 px-4">Địa chỉ</th>
+                        <th scope="col" class="py-3 px-4 text-center">Hành động</th>
+                    </tr>
                     </thead>
                     <tbody>
-                        @if (isLoading)
+                    @if (isLoading)
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <div class="d-flex justify-content-center align-items-center gap-2">
+                                    <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                                    Đang tải dữ liệu...
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    else if (currentSuppliers.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                Không có dữ liệu nhà cung cấp.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var supplier in currentSuppliers)
                         {
-                            <tr>
-                                <td colspan="6" class="text-center py-5 text-muted">
-                                    <div class="d-flex justify-content-center align-items-center gap-2">
-                                        <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
-                                        Đang tải dữ liệu...
+                            var isChecking = checkingSupplierId == supplier.Id;
+                            <tr key="@supplier.Id" class="@(isChecking ? "opacity-50" : "")">
+                                <td class="py-3 px-4">@supplier.Id</td>
+                                <td class="py-3 px-4 fw-bold text-dark">@supplier.Name</td>
+                                <td class="py-3 px-4">@supplier.Phone</td>
+                                <td class="py-3 px-4">@supplier.Email</td>
+                                <td class="py-3 px-4">@supplier.Address</td>
+                                <td class="py-3 px-4 text-center">
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <button @onclick="() => HandleView(supplier)" class="btn btn-sm text-info border-0"
+                                                title="Xem chi tiết" disabled="@isChecking">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                                                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                                 stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+                                                <circle cx="12" cy="12" r="3"/>
+                                            </svg>
+                                        </button>
+                                        <button @onclick="() => HandleUpdate(supplier)"
+                                                class="btn btn-sm text-warning border-0" title="Chỉnh sửa"
+                                                disabled="@isChecking">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                                                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                                 stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                                            </svg>
+                                        </button>
+                                        <button @onclick="() => HandleDelete(supplier)"
+                                                class="btn btn-sm text-danger border-0" title="Xóa" disabled="@isChecking">
+                                            @if (isChecking)
+                                            {
+                                                <div class="spinner-border spinner-border-sm" role="status"></div>
+                                            }
+                                            else
+                                            {
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                                                     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                                     stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="M3 6h18"/>
+                                                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                                                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                                                </svg>
+                                            }
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
                         }
-                        else if (currentSuppliers.Count == 0)
-                        {
-                            <tr>
-                                <td colspan="6" class="text-center py-5 text-muted">
-                                    Không có dữ liệu nhà cung cấp.
-                                </td>
-                            </tr>
-                        }
-                        else
-                        {
-                            @foreach (var supplier in currentSuppliers)
-                            {
-                                var isChecking = checkingSupplierId == supplier.Id;
-                                <tr key="@supplier.Id" class="@(isChecking ? "opacity-50" : "")">
-                                    <td class="py-3 px-4">@supplier.Id</td>
-                                    <td class="py-3 px-4 fw-bold text-dark">@supplier.Name</td>
-                                    <td class="py-3 px-4">@supplier.Phone</td>
-                                    <td class="py-3 px-4">@supplier.Email</td>
-                                    <td class="py-3 px-4">@supplier.Address</td>
-                                    <td class="py-3 px-4 text-center">
-                                        <div class="d-flex justify-content-center gap-2">
-                                            <button @onclick="() => HandleView(supplier)" class="btn btn-sm text-info border-0"
-                                                title="Xem chi tiết" disabled="@isChecking">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
-                                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                                    stroke-linecap="round" stroke-linejoin="round">
-                                                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
-                                                    <circle cx="12" cy="12" r="3" />
-                                                </svg>
-                                            </button>
-                                            <button @onclick="() => HandleUpdate(supplier)"
-                                                class="btn btn-sm text-warning border-0" title="Chỉnh sửa"
-                                                disabled="@isChecking">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
-                                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                                    stroke-linecap="round" stroke-linejoin="round">
-                                                    <path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-                                                </svg>
-                                            </button>
-                                            <button @onclick="() => HandleDelete(supplier)"
-                                                class="btn btn-sm text-danger border-0" title="Xóa" disabled="@isChecking">
-                                                @if (isChecking)
-                                                {
-                                                    <div class="spinner-border spinner-border-sm" role="status"></div>
-                                                }
-                                                else
-                                                {
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
-                                                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                                        stroke-linecap="round" stroke-linejoin="round">
-                                                        <path d="M3 6h18" />
-                                                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                                                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                                                    </svg>
-                                                }
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            }
-                        }
+                    }
                     </tbody>
                 </table>
             </div>
@@ -140,15 +142,15 @@
     {
         <div class="mt-3 card card-body p-0">
             <SupplierPagination CurrentPage="@(page + 1)"
-                TotalPages="@((int)Math.Ceiling((double)filteredSuppliers.Count / rowsPerPage))"
-                TotalItems="@filteredSuppliers.Count" ItemsPerPage="@rowsPerPage" OnPageChanged="HandlePaginationChange"
-                OnItemsPerPageChanged="HandlePageSizeChange" />
+                                TotalPages="@((int)Math.Ceiling((double)filteredSuppliers.Count / rowsPerPage))"
+                                TotalItems="@filteredSuppliers.Count" ItemsPerPage="@rowsPerPage" OnPageChanged="HandlePaginationChange"
+                                OnItemsPerPageChanged="HandlePageSizeChange"/>
         </div>
     }
 </div>
 
-<SupplierDeleteDialog @ref="deleteDialog" OnDeleteSuccess="HandleDeleteSuccess" />
-<AlertModalDialog @ref="alertDialog" />
+<SupplierDeleteDialog @ref="deleteDialog" OnDeleteSuccess="HandleDeleteSuccess"/>
+<AlertModalDialog @ref="alertDialog"/>
 
 
 @code {
@@ -241,13 +243,13 @@
         {
             var search = searchTerm.ToLower();
             filteredSuppliers = suppliers
-            .Where(s =>
-            s.Name.ToLower().Contains(search) ||
-            s.Phone.ToLower().Contains(search) ||
-            s.Email.ToLower().Contains(search) ||
-            (s.Address != null && s.Address.ToLower().Contains(search))
-            )
-            .ToList();
+                .Where(s =>
+                    s.Name.ToLower().Contains(search) ||
+                    s.Phone.ToLower().Contains(search) ||
+                    s.Email.ToLower().Contains(search) ||
+                    (s.Address != null && s.Address.ToLower().Contains(search))
+                )
+                .ToList();
         }
 
         if (page * rowsPerPage >= filteredSuppliers.Count && page > 0)
@@ -303,14 +305,15 @@
         if (alertDialog != null)
         {
             alertDialog.Show(
-            title: "Thành công",
-            message: message,
-            type: "success" 
+                title: "Thành công",
+                message: message,
+                type: "success"
             );
         }
 
         await FetchSuppliers();
     }
+
     private async Task HandleDelete(SupplierResponse supplier)
     {
         if (checkingSupplierId.HasValue) return;
@@ -332,9 +335,9 @@
                     if (alertDialog != null)
                     {
                         alertDialog.Show(
-                        title: "Không thể xóa",
-                        message: message,
-                        type: "warning"
+                            title: "Không thể xóa",
+                            message: message,
+                            type: "warning"
                         );
                     }
                 }
@@ -352,10 +355,10 @@
                 if (alertDialog != null)
                 {
                     alertDialog.Show(
-                    title: "Lỗi kiểm tra",
-                    message: "Vui lòng thử lại sau.",
-                    type: "error",
-                    detail: message
+                        title: "Lỗi kiểm tra",
+                        message: "Vui lòng thử lại sau.",
+                        type: "error",
+                        detail: message
                     );
                 }
             }
@@ -365,10 +368,10 @@
             if (alertDialog != null)
             {
                 alertDialog.Show(
-                title: "Lỗi hệ thống",
-                message: "Đã xảy ra lỗi mạng. Vui lòng thử lại.",
-                type: "error",
-                detail: ex.Message
+                    title: "Lỗi hệ thống",
+                    message: "Đã xảy ra lỗi mạng. Vui lòng thử lại.",
+                    type: "error",
+                    detail: ex.Message
                 );
             }
         }
@@ -378,4 +381,5 @@
             StateHasChanged();
         }
     }
+
 }

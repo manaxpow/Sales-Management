@@ -1,8 +1,12 @@
 @page "/admin"
 @using blazor_web.Components.UI.Dashboard
+@using blazor_web.Components.Auth
 @inject IStatisticService StatisticService
 @inject IJSRuntime JS
-@rendermode InteractiveServer
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+
+<ProtectedRoute RequiredRoles="admin">
 
 <PageTitle>Dashboard</PageTitle>
 
@@ -449,3 +453,4 @@
     };
 
 }
+</ProtectedRoute>

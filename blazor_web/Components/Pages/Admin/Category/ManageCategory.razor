@@ -1,9 +1,8 @@
 @page "/admin/categories"
 @using blazor_web.Models
 @using blazor_web.Services.Category
-@using blazor_web.Components.Pages.Admin.Category
+<ProtectedRoute RequiredRoles="admin"/>
 
-@using Microsoft.AspNetCore.Components.Web
 
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
 
@@ -17,7 +16,14 @@
     @if (!string.IsNullOrEmpty(Message))
     {
         <div class="alert @(IsSuccess ? "alert-success" : "alert-danger") alert-dismissible fade show shadow-sm mb-3">
-            @if(IsSuccess) { <i class="bi bi-check-circle-fill me-2"></i> } else { <i class="bi bi-exclamation-triangle-fill me-2"></i> }
+            @if (IsSuccess)
+            {
+                <i class="bi bi-check-circle-fill me-2"></i>
+            }
+            else
+            {
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            }
             @Message
             <button type="button" class="btn-close" @onclick="() => Message = null"></button>
         </div>
@@ -34,11 +40,11 @@
     else
     {
         @* ĐÃ XÓA NÚT THÊM Ở ĐÂY ĐỂ TRÁNH BỊ TRÙNG *@
-        
+
         <CategoryTable Categories="categories"
                        OnAdd="OpenAdd"
                        OnEdit="OpenEdit"
-                       OnDelete="ConfirmDelete" />
+                       OnDelete="ConfirmDelete"/>
     }
 </div>
 
@@ -46,13 +52,13 @@
 <CategoryFormDialog Open="showForm"
                     Initial="editing"
                     OnClose="() => showForm = false"
-                    OnSave="SaveCategory" />
+                    OnSave="SaveCategory"/>
 
 @* Dialog Xóa *@
 <CategoryDeleteDialog Open="showDelete"
                       Name="@(deleting?.Name)"
                       OnClose="() => showDelete = false"
-                      OnConfirm="DeleteCategory" />
+                      OnConfirm="DeleteCategory"/>
 
 @code {
     private List<CategoryTable.CategoryDto> categories = new();
@@ -82,10 +88,10 @@
             var result = await CategoryService.GetAll();
             if (result.Success && result.Data != null)
             {
-                categories = result.Data.Select(x => new CategoryTable.CategoryDto 
-                { 
-                    Id = x.Id, 
-                    Name = x.Name 
+                categories = result.Data.Select(x => new CategoryTable.CategoryDto
+                {
+                    Id = x.Id,
+                    Name = x.Name
                 }).OrderBy(x => x.Id).ToList();
             }
             else
@@ -134,7 +140,7 @@
             {
                 var req = new CategoryCreateRequest { Name = data.Name };
                 var res = await CategoryService.Update(data.Id.Value, req);
-                
+
                 if (res.Success && res.Data != null)
                 {
                     var item = categories.FirstOrDefault(x => x.Id == data.Id);
@@ -147,7 +153,7 @@
             {
                 var req = new CategoryCreateRequest { Name = data.Name };
                 var res = await CategoryService.Create(req);
-                
+
                 if (res.Success && res.Data != null)
                 {
                     categories.Add(new CategoryTable.CategoryDto { Id = res.Data.Id, Name = res.Data.Name });
@@ -156,9 +162,13 @@
                 }
                 else ShowMessage(res.Message ?? "Lỗi thêm mới", false);
             }
+
             showForm = false;
         }
-        catch { ShowMessage("Lỗi kết nối", false); }
+        catch
+        {
+            ShowMessage("Lỗi kết nối", false);
+        }
     }
 
     // Xử lý Xóa
@@ -175,11 +185,14 @@
             }
             else ShowMessage(res.Message ?? "Không thể xóa", false);
         }
-        catch { ShowMessage("Lỗi kết nối", false); }
-        finally 
-        { 
-            showDelete = false; 
-            deleting = null; 
+        catch
+        {
+            ShowMessage("Lỗi kết nối", false);
+        }
+        finally
+        {
+            showDelete = false;
+            deleting = null;
         }
     }
 
@@ -188,6 +201,11 @@
         Message = msg;
         IsSuccess = success;
         StateHasChanged();
-        _ = Task.Delay(3000).ContinueWith(_ => { Message = null; InvokeAsync(StateHasChanged); });
+        _ = Task.Delay(3000).ContinueWith(_ =>
+        {
+            Message = null;
+            InvokeAsync(StateHasChanged);
+        });
     }
+
 }

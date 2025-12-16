@@ -10,8 +10,8 @@
 @inject IOrderService orderService
 @inject IProductService productService
 @inject ICustomerService customerService
-@rendermode InteractiveServer
-
+<ProtectedRoute RequiredRoles="staff"/>
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
 
 <PageTitle>Quản lý đơn hàng</PageTitle>
 

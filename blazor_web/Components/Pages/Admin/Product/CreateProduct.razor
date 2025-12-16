@@ -1,4 +1,6 @@
 @page "/admin/products/create"
+<ProtectedRoute RequiredRoles="admin"/>
+
 @using blazor_web.DTOs.Supplier
 @using blazor_web.Services.Category
 @inject NavigationManager Nav
@@ -8,7 +10,7 @@
 @using blazor_web.Models
 @using System.ComponentModel.DataAnnotations
 @using blazor_web.Services.Supplier
-@rendermode InteractiveServer
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
 
 <div class="d-flex justify-content-center">
     <div class="card shadow-lg create-form w-full">
