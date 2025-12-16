@@ -103,20 +103,16 @@
                                     @{
                                         var statusClass = order.Status switch
                                         {
-                                            1 => "bg-warning text-dark",
-                                            2 => "bg-info text-white",
-                                            3 => "bg-primary text-white",
-                                            4 => "bg-success text-white",
-                                            5 => "bg-danger text-white",
+                                            0 => "bg-warning text-dark",
+                                            1 => "bg-success text-white",
+                                            2 => "bg-danger text-white",
                                             _ => "bg-secondary text-white"
                                         };
                                         var statusText = order.Status switch
                                         {
-                                            1 => "Đang xử lý",
-                                            2 => "Đã xác nhận",
-                                            3 => "Đang giao hàng",
-                                            4 => "Đã giao hàng",
-                                            5 => "Đã hủy",
+                                            0 => "Đang xử lý",
+                                            1 => "Đã giao hàng",
+                                            2 => "Đã hủy",
                                             _ => "Không xác định"
                                         };
                                     }

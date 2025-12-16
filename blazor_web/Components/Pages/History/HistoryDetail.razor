@@ -68,20 +68,16 @@
                             @{
                                 var statusClass = orderDetail.Status switch
                                 {
-                                    1 => "bg-warning text-dark",
-                                    2 => "bg-info text-white",
-                                    3 => "bg-primary text-white",
-                                    4 => "bg-success text-white",
-                                    5 => "bg-danger text-white",
+                                    0 => "bg-warning text-dark",
+                                    1 => "bg-success text-white",
+                                    2 => "bg-danger text-white",
                                     _ => "bg-secondary text-white"
                                 };
                                 var statusText = orderDetail.Status switch
                                 {
-                                    1 => "Đang xử lý",
-                                    2 => "Đã xác nhận",
-                                    3 => "Đang giao hàng",
-                                    4 => "Đã giao hàng",
-                                    5 => "Đã hủy",
+                                    0 => "Đang xử lý",
+                                    1 => "Đã giao hàng",
+                                    2 => "Đã hủy",
                                     _ => "Không xác định"
                                 };
                             }
@@ -188,7 +184,7 @@
                 <button class="btn btn-primary me-2" @onclick="GoBack">
                     <i class="bi bi-arrow-left me-2"></i>Quay lại
                 </button>
-                @if (orderDetail.Status == 1 || orderDetail.Status == 2)
+                @if (orderDetail.Status == 0)
                 {
                     <button class="btn btn-danger" @onclick="CancelOrder">
                         <i class="bi bi-x-circle me-2"></i>Hủy đơn hàng
