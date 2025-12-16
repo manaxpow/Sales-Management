@@ -3,6 +3,7 @@
 @using System.ComponentModel.DataAnnotations
 @inject blazor_web.Services.Auth.IAuthService AuthService
 @inject blazor_web.Services.Storage.ILocalStorageService LocalStorageService
+@inject blazor_web.Services.Auth.CustomAuthenticationStateProvider AuthStateProvider
 @inject NavigationManager NavigationManager
 
 @rendermode InteractiveServer
@@ -216,6 +217,9 @@
                 // Store login information in localStorage
                 await LocalStorageService.SetLoginInfoAsync(result.Data);
                 Console.WriteLine($"Login info stored for user: {result.Data}");
+
+                // Update authentication state
+                await AuthStateProvider.MarkUserAsAuthenticated();
 
                 // Redirect to home page or dashboard
                 NavigationManager.NavigateTo("/", forceLoad: true);

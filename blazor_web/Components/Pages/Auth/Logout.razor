@@ -1,0 +1,16 @@
+@page "/logout"
+@using blazor_web.Services.Storage
+@using blazor_web.Services.Auth
+@inject ILocalStorageService LocalStorage
+@inject CustomAuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await LocalStorage.RemoveLoginInfoAsync();
+        AuthStateProvider.MarkUserAsLoggedOut();
+        Navigation.NavigateTo("/login", true);
+    }
+}

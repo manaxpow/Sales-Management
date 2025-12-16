@@ -1,8 +1,10 @@
 @using blazor_web.Services.Cart
+@using blazor_web.Services.Auth
 @rendermode InteractiveServer
 @inject ICartService CartService
 @inject NavigationManager Navigation
 @inject blazor_web.Services.Storage.ILocalStorageService LocalStorage
+@inject CustomAuthenticationStateProvider AuthStateProvider
 
 
 
@@ -182,6 +184,7 @@
     private async Task Logout()
     {
         await LocalStorage.RemoveLoginInfoAsync();
+        AuthStateProvider.MarkUserAsLoggedOut();
         Navigation.NavigateTo("/login", true);
     }
 }

@@ -1,3 +1,5 @@
 @using blazor_web.Components.Layout.Admin
 @using blazor_web.Services.Customer
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "admin")]
 @layout AdminLayout

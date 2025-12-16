@@ -1,2 +1,4 @@
 @using blazor_web.Components.Layout.Staff
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "staff,admin")]
 @layout StaffLayout
