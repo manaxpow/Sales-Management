@@ -3,12 +3,15 @@
 @using blazor_web.Services.History
 @using blazor_web.DTOs.History
 @using blazor_web.Services.Storage
+@using blazor_web.Services.Orders
+@using blazor_web.DTOs.Orders
 
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
 
 @inject IHistoryService HistoryService
 @inject NavigationManager Navigation
 @inject ILocalStorageService LocalStorage
+@inject IOrderService OrderService
 
 <PageTitle>Chi tiết đơn hàng #@orderId</PageTitle>
 
@@ -279,8 +282,37 @@
     {
         if (orderDetail == null) return;
 
-        // TODO: Implement cancel order functionality
-        ShowMessage("Tính năng hủy đơn hàng đang được phát triển", false);
+        try
+        {
+            // Create update request with status = 2 (cancelled)
+            var updateRequest = new OrderRequest
+            {
+                Customerid = orderDetail.Customerid,
+                Userid = orderDetail.Userid,
+                Status = 2, // 2 = Đã hủy
+                TotalAmount = orderDetail.TotalAmount,
+                DiscountAmount = orderDetail.DiscountAmount,
+                OrderDate = orderDetail.OrderDate
+            };
+
+            var result = await OrderService.UpdateOrderAsync(orderDetail.Id, updateRequest);
+            
+            if (result.Success)
+            {
+                ShowMessage($"Đã hủy đơn hàng #{orderDetail.Id} thành công", true);
+                
+                // Reload order detail to reflect the status change
+                await LoadOrderDetail();
+            }
+            else
+            {
+                ShowMessage(result.Message ?? "Không thể hủy đơn hàng. Vui lòng thử lại.", false);
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowMessage($"Lỗi hệ thống khi hủy đơn hàng: {ex.Message}", false);
+        }
     }
 
     private void ShowMessage(string msg, bool success)
