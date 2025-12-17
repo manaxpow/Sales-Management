@@ -1,13 +1,41 @@
 ﻿@using blazor_web.Components.Pages
+@using blazor_web.Components.Auth
+@using blazor_web.Components.UI
+@using Microsoft.AspNetCore.Components.Authorization
+@inject NavigationManager NavigationManager
+
 <CascadingAuthenticationState>
     <Router AppAssembly="@typeof(Program).Assembly">
         <Found Context="routeData">
-            <AuthorizeRouteView RouteData="@routeData"
-                                DefaultLayout="@typeof(Layout.Main.MainLayout)">
-                <NotAuthorized>
-                    <RedirectToLogin/>
-                </NotAuthorized>
-            </AuthorizeRouteView>
+            @{
+                var currentPath = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+            }
+            @if (currentPath.StartsWith("/admin", StringComparison.OrdinalIgnoreCase))
+            {
+                // Admin routes - require admin role
+                <ProtectedRoute RequiredRoles="admin" RedirectUrl="/auth/login">
+                    <RouteView RouteData="@routeData" DefaultLayout="@typeof(Layout.Admin.AdminLayout)" />
+                </ProtectedRoute>
+            }
+            else if (currentPath.StartsWith("/staff", StringComparison.OrdinalIgnoreCase))
+            {
+                // Staff routes - require staff or admin role
+                <ProtectedRoute RequiredRoles="staff,admin" RedirectUrl="/auth/login">
+                    <RouteView RouteData="@routeData" DefaultLayout="@typeof(Layout.Staff.StaffLayout)" />
+                </ProtectedRoute>
+            }
+            else
+            {
+                // Public routes - no authentication required
+                <RouteView RouteData="@routeData" DefaultLayout="@typeof(Layout.Main.MainLayout)" />
+            }
+            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
         </Found>
+        <NotFound>
+            <PageTitle>Not found</PageTitle>
+            <LayoutView Layout="@typeof(Layout.Main.MainLayout)">
+                <p role="alert">Sorry, there's nothing at this address.</p>
+            </LayoutView>
+        </NotFound>
     </Router>
 </CascadingAuthenticationState>

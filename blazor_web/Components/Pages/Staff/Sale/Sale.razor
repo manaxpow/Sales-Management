@@ -18,7 +18,8 @@
 @inject IPromotionService promotionService
 @inject IOrderService orderService
 @inject ILocalStorageService localStorageService
-@rendermode InteractiveServer
+@* <ProtectedRoute RequiredRoles="staff"/> *@
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
 
 <PageTitle>Bán hàng</PageTitle>
 

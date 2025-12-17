@@ -1,9 +1,12 @@
 @page "/staff/customers/create"
+@* <ProtectedRoute RequiredRoles="staff"/> *@
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+
 @using blazor_web.DTOs.Customer
 @inject blazor_web.Services.Customer.ICustomerService CustomerService
 @inject NavigationManager NavManager
 
-@rendermode InteractiveServer
 
 <h3>Thêm mới Khách hàng</h3>
 

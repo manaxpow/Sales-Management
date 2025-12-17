@@ -10,7 +10,8 @@
 @using blazor_web.Models;
 @using blazor_web.Services.Category
 @using blazor_web.Services.Supplier
-@rendermode InteractiveServer
+@* <ProtectedRoute RequiredRoles="staff"/> *@
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
 <div class="d-flex justify-content-between items-center mb-3">
     <h3>Quản lý sản phẩm</h3>
 </div>
@@ -134,7 +135,7 @@
                 <td>
                     @item.Unit
                 </td>
-                <td class="d-flex justify-content-end w-48 gap-2">
+                <td class="d-flex justify-content-end w-[300px] gap-2 text-end">
                     <button class="btn btn-primary btn-sm" @onclick="() => detailDialog!.Show(item)">
                         Chi Tiết
                     </button>

@@ -11,16 +11,14 @@
                     <h5 class="modal-title">Edit Promotion</h5>
                     <button type="button" class="btn-close" @onclick="Close"></button>
                 </div>
-
-
                 @if (!string.IsNullOrEmpty(ErrorMessage))
                 {
                     <div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md">
                         <div class="flex">
                             <svg class="h-5 w-5 text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd"
-                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                                    clip-rule="evenodd" />
+                                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                      clip-rule="evenodd"/>
                             </svg>
                             <span class="text-sm">@ErrorMessage</span>
                         </div>
@@ -34,15 +32,15 @@
                         <div class="flex">
                             <svg class="h-5 w-5 text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd"
-                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                    clip-rule="evenodd" />
+                                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                      clip-rule="evenodd"/>
                             </svg>
                             <span class="text-sm">@SuccessMessage</span>
                         </div>
                     </div>
                 }
                 <EditForm Model="@PromotionEditModel" OnValidSubmit="HandleSave">
-                    <DataAnnotationsValidator />
+                    <DataAnnotationsValidator/>
 
                     <div class="modal-body">
 
@@ -50,16 +48,16 @@
                         <div class="mb-3">
                             <label>Code promotion</label>
                             <InputText class="form-control" @bind-Value="PromotionEditModel.PromotionCode"
-                                disabled="@IsReadOnly" />
-                            <ValidationMessage For="@(() => PromotionEditModel.PromotionCode)" class="text-danger small" />
+                                       disabled="@_isReadOnly"/>
+                            <ValidationMessage For="@(() => PromotionEditModel.PromotionCode)" class="text-danger small"/>
                         </div>
 
                         <!-- DESCRIPTION -->
                         <div class="mb-3">
                             <label>Description</label>
                             <InputText class="form-control" @bind-Value="PromotionEditModel.Description"
-                                disabled="@IsReadOnly" />
-                            <ValidationMessage For="@(() => PromotionEditModel.Description)" class="text-danger small" />
+                                       disabled="@_isReadOnly"/>
+                            <ValidationMessage For="@(() => PromotionEditModel.Description)" class="text-danger small"/>
                         </div>
 
                         <!-- DISCOUNT TYPE -->
@@ -71,57 +69,57 @@
                                     <option value="@t">@t</option>
                                 }
                             </InputSelect>
-                            <ValidationMessage For="@(() => PromotionEditModel.DiscountType)" class="text-danger small" />
+                            <ValidationMessage For="@(() => PromotionEditModel.DiscountType)" class="text-danger small"/>
                         </div>
 
                         <!-- DISCOUNT VALUE -->
                         <div class="mb-3">
                             <label>Discount value</label>
                             <InputNumber class="form-control" @bind-Value="PromotionEditModel.DiscountValue"
-                                disabled="@IsReadOnly" />
-                            <ValidationMessage For="@(() => PromotionEditModel.DiscountValue)" class="text-danger small" />
+                                         disabled="@_isReadOnly"/>
+                            <ValidationMessage For="@(() => PromotionEditModel.DiscountValue)" class="text-danger small"/>
                         </div>
 
                         <!-- USAGE LIMIT -->
                         <div class="mb-3">
                             <label>Usage limit</label>
                             <InputNumber class="form-control" @bind-Value="PromotionEditModel.UsageLimit"
-                                disabled="@IsReadOnly" />
-                            <ValidationMessage For="@(() => PromotionEditModel.UsageLimit)" class="text-danger small" />
+                                         disabled="@_isReadOnly"/>
+                            <ValidationMessage For="@(() => PromotionEditModel.UsageLimit)" class="text-danger small"/>
                         </div>
 
                         <!-- MIN ORDER AMOUNT -->
                         <div class="mb-3">
                             <label>Min order amount</label>
                             <InputNumber class="form-control" @bind-Value="PromotionEditModel.MinOrderAmount"
-                                disabled="@IsReadOnly" />
-                            <ValidationMessage For="@(() => PromotionEditModel.MinOrderAmount)" class="text-danger small" />
+                                         disabled="@_isReadOnly"/>
+                            <ValidationMessage For="@(() => PromotionEditModel.MinOrderAmount)" class="text-danger small"/>
                         </div>
 
                         <!-- START DATE -->
                         <div class="mb-3">
                             <label>Start date</label>
                             <InputDate class="form-control" @bind-Value="PromotionEditModel.StartDate"
-                                disabled="@IsReadOnly" />
-                            <ValidationMessage For="@(() => PromotionEditModel.StartDate)" class="text-danger small" />
+                                       disabled="@_isReadOnly"/>
+                            <ValidationMessage For="@(() => PromotionEditModel.StartDate)" class="text-danger small"/>
                         </div>
 
                         <!-- END DATE -->
                         <div class="mb-3">
                             <label>End date</label>
                             <InputDate class="form-control" @bind-Value="PromotionEditModel.EndDate"
-                                disabled="@IsReadOnly" />
-                            <ValidationMessage For="@(() => PromotionEditModel.EndDate)" class="text-danger small" />
+                                       disabled="@_isReadOnly"/>
+                            <ValidationMessage For="@(() => PromotionEditModel.EndDate)" class="text-danger small"/>
                         </div>
 
                         <!-- STATUS -->
                         <div class="mb-3">
                             <label>Status</label>
-                            <InputSelect class="form-select" @bind-Value="PromotionEditModel.Status" disabled="@IsReadOnly">
+                            <InputSelect class="form-select" @bind-Value="PromotionEditModel.Status" disabled="@_isReadOnly">
                                 <option value="Active">Active</option>
                                 <option value="Inactive">Inactive</option>
                             </InputSelect>
-                            <ValidationMessage For="@(() => PromotionEditModel.Status)" class="text-danger small" />
+                            <ValidationMessage For="@(() => PromotionEditModel.Status)" class="text-danger small"/>
                         </div>
 
                     </div>
@@ -129,7 +127,7 @@
                     <div class="modal-footer">
                         <button class="btn btn-secondary" @onclick="Close">Cancel</button>
 
-                        @if (!IsReadOnly)
+                        @if (!_isReadOnly)
                         {
                             <button class="btn btn-primary" type="submit">Save changes</button>
                         }
@@ -145,15 +143,13 @@
 @code {
 
     public bool ShowDialog { get; set; }
-
+    private bool _isReadOnly;
     private EditPromotionModal PromotionEditModel = new();
     [Parameter] public EventCallback<PromotionRes> OnSave { get; set; }
-    bool IsReadOnly =>
-    DateOnly.FromDateTime(DateTime.Today) >= PromotionEditModel.StartDate &&
-    DateOnly.FromDateTime(DateTime.Today) <= PromotionEditModel.EndDate;
 
     private string? ErrorMessage { get; set; }
     private string? SuccessMessage { get; set; }
+
     public void Show(PromotionRes p)
     {
         ErrorMessage = null;
@@ -171,8 +167,10 @@
             Status = (StatusTypeEnum)p.Status,
             Id = p.Id
         };
-
         ShowDialog = true;
+        _isReadOnly =
+            DateOnly.FromDateTime(DateTime.Today) >= PromotionEditModel.StartDate &&
+            DateOnly.FromDateTime(DateTime.Today) <= PromotionEditModel.EndDate;
         StateHasChanged();
     }
 
@@ -214,9 +212,11 @@
             // Show error message without redirecting (preserves form data)
             SuccessMessage = null;
             ErrorMessage = !string.IsNullOrEmpty(result.Message)
-            ? result.Message
-            : "Created failed. Please try again.";
+                ? result.Message
+                : "Created failed. Please try again.";
         }
+
         await OnSave.InvokeAsync(result.Data);
     }
+
 }

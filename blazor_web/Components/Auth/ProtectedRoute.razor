@@ -1,0 +1,91 @@
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@using blazor_web.Components.Pages
+@using blazor_web.Components.UI
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+
+@if (isInitialized)
+{
+    if (isAuthenticated)
+    {
+        if (hasRequiredRole)
+        {
+            @ChildContent
+        }
+        else
+        {
+            <AccessDenied />
+        }
+    }
+    else
+    {
+        @if (!string.IsNullOrEmpty(RedirectUrl))
+        {
+            <RedirectToLogin ReturnUrl="@RedirectUrl" />
+        }
+        else
+        {
+            <RedirectToLogin />
+        }
+    }
+}
+else
+{
+    <LoadingSpinner Message="Checking authentication..." />
+}
+
+@code {
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public string? RequiredRoles { get; set; }
+
+    [Parameter]
+    public string? RedirectUrl { get; set; }
+
+    private bool isInitialized = false;
+    private bool isAuthenticated = false;
+    private bool hasRequiredRole = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Get authentication state
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+
+            isAuthenticated = user.Identity?.IsAuthenticated == true;
+
+            if (isAuthenticated && !string.IsNullOrEmpty(RequiredRoles))
+            {
+                // Check if user has required role
+                var requiredRolesList = RequiredRoles.Split(',', StringSplitOptions.RemoveEmptyEntries);
+                hasRequiredRole = requiredRolesList.Any(role => 
+                    user.IsInRole(role.Trim()) || 
+                    user.HasClaim(c => c.Type == ClaimTypes.Role && c.Value.Equals(role.Trim(), StringComparison.OrdinalIgnoreCase)));
+            }
+            else if (!string.IsNullOrEmpty(RequiredRoles))
+            {
+                hasRequiredRole = false;
+            }
+            else
+            {
+                hasRequiredRole = true; // No roles required, just authentication
+            }
+        }
+        catch
+        {
+            // If there's any error getting authentication state, assume not authenticated
+            isAuthenticated = false;
+            hasRequiredRole = false;
+        }
+        finally
+        {
+            isInitialized = true;
+            StateHasChanged();
+        }
+    }
+}

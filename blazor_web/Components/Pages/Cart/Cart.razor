@@ -82,7 +82,7 @@
                                             </svg>
                                         </button>
                                         <span class="w-12 text-center font-semibold text-gray-900 ">@item.Quantity</span>
-                                        <button disabled="@(_canIncrease)" @onclick="() => IncreaseQuantityAsync(item)"
+                                        <button disabled="@(!_canIncrease)" @onclick="() => IncreaseQuantityAsync(item)"
                                                 class="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-700 flex items-center justify-center transition-all duration-200      disabled:bg-gray-100
                                                 disabled:text-gray-400">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -166,10 +166,10 @@
                         <span class="text-gray-600">Shipping</span>
                         <span class="font-medium text-gray-900">@PriceHelper.FormatPrice(shipping)</span>
                     </div>
-                    <div class="flex justify-between text-sm">
+                    @* <div class="flex justify-between text-sm">
                         <span class="text-gray-600">Tax (10%)</span>
                         <span class="font-medium text-gray-900">@PriceHelper.FormatPrice(tax)</span>
-                    </div>
+                    </div> *@
                     @if (discount > 0)
                     {
                         <div class="flex justify-between text-sm">
@@ -322,11 +322,11 @@
         // prefer to compute from items for accurate per-item pricing
         subtotal = cartItems.Sum(i => i.PriceSnapshot * i.Quantity);
         totalItems = cartItems.Sum(i => i.Quantity);
-        tax = subtotal * 0.1m;
+        @* tax = subtotal * 0.1m; *@
         shipping = _activeCart?.ShippingAmount ?? 0m;
         discount = _activeCart?.DiscountAmount ?? discount; // keep existing if backend provided
         if (discount > subtotal) discount = subtotal;
-        total = subtotal + shipping + tax - discount;
+        total = subtotal + shipping  - discount;
     }
 
     private string GetProductImage(int? productId)
@@ -337,9 +337,11 @@
 
     private async Task IncreaseQuantityAsync(CartItemResponse item)
     {
-        if (item.Quantity <= item.QuantityRemain)
+        if (item.Quantity < item.QuantityRemain)
             item.Quantity++;
+        
         else
+
         {
             _canIncrease = false;
             _snackBoard.Show("Không thể tăng số lượng. Đã đạt giới hạn tồn kho.", "warning");

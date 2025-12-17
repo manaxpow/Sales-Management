@@ -61,4 +61,42 @@ public class AppDbContext : DbContext
 
         base.OnModelCreating(modelBuilder);
     }
+
+    public override int SaveChanges()
+    {
+        // Check for promotions that have reached their usage limit
+        var changedEntries = ChangeTracker.Entries<Promotions>()
+            .Where(e => e.State == EntityState.Modified || e.State == EntityState.Added)
+            .ToList();
+
+        foreach (var entry in changedEntries)
+        {
+            var promotion = entry.Entity;
+            if (promotion.Usedcount >= promotion.Usagelimit && promotion.Status != 0)
+            {
+                promotion.Status = 0; // Set status to 0 (inactive)
+            }
+        }
+
+        return base.SaveChanges();
+    }
+
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        // Check for promotions that have reached their usage limit
+        var changedEntries = ChangeTracker.Entries<Promotions>()
+            .Where(e => e.State == EntityState.Modified || e.State == EntityState.Added)
+            .ToList();
+
+        foreach (var entry in changedEntries)
+        {
+            var promotion = entry.Entity;
+            if (promotion.Usedcount >= promotion.Usagelimit && promotion.Status != 0)
+            {
+                promotion.Status = 0; // Set status to 0 (inactive)
+            }
+        }
+
+        return await base.SaveChangesAsync(cancellationToken);
+    }
 }

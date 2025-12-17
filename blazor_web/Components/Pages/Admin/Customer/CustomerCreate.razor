@@ -1,10 +1,12 @@
 @page "/admin/customers/create"
+@using blazor_web.Components.Auth
 @using blazor_web.DTOs.Customer
 @using blazor_web.Services.Customer
 @inject ICustomerService CustomerService
 @inject NavigationManager NavManager
 
-@rendermode InteractiveServer
+<ProtectedRoute RequiredRoles="admin"/>
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
 
 <h3>Thêm mới Khách hàng</h3>
 
@@ -19,34 +21,34 @@
         }
 
         <EditForm Model="@createRequest" OnValidSubmit="HandleSubmit">
-            <DataAnnotationsValidator />
-            
+            <DataAnnotationsValidator/>
+
             @* Tên *@
             <div class="mb-3">
                 <label class="form-label">Tên <span class="text-danger">*</span></label>
-                <InputText class="form-control" @bind-Value="createRequest.Name" />
-                <ValidationMessage For="@(() => createRequest.Name)" class="text-danger" />
+                <InputText class="form-control" @bind-Value="createRequest.Name"/>
+                <ValidationMessage For="@(() => createRequest.Name)" class="text-danger"/>
             </div>
 
             @* SĐT *@
             <div class="mb-3">
                 <label class="form-label">SĐT <span class="text-danger">*</span></label>
-                <InputText class="form-control" @bind-Value="createRequest.Phone" />
-                <ValidationMessage For="@(() => createRequest.Phone)" class="text-danger" />
+                <InputText class="form-control" @bind-Value="createRequest.Phone"/>
+                <ValidationMessage For="@(() => createRequest.Phone)" class="text-danger"/>
             </div>
 
             @* Email *@
             <div class="mb-3">
                 <label class="form-label">Email <span class="text-danger">*</span></label>
-                <InputText class="form-control" @bind-Value="createRequest.Email" />
-                <ValidationMessage For="@(() => createRequest.Email)" class="text-danger" />
+                <InputText class="form-control" @bind-Value="createRequest.Email"/>
+                <ValidationMessage For="@(() => createRequest.Email)" class="text-danger"/>
             </div>
 
             @* Địa chỉ *@
             <div class="mb-3">
                 <label class="form-label">Địa chỉ <span class="text-danger">*</span></label>
-                <InputText class="form-control" @bind-Value="createRequest.Address" />
-                <ValidationMessage For="@(() => createRequest.Address)" class="text-danger" />
+                <InputText class="form-control" @bind-Value="createRequest.Address"/>
+                <ValidationMessage For="@(() => createRequest.Address)" class="text-danger"/>
             </div>
 
             <div class="mt-4">
@@ -69,9 +71,9 @@
 
 @code {
     private CreateCustomerRequest createRequest = new();
-    
+
     private string? errorMessage;
-    
+
     private bool isSubmitting = false;
 
     private async Task HandleSubmit()
@@ -79,7 +81,7 @@
         try
         {
             isSubmitting = true;
-            errorMessage = null; 
+            errorMessage = null;
 
             var response = await CustomerService.CreateCustomerAsync(createRequest);
 
@@ -101,4 +103,5 @@
             isSubmitting = false;
         }
     }
+
 }

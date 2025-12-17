@@ -1,5 +1,5 @@
 @page "/admin/profile"
-@rendermode InteractiveServer
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
 
 @using System.ComponentModel.DataAnnotations
 @using blazor_web.DTOs.User

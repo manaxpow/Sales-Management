@@ -1,5 +1,4 @@
 @using Microsoft.AspNetCore.Components.Authorization
-@using blazor_web.Services.Auth
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
 
@@ -8,16 +7,16 @@
         <header class="bg-white shadow-sm border-b border-gray-200">
             <div class="px-6">
                 <div class="flex items-center justify-between">
-                    <!-- Left side - Mobile menu toggle and Page Title -->
+                    <!-- Left side - Page Title -->
                     <div class="flex items-center">                
                         <!-- Page Title -->
                         <div class="ml-4">
-                            <h1 class="text-xl font-semibold text-gray-900">Admin Dashboard</h1>
+                            <h1 class="text-xl font-semibold text-gray-900">Staff Dashboard</h1>
                             <p class="text-sm text-gray-500">Welcome back, @authContext.User.FindFirst("FullName")?.Value ?? authContext.User.Identity?.Name</p>
                         </div>
                     </div>
 
-                    <!-- Right side - Search, Notifications, User Menu -->
+                    <!-- Right side - User Menu -->
                     <div class="flex items-center space-x-4">
                         <!-- User Menu -->
                         <div class="relative" x-data="{ userMenuOpen: false }">
@@ -41,13 +40,13 @@
                                 <div class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none z-50">
                                     <div class="py-1">
                                         <div class="px-4 py-2 text-sm text-gray-700">
-                                            <div class="font-medium">@(authContext.User.FindFirst("FullName")?.Value ?? "Admin User")</div>
-                                            <div class="text-gray-500">@(authContext.User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "Admin")</div>
+                                            <div class="font-medium">@(authContext.User.FindFirst("FullName")?.Value ?? "Staff User")</div>
+                                            <div class="text-gray-500">@(authContext.User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "Staff")</div>
                                         </div>
                                     </div>
                                     <div class="py-1">
-                                        <a href="/admin/profile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile</a>
-                                        <a href="/admin/settings" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</a>
+                                        <a href="/staff/profile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile</a>
+                                        <a href="/staff/settings" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</a>
                                     </div>
                                     <div class="py-1">
                                         <button @onclick="Logout" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">

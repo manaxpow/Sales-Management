@@ -1,9 +1,15 @@
 @page "/login"
+@page "/auth/login"
 @layout Layout.Main.MainLayout
 @using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Components.Authorization
+@using blazor_web.Services.Auth
+@using blazor_web.Services.Storage
+@using blazor_web.Components.UI
 @inject blazor_web.Services.Auth.IAuthService AuthService
 @inject blazor_web.Services.Storage.ILocalStorageService LocalStorageService
 @inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 @rendermode InteractiveServer
 
@@ -51,6 +57,11 @@
             </div>
         }
 
+        <!-- Loading State -->
+        @if (isProcessing) {
+            <LoadingSpinner Message="Signing in..." />
+        }
+        else {
         <!-- Login Form -->
         <EditForm Model="@loginModel" FormName="loginForm" OnValidSubmit="HandleLogin" class="mt-8 space-y-6 bg-white shadow-xl rounded-lg p-8">
             <DataAnnotationsValidator />
@@ -137,6 +148,7 @@
                 Back to Home
             </a>
         </div>
+        }
     </div>
 </div>
 
@@ -144,6 +156,7 @@
     private LoginModel loginModel = new();
     private string? ErrorMessage { get; set; }
     private string? SuccessMessage { get; set; }
+    private bool isProcessing = false;
 
     protected override void OnInitialized() {
         // Check for error or success messages from query parameters
@@ -176,6 +189,8 @@
             // Clear previous messages
             ErrorMessage = null;
             SuccessMessage = null;
+            isProcessing = true;
+            StateHasChanged();
 
             Console.WriteLine("=== HandleLogin called ===");
             Console.WriteLine($"All form values:");
@@ -193,12 +208,14 @@
                 var errorMessages = validationResults.Select(vr => vr.ErrorMessage);
                 ErrorMessage = string.Join("; ", errorMessages);
                 Console.WriteLine($"Validation failed: {ErrorMessage}");
+                isProcessing = false;
+                StateHasChanged();
                 return;
             }
 
             Console.WriteLine("Validation passed, creating request...");
 
-            // Create the request DTO
+            // Create a request DTO
             var loginRequest = new blazor_web.DTOs.Auth.LoginRequest {
                 Username = loginModel.Username,
                 Password = loginModel.Password
@@ -217,8 +234,20 @@
                 await LocalStorageService.SetLoginInfoAsync(result.Data);
                 Console.WriteLine($"Login info stored for user: {result.Data}");
 
-                // Redirect to home page or dashboard
-                NavigationManager.NavigateTo("/", forceLoad: true);
+                // Notify authentication state provider
+                if (AuthenticationStateProvider is CustomAuthenticationStateProvider customAuthStateProvider)
+                {
+                    await customAuthStateProvider.NotifyUserAuthentication(result.Data);
+                }
+
+                // Redirect based on user role
+                var redirectTo = result.Data.User.Role.ToLowerInvariant() switch
+                {
+                    "admin" => "/admin",
+                    "staff" => "/staff",
+                    _ => "/"
+                };
+                NavigationManager.NavigateTo(redirectTo, forceLoad: true);
             } else {
                 // Show error message without redirecting (preserves form data)
                 ErrorMessage = !string.IsNullOrEmpty(result.Message)
@@ -232,6 +261,9 @@
             ErrorMessage = $"An unexpected error occurred: {ex.Message}";
             Console.WriteLine($"Exception: {ex.Message}");
             Console.WriteLine($"Stack trace: {ex.StackTrace}");
+        } finally {
+            isProcessing = false;
+            StateHasChanged();
         }
 
         // Refresh the component to show messages

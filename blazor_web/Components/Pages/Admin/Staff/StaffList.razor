@@ -2,7 +2,9 @@
 @using blazor_web.DTOs.User
 @using blazor_web.Models
 @inject blazor_web.Services.User.IUserService UserService
-@rendermode InteractiveServer
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+<ProtectedRoute RequiredRoles="admin"/>
+
 
 <h3>Quản lý Nhân viên (Staff)</h3>
 
@@ -10,8 +12,10 @@
     @* Ô tìm kiếm *@
     <div class="input-group w-50">
         <input type="text" class="form-control" placeholder="Tìm theo tên đăng nhập, họ tên..."
-               @bind="searchTerm" @bind:event="oninput" @onkeyup="HandleSearch" />
-        <span class="input-group-text"><i class="oi oi-magnifying-glass"></i></span>
+               @bind="searchTerm" @bind:event="oninput" @onkeyup="HandleSearch"/>
+        <span class="input-group-text">
+            <i class="oi oi-magnifying-glass"></i>
+        </span>
     </div>
 
     @* Nút thêm mới - trỏ về trang Create User *@
@@ -32,50 +36,50 @@ else
 {
     <table class="table table-bordered table-striped table-hover">
         <thead>
-            <tr>
-                <th>ID</th>
-                <th>User Name</th>
-                <th>Full Name</th>
-                <th>Role</th>
-                <th>Created At</th>
-                <th>Action</th>
-            </tr>
+        <tr>
+            <th>ID</th>
+            <th>User Name</th>
+            <th>Full Name</th>
+            <th>Role</th>
+            <th>Created At</th>
+            <th>Action</th>
+        </tr>
         </thead>
         <tbody>
-            @if (users != null && users.Any())
-            {
-                @foreach (var item in users)
-                {
-                    <tr>
-                        <td>@item.Id</td>
-                        <td class="fw-bold text-primary">@item.UserName</td>
-                        <td>@item.FullName</td>
-                        <td>
-                            @* Badge hiển thị Role *@
-                            <span class="badge @(item.Role == "Admin" ? "bg-danger" : "bg-success")">
-                                @item.Role
-                            </span>
-                        </td>
-                        <td>@item.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
-                        <td>
-                            <button class="btn btn-sm btn-warning me-1" @onclick="() => OpenEditDialog(item)">
-                                Sửa
-                            </button>
-                            <button class="btn btn-sm btn-danger" @onclick="() => OpenDeleteDialog(item)">
-                                Xóa
-                            </button>
-                        </td>
-                    </tr>
-                }
-            }
-            else
+        @if (users != null && users.Any())
+        {
+            @foreach (var item in users)
             {
                 <tr>
-                    <td colspan="7" class="text-center text-muted py-3">
-                        Không tìm thấy nhân viên nào
+                    <td>@item.Id</td>
+                    <td class="fw-bold text-primary">@item.UserName</td>
+                    <td>@item.FullName</td>
+                    <td>
+                        @* Badge hiển thị Role *@
+                        <span class="badge @(item.Role == "Admin" ? "bg-danger" : "bg-success")">
+                            @item.Role
+                        </span>
+                    </td>
+                    <td>@item.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning me-1" @onclick="() => OpenEditDialog(item)">
+                            Sửa
+                        </button>
+                        <button class="btn btn-sm btn-danger" @onclick="() => OpenDeleteDialog(item)">
+                            Xóa
+                        </button>
                     </td>
                 </tr>
             }
+        }
+        else
+        {
+            <tr>
+                <td colspan="7" class="text-center text-muted py-3">
+                    Không tìm thấy nhân viên nào
+                </td>
+            </tr>
+        }
         </tbody>
     </table>
 
@@ -98,23 +102,24 @@ else
     </div>
 }
 
-<EditStaffDialog @ref="editDialog" OnSave="SaveUserAsync" />
-<DeleteConfirmationDialog @ref="deleteDialog" OnConfirm="DeleteUserAsync" />
+<EditStaffDialog @ref="editDialog" OnSave="SaveUserAsync"/>
+<DeleteConfirmationDialog @ref="deleteDialog" OnConfirm="DeleteUserAsync"/>
 
 @code {
+
     // Đổi sang UserResponse
     private IEnumerable<UserResponse> users = new List<UserResponse>();
     private bool isLoading = true;
-    
+
     // Pagination & Search
     private string searchTerm = "";
     private int currentPage = 1;
     private int pageSize = 10;
     private int totalPages = 0;
     private int totalRecords = 0;
-    
+
     private System.Timers.Timer? _debounceTimer;
-    private EditStaffDialog editDialog = default!; 
+    private EditStaffDialog editDialog = default!;
     private DeleteConfirmationDialog deleteDialog = default!;
 
     protected override async Task OnInitializedAsync()
@@ -138,7 +143,7 @@ else
                 Page = currentPage,
                 Limit = pageSize,
                 Search = searchTerm,
-                Role = "staff" 
+                Role = "staff"
             };
 
             var response = await UserService.GetAllUsersAsync(request);
@@ -147,8 +152,8 @@ else
             {
                 users = response.Data.Users;
                 totalRecords = response.Data.Total;
-                totalPages = (int)Math.Ceiling((double)totalRecords / pageSize); 
-                
+                totalPages = (int)Math.Ceiling((double)totalRecords / pageSize);
+
                 currentPage = response.Data.Page;
             }
             else
@@ -193,7 +198,7 @@ else
         var result = await UserService.DeleteUserAsync(id);
         if (result.Success)
         {
-            await LoadData(); 
+            await LoadData();
         }
         else
         {
@@ -224,9 +229,10 @@ else
 
         return result;
     }
-    
+
     public void Dispose()
     {
         _debounceTimer?.Dispose();
     }
+
 }

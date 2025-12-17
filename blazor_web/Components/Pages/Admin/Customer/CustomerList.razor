@@ -3,15 +3,19 @@
 @using blazor_web.Models
 @* Inject Service đầy đủ namespace *@
 @inject blazor_web.Services.Customer.ICustomerService CustomerService
-@rendermode InteractiveServer
+
+<ProtectedRoute RequiredRoles="admin"/>
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
 
 <h3>Quản lý Customer</h3>
 
 <div class="d-flex justify-content-between mb-3 align-items-center">
     <div class="input-group w-50">
         <input type="text" class="form-control" placeholder="Tìm theo tên, email..."
-               @bind="searchTerm" @bind:event="oninput" @onkeyup="HandleSearch" />
-        <span class="input-group-text"><i class="oi oi-magnifying-glass"></i></span>
+               @bind="searchTerm" @bind:event="oninput" @onkeyup="HandleSearch"/>
+        <span class="input-group-text">
+            <i class="oi oi-magnifying-glass"></i>
+        </span>
     </div>
 
     <a href="/admin/customers/create" class="btn btn-primary">
@@ -31,45 +35,45 @@ else
 {
     <table class="table table-bordered table-striped table-hover">
         <thead>
-            <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Phone</th>
-                <th>Email</th>
-                <th>Address</th>
-                <th>Created At</th>
-                <th>Action</th>
-            </tr>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Phone</th>
+            <th>Email</th>
+            <th>Address</th>
+            <th>Created At</th>
+            <th>Action</th>
+        </tr>
         </thead>
         <tbody>
-            @if (customers != null && customers.Any())
-            {
-                @foreach (var item in customers)
-                {
-                    <tr>
-                        <td>@item.Id</td>
-                        <td class="fw-bold text-primary">@item.Name</td>
-                        <td>@item.Phone</td>
-                        <td>@item.Email</td>
-                        <td>@item.Address</td>
-                        <td>@item.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
-                        <td>
-                            <button class="btn btn-sm btn-warning me-1" @onclick="() => OpenEditDialog(item)">
-                                Sửa
-                            </button>
-                            <button class="btn btn-sm btn-danger" @onclick="() => OpenDeleteDialog(item)">
-                                Xóa
-                            </button>
-                        </td>
-                    </tr>
-                }
-            }
-            else
+        @if (customers != null && customers.Any())
+        {
+            @foreach (var item in customers)
             {
                 <tr>
-                    <td colspan="7" class="text-center text-muted">Không tìm thấy dữ liệu</td>
+                    <td>@item.Id</td>
+                    <td class="fw-bold text-primary">@item.Name</td>
+                    <td>@item.Phone</td>
+                    <td>@item.Email</td>
+                    <td>@item.Address</td>
+                    <td>@item.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning me-1" @onclick="() => OpenEditDialog(item)">
+                            Sửa
+                        </button>
+                        @* <button class="btn btn-sm btn-danger" @onclick="() => OpenDeleteDialog(item)">
+                            Xóa
+                        </button> *@
+                    </td>
                 </tr>
             }
+        }
+        else
+        {
+            <tr>
+                <td colspan="7" class="text-center text-muted">Không tìm thấy dữ liệu</td>
+            </tr>
+        }
         </tbody>
     </table>
 
@@ -92,19 +96,19 @@ else
     </div>
 }
 
-<EditCustomerDialog @ref="editDialog" OnSave="SaveCustomerAsync" />
-<DeleteConfirmationDialog @ref="deleteDialog" OnConfirm="DeleteCustomerAsync" />
+<EditCustomerDialog @ref="editDialog" OnSave="SaveCustomerAsync"/>
+<DeleteConfirmationDialog @ref="deleteDialog" OnConfirm="DeleteCustomerAsync"/>
 
 @code {
     private List<CustomerResponse> customers = new();
     private bool isLoading = true;
-    
+
     private string searchTerm = "";
     private int currentPage = 1;
     private int pageSize = 10;
     private int totalPages = 0;
     private int totalRecords = 0;
-    
+
     private System.Timers.Timer? _debounceTimer;
 
     private EditCustomerDialog editDialog = default!;
@@ -182,7 +186,7 @@ else
         var result = await CustomerService.DeleteCustomerAsync(id);
         if (result.Success)
         {
-            await LoadData(); 
+            await LoadData();
         }
         else
         {
@@ -198,7 +202,8 @@ else
     // Hàm này trả về ApiResponse để Dialog biết có lỗi hay không
     private async Task<ApiResponse<CustomerResponse>> SaveCustomerAsync(CustomerResponse updatedData)
     {
-        var request = new UpdateCustomerRequest     {
+        var request = new UpdateCustomerRequest
+        {
             Name = updatedData.Name,
             Phone = updatedData.Phone,
             Email = updatedData.Email,
@@ -213,11 +218,12 @@ else
             await LoadData();
         }
 
-        return result; 
+        return result;
     }
-    
+
     public void Dispose()
     {
         _debounceTimer?.Dispose();
     }
+
 }

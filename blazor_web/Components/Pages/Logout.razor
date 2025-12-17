@@ -1,0 +1,34 @@
+@page "/logout"
+@layout Layout.Main.MainLayout
+@using blazor_web.Services.Auth
+@using blazor_web.Services.Storage
+@using Microsoft.AspNetCore.Components.Authorization
+@inject ILocalStorageService LocalStorageService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Remove login info from localStorage
+            await LocalStorageService.RemoveLoginInfoAsync();
+            
+            // Notify authentication state provider
+            if (AuthenticationStateProvider is CustomAuthenticationStateProvider customAuthStateProvider)
+            {
+                await customAuthStateProvider.NotifyUserLogout();
+            }
+            
+            // Redirect to login page
+            NavigationManager.NavigateTo("/auth/login", forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            // Log error but still redirect
+            Console.WriteLine($"Error during logout: {ex.Message}");
+            NavigationManager.NavigateTo("/auth/login", forceLoad: true);
+        }
+    }
+}
