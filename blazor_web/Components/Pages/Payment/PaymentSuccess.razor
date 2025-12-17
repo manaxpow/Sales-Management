@@ -112,7 +112,7 @@
                                         </div>
                                         <div class="flex justify-between">
                                             <span class="text-gray-600">Tax</span>
-                                            <span class="font-medium">@PriceHelper.FormatPrice(tax))</span>
+                                            <span class="font-medium">@PriceHelper.FormatPrice(subtotal * 0.1m)</span>
                                         </div>
                                         @if (discount > 0)
                                         {
@@ -271,8 +271,8 @@
     private string lastFourDigits = "1234";
 
     private decimal subtotal = 299.99m;
-    private decimal shipping = 12.99m;
-    private decimal tax = 25.40m;
+    private decimal shipping = 0.00m;
+    private decimal tax = 0.00m;
     private decimal discount = 20.00m;
     private decimal total = 318.38m;
 
@@ -322,9 +322,10 @@
                 {
                     Console.Write($"Order found: {order.Id} for user {_loginInfo.Customer.Id}");
                     orderDate = order.OrderDate.ToString("MMMM dd, yyyy");
-                    total = order.TotalAmount;
                     discount = order.DiscountAmount;
-                    subtotal = total + discount - shipping - tax; // Calculate subtotal from total
+                    @* tax = total * 0.1m; // Assuming 10% tax *@
+                    subtotal = order.TotalAmount; // Calculate subtotal from total
+                    total = subtotal - discount;
 
                     // Get order items for this specific order
                     var orderItemsResponse = await OrderService.GetOrderItemsAsync(orderId);

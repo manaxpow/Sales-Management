@@ -166,10 +166,10 @@
                         <span class="text-gray-600">Shipping</span>
                         <span class="font-medium text-gray-900">@PriceHelper.FormatPrice(shipping)</span>
                     </div>
-                    <div class="flex justify-between text-sm">
+                    @* <div class="flex justify-between text-sm">
                         <span class="text-gray-600">Tax (10%)</span>
                         <span class="font-medium text-gray-900">@PriceHelper.FormatPrice(tax)</span>
-                    </div>
+                    </div> *@
                     @if (discount > 0)
                     {
                         <div class="flex justify-between text-sm">
@@ -322,11 +322,11 @@
         // prefer to compute from items for accurate per-item pricing
         subtotal = cartItems.Sum(i => i.PriceSnapshot * i.Quantity);
         totalItems = cartItems.Sum(i => i.Quantity);
-        tax = subtotal * 0.1m;
+        @* tax = subtotal * 0.1m; *@
         shipping = _activeCart?.ShippingAmount ?? 0m;
         discount = _activeCart?.DiscountAmount ?? discount; // keep existing if backend provided
         if (discount > subtotal) discount = subtotal;
-        total = subtotal + shipping + tax - discount;
+        total = subtotal + shipping  - discount;
     }
 
     private string GetProductImage(int? productId)

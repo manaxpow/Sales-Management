@@ -117,7 +117,13 @@ public class StatisticService(AppDbContext context, ILogger<ProductService> logg
                 return _responseStaRevenue.ErrorResponse("Start date must be before end date");
             }
 
+
             var query = context.Orders.AsQueryable();
+            if (request.Status.HasValue)
+            {
+                query = query.Where(u => u.Status == request.Status.Value);
+            }
+
             query = query.Where(u => u.OrderDate >= startdate && u.OrderDate <= enddate);
             var dataRaw = await query
                 .GroupBy(u => u.OrderDate.Date)

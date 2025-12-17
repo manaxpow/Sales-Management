@@ -167,7 +167,7 @@
                 ItemsPerPage="limit" OnPageChanged="HandlePageChanged" OnItemsPerPageChanged="HandleItemsPerPageChanged"/>
 }
 <DetailProduct @ref="detailDialog"/>
-<EditProduct Categories="categories" Suppliers="categories" @ref="editProductDialog" onSave="LoadData"/>
+<EditProduct Categories="categories" Suppliers="suppliers" @ref="editProductDialog" onSave="LoadData"/>
 <ConfirmDeleteProduct @ref="deleteProductDialog" OnSave="LoadData"/>
 
 @code

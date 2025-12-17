@@ -1,3 +1,4 @@
+@using blazor_web.DTOs.Supplier
 @using blazor_web.Models
 @using blazor_web.Services.Category
 @inject IProductService productService
@@ -133,7 +134,7 @@
     private IBrowserFile? NewImageFile { get; set; }
     private string? PreviewImage { get; set; }
     [Parameter] public List<CategoryResponse> Categories { get; set; } = new();
-    [Parameter] public List<CategoryResponse> Suppliers { get; set; } = new();
+    [Parameter] public List<SupplierResponse> Suppliers { get; set; } = new();
 
     // callback khi lưu
     [Parameter] public EventCallback<ProductResponse> OnSave { get; set; }

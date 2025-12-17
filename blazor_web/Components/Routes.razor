@@ -20,7 +20,7 @@
             else if (currentPath.StartsWith("/staff", StringComparison.OrdinalIgnoreCase))
             {
                 // Staff routes - require staff or admin role
-                <ProtectedRoute RequiredRoles="staff" RedirectUrl="/auth/login">
+                <ProtectedRoute RequiredRoles="staff,admin" RedirectUrl="/auth/login">
                     <RouteView RouteData="@routeData" DefaultLayout="@typeof(Layout.Staff.StaffLayout)" />
                 </ProtectedRoute>
             }

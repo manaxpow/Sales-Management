@@ -203,10 +203,10 @@
                         <span class="text-gray-600">Shipping</span>
                         <span class="font-medium text-gray-900">@PriceHelper.FormatPrice(shipping)</span>
                     </div>
-                    <div class="flex justify-between text-sm">
+                    @* <div class="flex justify-between text-sm">
                         <span class="text-gray-600">Tax (10%)</span>
                         <span class="font-medium text-gray-900">@PriceHelper.FormatPrice(tax)</span>
-                    </div>
+                    </div> *@
                     @if (discount > 0)
                     {
                         <div class="flex justify-between text-sm">
@@ -392,10 +392,11 @@
     {
         subtotal = cartItems.Sum(i => i.PriceSnapshot * i.Quantity);
         totalItems = cartItems.Sum(i => i.Quantity);
-        tax = subtotal * 0.1m;
+        @* tax = subtotal * 0.1m; *@
         shipping = _activeCart?.ShippingAmount ?? (subtotal > 0 ? 10m : 0m); // $10 shipping if items exist
         if (discount > subtotal) discount = subtotal;
-        total = subtotal + shipping + tax - discount;
+        total = subtotal + shipping  - discount;
+        Console.WriteLine($"Totals calculated: Subtotal={subtotal}, Shipping={shipping}, Tax={tax}, Discount={discount}, Total={total}");
     }
 
     private string GetProductImage(int? productId)
@@ -425,8 +426,9 @@
             }
 
             selectedPromotion = promo;
-            CalculateTotals();
         }
+
+        CalculateTotals();
 
         StateHasChanged();
     }

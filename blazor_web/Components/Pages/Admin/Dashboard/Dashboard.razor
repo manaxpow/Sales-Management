@@ -389,6 +389,7 @@
         {
             StartDate = "2020/01/01",
             EndDate = "2025/12/31",
+            Status = 1
         };
         var revenueResponse = await StatisticService.GetStatisticRevenue(req);
         _revenueSTA = revenueResponse?.Data ?? new();

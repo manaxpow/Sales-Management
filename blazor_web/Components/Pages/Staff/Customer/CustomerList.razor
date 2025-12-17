@@ -3,7 +3,7 @@
 @using blazor_web.Models
 @* QUAN TRỌNG: Dùng đường dẫn đầy đủ để tránh xung đột *@
 @inject blazor_web.Services.Customer.ICustomerService CustomerService
-<ProtectedRoute RequiredRoles="staff"/>
+@* <ProtectedRoute RequiredRoles="staff"/> *@
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
 <h3>Quản lý Customer (Staff)</h3>
 
